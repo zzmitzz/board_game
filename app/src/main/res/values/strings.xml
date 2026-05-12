@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">BoardGame</string>
+    <string name="network_connection_fail">You are offline</string>
+    <string name="back">Back</string>
+    <string name="nav_back">Back</string>
+    <string name="trending_now">Trending Now</string>
+    <string name="see_all">See All</string>
+    <string name="create_by">"by "</string>
+    <string name="chill">Chill</string>
+    <string name="spicy">Spicy</string>
+    <string name="extreme">Extreme</string>
+    <string name="sample_cards">Sample Cards</string>
+    <string name="how_to_play">How to Play</string>
+    <string name="free">Free</string>
+    <string name="how_many_players">How many players?</string>
+    <string name="players">Players</string>
+    <string name="cancel_text">Cancel</string>
+    <string name="confirm_selection">Confirm</string>
+</resources>
