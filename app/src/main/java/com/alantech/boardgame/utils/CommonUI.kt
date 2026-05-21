@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import kotlin.random.Random
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -37,7 +38,7 @@ fun ButtonText(
 
 
 interface DialogListener{
-    fun onConfirm()
+    fun onConfirm(numberPlayer: Int)
     fun onCancel()
     fun onDismiss()
 }
@@ -84,3 +85,13 @@ fun Modifier.addBgGradient(
         startY = 0f
     )
 )
+
+
+// Extension property for easy use
+val Color.Companion.random: Color
+    get() = Color(
+        red = Random.nextFloat(),
+        green = Random.nextFloat(),
+        blue = Random.nextFloat(),
+        alpha = 1f // 1f means fully opaque
+    )

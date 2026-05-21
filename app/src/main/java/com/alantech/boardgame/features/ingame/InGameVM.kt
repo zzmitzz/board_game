@@ -7,8 +7,11 @@ import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.ui.model.loadingCardsDetailPack
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -21,7 +24,7 @@ sealed class UIState {
     data class InGameUIState(
         val round: Int,
         val totalRound: Int,
-        val currentCard: CardDetail? = null,
+        val currentCard: CardDetail,
         val currentPlayer: GamePlayer,
         val gameTitle: String,
         val penalty: String,
@@ -39,8 +42,8 @@ class InGameVM : ViewModel() {
     private val _uiState = MutableStateFlow<UIState>(UIState.DataLoading)
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
-    private val _uiEffect = MutableStateFlow<UIEffect?>(null)
-    val uiEffect: StateFlow<UIEffect?> = _uiEffect.asStateFlow()
+    private val _uiEffect = MutableSharedFlow<UIEffect?>(1)
+    val uiEffect: SharedFlow<UIEffect?> = _uiEffect.asSharedFlow()
 
     private val gameConfig by lazy {
         GameSettingConfigCurrentSession
@@ -73,7 +76,7 @@ class InGameVM : ViewModel() {
                 _uiState.value = UIState.InGameUIState(
                     round = 1,
                     totalRound = 10,
-                    currentCard = cards.firstOrNull(),
+                    currentCard = cards.first(),
                     currentPlayer = gameConfig.getPlayers().first(),
                     gameTitle = "Game Title",
                     penalty = "Penalty"
@@ -91,7 +94,7 @@ class InGameVM : ViewModel() {
         val inGameState = (_uiState.value as UIState.InGameUIState)
 
         val currentCardIndex = cards.indexOf(inGameState.currentCard)
-        val nextCard = cards.getOrNull((currentCardIndex + 1) % cards.size)
+        val nextCard = cards[(currentCardIndex + 1) % cards.size]
         val currentPlayerIndex =
             gameConfig.getPlayers()
                 .indexOf(inGameState.currentPlayer)
@@ -105,8 +108,18 @@ class InGameVM : ViewModel() {
             currentPlayer = nextPlayer
         )
         if (inGameState.round == inGameState.totalRound){
-            _uiEffect.value = UIEffect.OnGameEnd
+            _uiEffect.tryEmit(UIEffect.OnGameEnd)
         }
+    }
+
+//    fun forfeitCard(){
+//        if (!checkIfValidPlayingState()) return
+//        val inGameState = (_uiState.value as UIState.InGameUIState)
+//
+//    }
+
+    fun pauseGame(){
+
     }
 
 

@@ -29,30 +29,113 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alantech.boardgame.features.gamesetup.components.AddPlayerDialog
 import com.alantech.boardgame.features.gamesetup.components.GameSetupTopBar
 import com.alantech.boardgame.features.gamesetup.components.HouseRulesSection
 import com.alantech.boardgame.features.gamesetup.components.PlayerSection
+import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.utils.DialogListener
 
+
+@Composable
+fun GameSetupScreenStateful(
+    onBackClick: () -> Unit = {},
+    onStartGameClick: () -> Unit = {},
+    vm: GameSetupVM = viewModel()
+) {
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
+
+    val gameActionHandler = remember {
+        object : GameSetupScreenAction {
+            override fun onStartGame() {
+                vm.saveGameConfigSession()
+                onStartGameClick()
+            }
+
+            override fun onDeletePlayer(id: Int) {
+                vm.removePlayer(id)
+            }
+
+            override fun onRemoveAllPlayers() {
+                vm.removeAllPlayers()
+            }
+
+            override fun onAddPlayers(player: Int) {
+                vm.addPlayer(player)
+            }
+
+            override fun onRecordDaresChange(b: Boolean) {
+                vm.setRecordDares(b)
+            }
+
+            override fun onNSFWContentChange(b: Boolean) {
+                vm.setNsfwEnable(b)
+            }
+
+            override fun onSpeedModeChange(b: Boolean) {
+                vm.setSpeedRun(b)
+            }
+
+            override fun onPenaltyChange(b: Boolean) {
+                vm.setPenalty(b)
+            }
+
+            override fun onRoundChange(round: Int) {
+                vm.setRoundAmount(round)
+            }
+        }
+    }
+
+    with(gameActionHandler) {
+        GameSetupScreen(
+            uiState = uiState,
+            onBackClick = onBackClick,
+        )
+    }
+}
+
+interface GameSetupScreenAction {
+    fun onStartGame()
+    fun onDeletePlayer(id: Int)
+    fun onRemoveAllPlayers()
+    fun onAddPlayers(player: Int)
+
+    fun onRecordDaresChange(b: Boolean)
+    fun onNSFWContentChange(b: Boolean)
+    fun onSpeedModeChange(b: Boolean)
+    fun onPenaltyChange(b: Boolean)
+    fun onRoundChange(round: Int)
+
+
+}
+
+
+context(action: GameSetupScreenAction)
 @Composable
 fun GameSetupScreen(
+    uiState: GameSetupUIState = GameSetupUIState(),
     onBackClick: () -> Unit = {},
-    onStartGameClick: () -> Unit = {}
 ) {
 
     var showAddingMemberDialog by remember { mutableStateOf(false) }
-    val dialogListener = remember { object : DialogListener {
-        override fun onConfirm() {
-            showAddingMemberDialog = false
+    val dialogListener = remember {
+        object : DialogListener {
+            override fun onConfirm(players: Int) {
+                showAddingMemberDialog = false
+                action.onAddPlayers(players)
+            }
+
+            override fun onCancel() {
+                showAddingMemberDialog = false
+            }
+
+            override fun onDismiss() {
+                showAddingMemberDialog = false
+            }
         }
-        override fun onCancel() {
-            showAddingMemberDialog = false
-        }
-        override fun onDismiss() {
-            showAddingMemberDialog = false
-        }
-    } }
+    }
 
 
 
@@ -64,24 +147,44 @@ fun GameSetupScreen(
             .padding(top = 16.dp, bottom = 32.dp)
     ) {
         GameSetupTopBar(onBackClick = onBackClick)
-        
+
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(32.dp))
-            PlayerSection(){
-                showAddingMemberDialog = !showAddingMemberDialog
-            }
+            PlayerSection(
+                mPlayers = uiState.players,
+                onAddPlayerClick = {
+                    showAddingMemberDialog = !showAddingMemberDialog
+                },
+                onDeletePlayerClick = {
+                    action.onDeletePlayer(it)
+                },
+                onDeleteAllPlayersClick = {
+                    action.onRemoveAllPlayers()
+                }
+            )
             Spacer(modifier = Modifier.height(48.dp))
-            HouseRulesSection()
+            HouseRulesSection(
+                recordDares = uiState.isRecordDares,
+                nsfwContent = uiState.nsfwEnable,
+                speedMode = uiState.speedRun,
+                penalty = uiState.penalty,
+                round = uiState.roundAmount,
+                onRecordDaresChange = { action.onRecordDaresChange(it) },
+                onNsfwContentChange = { action.onNSFWContentChange(it) },
+                onSpeedModeChange = { action.onSpeedModeChange(it) },
+                onPenaltyChange = { action.onPenaltyChange(it) },
+                onRoundChange = { action.onRoundChange(it) },
+            )
         }
 
         Spacer(modifier = Modifier.height(48.dp))
-        
+
         Button(
-            onClick = onStartGameClick,
+            onClick = { action.onStartGame() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp),
@@ -116,5 +219,45 @@ fun GameSetupScreen(
 @Preview
 @Composable
 private fun GameSuPV() {
-    GameSetupScreen {  }
+    val mock = object : GameSetupScreenAction{
+        override fun onStartGame() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onDeletePlayer(id: Int) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onRemoveAllPlayers() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onAddPlayers(player: Int) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onRecordDaresChange(b: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onNSFWContentChange(b: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onSpeedModeChange(b: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onPenaltyChange(b: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onRoundChange(round: Int) {
+            TODO("Not yet implemented")
+        }
+
+    }
+    with(mock){
+        GameSetupScreen {  }
+    }
 }

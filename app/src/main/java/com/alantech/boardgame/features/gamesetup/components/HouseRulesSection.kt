@@ -30,7 +30,17 @@ import com.alantech.boardgame.utils.PlusJakartaSans
 
 @Composable
 fun HouseRulesSection(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    recordDares: Boolean = true,
+    nsfwContent: Boolean = false,
+    speedMode: Boolean = false,
+    penalty: Boolean = false,
+    round: Int = 5,
+    onRecordDaresChange: (Boolean) -> Unit = {},
+    onNsfwContentChange: (Boolean) -> Unit = {},
+    onSpeedModeChange: (Boolean) -> Unit = {},
+    onPenaltyChange: (Boolean) -> Unit = {},
+    onRoundChange: (Int) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth().padding(
         bottom = 16.dp
@@ -44,12 +54,6 @@ fun HouseRulesSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        var recordDares by remember { mutableStateOf(true) }
-        var nsfwContent by remember { mutableStateOf(false) }
-        var speedMode by remember { mutableStateOf(false) }
-        var penalty by remember { mutableStateOf(false) }
-        var round by remember { mutableIntStateOf(5) }
-
         RuleItem(
             title = "Record Dares",
             description = "Capture the best moments",
@@ -62,7 +66,7 @@ fun HouseRulesSection(
                 )
             },
             isChecked = recordDares,
-            onCheckedChange = { recordDares = it }
+            onCheckedChange = { onRecordDaresChange(it) }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -80,7 +84,7 @@ fun HouseRulesSection(
                 )
             },
             isChecked = nsfwContent,
-            onCheckedChange = { nsfwContent = it }
+            onCheckedChange = { onNsfwContentChange(it) }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -97,7 +101,7 @@ fun HouseRulesSection(
                 )
             },
             isChecked = speedMode,
-            onCheckedChange = { speedMode = it }
+            onCheckedChange = { onSpeedModeChange(it) }
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -113,7 +117,7 @@ fun HouseRulesSection(
                 )
             },
             isChecked = penalty,
-            onCheckedChange = { penalty = it }
+            onCheckedChange = { onPenaltyChange(it) }
         )
 
 
@@ -131,7 +135,7 @@ fun HouseRulesSection(
                 )
             },
             progress = round,
-            onProgressChange = { round = it }
+            onProgressChange = { onRoundChange(it) }
         )
     }
 }

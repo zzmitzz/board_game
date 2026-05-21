@@ -12,6 +12,7 @@ object GameSettingConfigCurrentSession {
     private var isNSFWOn = false
     private var isRecordMomentOn = false
     private var totalRounds = 5
+    private var penalty = false
 
     fun setPlayers(players: Set<GamePlayer>) {
         this.players = players.also {
@@ -23,11 +24,13 @@ object GameSettingConfigCurrentSession {
         isTimerOn: Boolean = false,
         isNSFWOn: Boolean = false,
         isRecordMomentOn: Boolean = false,
+        penalty: Boolean = false,
         totalRounds: Int = 5
     ){
         this.isTimerOn = isTimerOn
         this.isNSFWOn = isNSFWOn
         this.isRecordMomentOn = isRecordMomentOn
+        this.penalty = penalty
         this.totalRounds = totalRounds
     }
 

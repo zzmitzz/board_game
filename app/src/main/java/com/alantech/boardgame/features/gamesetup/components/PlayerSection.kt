@@ -4,12 +4,19 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -20,55 +27,87 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alantech.boardgame.R
+import com.alantech.boardgame.ui.model.GamePlayer
+import com.alantech.boardgame.utils.random
 
 @Composable
 fun PlayerSection(
-    modifier: Modifier = Modifier,
-    onAddPlayerClick: () -> Unit = {}
+    mPlayers: Set<GamePlayer> = emptySet(), // Include you
+    onAddPlayerClick: () -> Unit = {},
+    onDeleteAllPlayersClick: () -> Unit = {},
+    onDeletePlayerClick: (Int) -> Unit = {}
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Who's Playing?",
+                text = stringResource(R.string.whos_playing),
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
-            
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF2E1B46), RoundedCornerShape(16.dp))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+
+            Row(
+                modifier = Modifier,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete Player",
+                    tint = Color(0xFFFFFFFF),
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable {
+                            onDeleteAllPlayersClick.invoke()
+                        }
+                )
+                Spacer(modifier = Modifier.width(24.dp))
                 Text(
-                    text = "3 Players",
+                    text = "${mPlayers.size} Player(s)",
                     color = Color(0xFFD8A5FF),
                     fontSize = 12.sp,
+                    modifier = Modifier
+                        .background(Color(0xFF2E1B46), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                     fontWeight = FontWeight.Medium
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            AddPlayerItem(){
+            AddPlayerItem() {
                 onAddPlayerClick.invoke()
             }
-            CurrentPlayerItem(name = "You")
-            OtherPlayerItem(name = "Alex", color = Color(0xFF2254A8))
-            OtherPlayerItem(name = "Sam", color = Color(0xFF147D64))
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                itemsIndexed(mPlayers.toList()){ index, player ->
+                    PlayerItem(
+                        name = player.name,
+                        bgColor = player.color
+                    ) {
+                        onDeletePlayerClick.invoke(player.id)
+                    }
+                }
+            }
         }
+
     }
 }
 
@@ -78,7 +117,7 @@ fun AddPlayerItem(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable{
+        modifier = Modifier.clickable {
             onClick.invoke()
         }
     ) {
@@ -108,7 +147,7 @@ fun AddPlayerItem(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "CHANGE",
+            text = "ADD",
             color = Color(0xFFA19AA8),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
@@ -117,7 +156,7 @@ fun AddPlayerItem(
 }
 
 @Composable
-fun CurrentPlayerItem(name: String) {
+fun PlayerItem(name: String, bgColor: Color, onClick: () -> Unit = {}) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -135,7 +174,11 @@ fun CurrentPlayerItem(name: String) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFE5D5F5), CircleShape),
+                        .background(
+                            bgColor.copy(
+                                alpha = 0.9f
+                            ), CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -146,18 +189,21 @@ fun CurrentPlayerItem(name: String) {
                     )
                 }
             }
-            
+
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .offset(x = (-4).dp, y = (-4).dp)
                     .size(24.dp)
                     .background(Color(0xFFB975FF), CircleShape)
-                    .border(2.dp, Color(0xFF15101C), CircleShape),
+                    .border(2.dp, Color(0xFF15101C), CircleShape)
+                    .clickable {
+                        onClick.invoke()
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Star,
+                    imageVector = Icons.Default.Remove,
                     contentDescription = null,
                     tint = Color(0xFF3F007D),
                     modifier = Modifier.size(14.dp)
@@ -167,7 +213,7 @@ fun CurrentPlayerItem(name: String) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = name,
-            color = Color(0xFFB975FF),
+            color = Color(0xFFA19AA8),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )

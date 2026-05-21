@@ -118,7 +118,7 @@ fun AddPlayerDialog(
 
                 // 2. Confirm Selection Button
                 Surface(
-                    onClick = { dialogListener.onConfirm() },
+                    onClick = { dialogListener.onConfirm(selectedCount.toInt()) },
                     shape = CircleShape, // Makes it pill-shaped
                     color = Color(0xFFD7B4F3), // The bright lilac/purple from the image
                     tonalElevation = 8.dp, // Adds that slight glow/shadow effect
@@ -229,7 +229,7 @@ fun CustomPlayerBox(
 @Composable
 private fun SpecPlayerBox() {
     AddPlayerDialog(object : DialogListener {
-        override fun onConfirm() {}
+        override fun onConfirm(a: Int) {}
         override fun onCancel() {}
         override fun onDismiss() {}
     })

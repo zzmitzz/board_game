@@ -38,6 +38,11 @@ android {
     buildFeatures {
         compose = true
     }
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions {
+            freeCompilerArgs.add("-Xcontext-parameters")
+        }
+    }
 }
 
 dependencies {

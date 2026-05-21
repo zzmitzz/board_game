@@ -18,6 +18,25 @@ import androidx.compose.ui.unit.sp
 import com.alantech.boardgame.R
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 
+
+
+
+@Composable
+fun InGameHeader(
+    gameName: String,
+    roundText: String,
+    onCloseClick: () -> Unit,
+    onPauseClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) = ActiveGameTopBar(
+    gameName = gameName,
+    roundText = roundText,
+    onCloseClick = onCloseClick,
+    onPauseClick = onPauseClick,
+    onSettingsClick = onSettingsClick
+)
+
+
 @Composable
 fun ActiveGameTopBar(
     gameName: String,
