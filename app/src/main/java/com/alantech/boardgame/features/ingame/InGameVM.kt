@@ -1,8 +1,11 @@
 package com.alantech.boardgame.features.ingame
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession
+import com.alantech.boardgame.data.repository.BoardGameRepository
+import com.alantech.boardgame.di.RepositoryProvider
 import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.ui.model.loadingCardsDetailPack
@@ -38,7 +41,10 @@ sealed class UIEffect {
 }
 
 
-class InGameVM : ViewModel() {
+class InGameVM(
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: BoardGameRepository = RepositoryProvider.boardGameRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow<UIState>(UIState.DataLoading)
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
@@ -72,7 +78,18 @@ class InGameVM : ViewModel() {
     private fun loadDataFirstStage() {
         scope.launch {
             try {
-                cards = loadingCardsDetailPack()
+                val packId = savedStateHandle.get<String>("id").orEmpty()
+                cards = if (packId.isNotEmpty()) {
+                    repository.getCardsByPackId(packId)
+                } else {
+                    loadingCardsDetailPack()
+                }
+                
+                if (cards.isEmpty()) {
+                    _uiState.value = UIState.DataError("No cards found for this pack")
+                    return@launch
+                }
+                
                 _uiState.value = UIState.InGameUIState(
                     round = 1,
                     totalRound = 10,

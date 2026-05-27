@@ -59,14 +59,20 @@ import com.alantech.boardgame.ui.theme.LightPrimary
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.ui.theme.LightTextOnBackground
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 @Composable
 fun HomeScreen(
     goToSetting: () -> Unit,
     goToCardDetails: (String) -> Unit,
-    goToSearch: () -> Unit
+    goToSearch: () -> Unit,
+    viewModel: HomeScreenVM = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HomeScreenContent(
         modifier = Modifier,
+        uiState = uiState,
         onSettingClick = goToSetting,
         onSearchClick = goToSearch,
         onCardClick = goToCardDetails
@@ -76,6 +82,7 @@ fun HomeScreen(
 @Composable
 internal fun HomeScreenContent(
     modifier: Modifier = Modifier,
+    uiState: HomeScreenUIState = HomeScreenUIState(trendingPacks = dataCardThumb),
     onSettingClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onCardClick: (String) -> Unit = {}
@@ -94,7 +101,7 @@ internal fun HomeScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
         BrowseByVibeSection()
         Spacer(modifier = Modifier.height(32.dp))
-        TrendingNowSection(dataCardThumb, onCardClick = onCardClick)
+        TrendingNowSection(uiState.trendingPacks, onCardClick = onCardClick)
         Spacer(modifier = Modifier.height(32.dp))
         CommunityHighlightsSection()
     }

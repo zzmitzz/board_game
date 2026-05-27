@@ -1,0 +1,138 @@
+{
+  "info": {
+    "_postman_id": "3db99c47-b60c-477f-9d34-e1da355400b5",
+    "name": "BoardGame",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "36859639"
+  },
+  "item": [
+    {
+      "name": "Get all cards belong to pack",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM"
+          }
+        ],
+        "url": {
+          "raw": "https://uundjnuvwlanzspjzryq.supabase.co/rest/v1/cards?pack_id=eq.fa501d0d-0507-4d46-8f51-864e6b64ee15&select=*",
+          "protocol": "https",
+          "host": [
+            "uundjnuvwlanzspjzryq",
+            "supabase",
+            "co"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "cards"
+          ],
+          "query": [
+            {
+              "key": "pack_id",
+              "value": "eq.fa501d0d-0507-4d46-8f51-864e6b64ee15"
+            },
+            {
+              "key": "select",
+              "value": "*"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all packs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://uundjnuvwlanzspjzryq.supabase.co/rest/v1/packs?select=*",
+          "protocol": "https",
+          "host": [
+            "uundjnuvwlanzspjzryq",
+            "supabase",
+            "co"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "packs"
+          ],
+          "query": [
+            {
+              "key": "pack_id",
+              "value": "eq.fa501d0d-0507-4d46-8f51-864e6b64ee15",
+              "disabled": true
+            },
+            {
+              "key": "select",
+              "value": "*"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get pack by id",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://uundjnuvwlanzspjzryq.supabase.co/rest/v1/packs?_id=eq.fa501d0d-0507-4d46-8f51-864e6b64ee15&select=*",
+          "protocol": "https",
+          "host": [
+            "uundjnuvwlanzspjzryq",
+            "supabase",
+            "co"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "packs"
+          ],
+          "query": [
+            {
+              "key": "_id",
+              "value": "eq.fa501d0d-0507-4d46-8f51-864e6b64ee15"
+            },
+            {
+              "key": "select",
+              "value": "*"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
