@@ -36,8 +36,12 @@ import com.alantech.boardgame.ui.state.BoardGameAppState
 import com.alantech.boardgame.ui.state.rememberBoardGameState
 import com.alantech.boardgame.ui.theme.BoardGameTheme
 import com.alantech.boardgame.utils.NetworkUtils
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 
+
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val mViewModel: MainActivityViewModel by viewModels()

@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.home
 
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -8,7 +9,9 @@ import androidx.navigation.toRoute
 import com.alantech.boardgame.features.gameend.GameEndScreen
 import com.alantech.boardgame.features.gamesetup.GameSetupScreen
 import com.alantech.boardgame.features.gamesetup.GameSetupScreenStateful
+import com.alantech.boardgame.features.gamesetup.GameSetupVM
 import com.alantech.boardgame.features.home.screen.HomeScreen
+import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.screen.ActiveGameScreenStateful
 import com.alantech.boardgame.features.pagedetail.PageDetailScreen
 import com.alantech.boardgame.navigation.RootRoute
@@ -56,17 +59,21 @@ fun NavGraphBuilder.homeNavigationEntry(
         }
         composable<HomeRoute.GameSetupLobby> { backStackEntry ->
             val route = backStackEntry.toRoute<HomeRoute.GameSetupLobby>()
+            val viewModel = hiltViewModel<GameSetupVM>()
             GameSetupScreenStateful(
                 onBackClick = { navController.popBackStack() },
-                onStartGameClick = { navController.navigate(HomeRoute.InGame(route.id)) }
+                onStartGameClick = { navController.navigate(HomeRoute.InGame(route.id)) },
+                vm = viewModel
             )
         }
 
         composable<HomeRoute.InGame> { backStackEntry ->
             val route = backStackEntry.toRoute<HomeRoute.InGame>()
+            val viewModel = hiltViewModel<InGameVM>()
             ActiveGameScreenStateful(
                 onGameEnd = { navController.navigate(HomeRoute.EndGame) },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                mViewModel = viewModel
             )
         }
 

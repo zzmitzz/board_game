@@ -4,14 +4,18 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.R
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.utils.random
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 
 data class GameSetupUIState(
@@ -23,6 +27,11 @@ data class GameSetupUIState(
     val roundAmount: Int = 5
 )
 
+sealed class GameSetupUIEffect(){
+    data class onToast(val message: String) : GameSetupUIEffect()
+    object onGameStart: GameSetupUIEffect()
+}
+
 
 class GameSetupVM : ViewModel() {
     private val gameSession by lazy {
@@ -33,8 +42,10 @@ class GameSetupVM : ViewModel() {
     private var _uiState: MutableStateFlow<GameSetupUIState> = MutableStateFlow(
         GameSetupUIState()
     )
-
     val uiState: StateFlow<GameSetupUIState> = _uiState.asStateFlow()
+
+    private var _uiEffect: MutableSharedFlow<GameSetupUIEffect> = MutableSharedFlow<GameSetupUIEffect>()
+    val uiEffect: SharedFlow<GameSetupUIEffect> = _uiEffect
 
     fun setGamePlayer(players: List<GamePlayer>) {
         val newPlayers = players.toSet()
@@ -90,6 +101,12 @@ class GameSetupVM : ViewModel() {
     }
 
     fun saveGameConfigSession() {
+        if(_uiState.value.players.size < 2){
+            viewModelScope.launch {
+                _uiEffect.emit(GameSetupUIEffect.onToast("Please add at least 2 players"))
+            }
+            return
+        }
         gameSession.setupGameConfig(
             isTimerOn = _uiState.value.speedRun,
             isRecordMomentOn = _uiState.value.isRecordDares,
@@ -100,5 +117,8 @@ class GameSetupVM : ViewModel() {
         gameSession.setPlayers(
             _uiState.value.players
         )
+        viewModelScope.launch {
+            _uiEffect.emit(GameSetupUIEffect.onGameStart)
+        }
     }
 }

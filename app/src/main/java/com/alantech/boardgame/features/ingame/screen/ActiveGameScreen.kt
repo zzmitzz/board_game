@@ -36,7 +36,7 @@ fun ActiveGameScreenStateful(
     onBackClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onGameEnd: () -> Unit = {},
-    mViewModel: InGameVM= viewModel()
+    mViewModel: InGameVM
 ){
     val toast = LocalSnackbarHostState.current
     val uiState = mViewModel.uiState.collectAsStateWithLifecycle()

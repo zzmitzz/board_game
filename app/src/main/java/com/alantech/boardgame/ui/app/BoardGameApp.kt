@@ -1,6 +1,8 @@
 package com.alantech.boardgame.ui.app
 
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -36,8 +38,14 @@ fun BoardGameApp(
     CompositionLocalProvider(
         LocalSnackbarHostState provides snackBarState
     ) {
-        NavigationGraph(
-            appState
-        )
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(hostState = snackBarState)
+            }
+        ) { contentPadding ->
+            NavigationGraph(
+                appState
+            )
+        }
     }
 }

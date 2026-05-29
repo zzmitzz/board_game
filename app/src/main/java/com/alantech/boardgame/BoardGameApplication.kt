@@ -4,7 +4,10 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy.Builder
+import dagger.hilt.android.HiltAndroidApp
 
+
+@HiltAndroidApp
 class BoardGameApplication : Application() {
 
     private fun isDebuggable(): Boolean {

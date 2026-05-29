@@ -1,14 +1,16 @@
 package com.alantech.boardgame.features.ingame
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession
 import com.alantech.boardgame.data.repository.BoardGameRepository
-import com.alantech.boardgame.di.RepositoryProvider
+
 import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.ui.model.loadingCardsDetailPack
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import javax.inject.Inject
 import kotlin.math.round
 
 
@@ -40,10 +43,10 @@ sealed class UIEffect {
     data object OnGameEnd : UIEffect()
 }
 
-
-class InGameVM(
+@HiltViewModel
+class InGameVM @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val repository: BoardGameRepository = RepositoryProvider.boardGameRepository
+    private val repository: BoardGameRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UIState>(UIState.DataLoading)
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
@@ -79,17 +82,18 @@ class InGameVM(
         scope.launch {
             try {
                 val packId = savedStateHandle.get<String>("id").orEmpty()
+                Log.d("InGameVM", "packId: $packId")
                 cards = if (packId.isNotEmpty()) {
                     repository.getCardsByPackId(packId)
                 } else {
                     loadingCardsDetailPack()
                 }
-                
+
                 if (cards.isEmpty()) {
                     _uiState.value = UIState.DataError("No cards found for this pack")
                     return@launch
                 }
-                
+
                 _uiState.value = UIState.InGameUIState(
                     round = 1,
                     totalRound = 10,
@@ -120,11 +124,11 @@ class InGameVM(
             gameConfig.getPlayers()[((currentPlayerIndex + 1) % gameConfig.getPlayers().size)]
 
         _uiState.value = inGameState.copy(
-            round = if(currentPlayerIndex == 1) inGameState.round + 1 else inGameState.round,
+            round = if (currentPlayerIndex == 1) inGameState.round + 1 else inGameState.round,
             currentCard = nextCard,
             currentPlayer = nextPlayer
         )
-        if (inGameState.round == inGameState.totalRound){
+        if (inGameState.round == inGameState.totalRound) {
             _uiEffect.tryEmit(UIEffect.OnGameEnd)
         }
     }
@@ -135,7 +139,7 @@ class InGameVM(
 //
 //    }
 
-    fun pauseGame(){
+    fun pauseGame() {
 
     }
 

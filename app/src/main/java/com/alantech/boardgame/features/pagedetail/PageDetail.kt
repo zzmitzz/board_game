@@ -30,7 +30,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -56,7 +59,9 @@ fun PageDetailScreen(
     onBackClick: () -> Unit,
     onRestoreClick: () -> Unit,
     onUnlockClick: () -> Unit,
+    viewModel: PageDetailVM = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     PageDetailTemplate(
         bottomBar = {
             PageDetailBottomBar(
@@ -66,7 +71,7 @@ fun PageDetailScreen(
         modifier = Modifier,
         onBackClick = onBackClick
     ) {
-        PageDetailContent()
+        PageDetailContent(uiState = uiState)
     }
 }
 
@@ -103,6 +108,7 @@ fun PageDetailTemplate(
  */
 @Composable
 fun PageDetailContent(
+    uiState: PageDetailUIState,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -115,9 +121,9 @@ fun PageDetailContent(
 
         item {
             HeroSection(
-                badgeText = "TRENDING PACK",
-                title = "Savage Mode",
-                description = "Not for the faint of heart. 50 cards designed to ruin friendships or make the night unforgettable.",
+                badgeText = uiState.pack?.creator?.uppercase() ?: "PACK",
+                title = uiState.pack?.titleCard ?: "",
+                thumbnailUrl = uiState.pack?.thumbnail,
                 onPreviewClick = {},
                 modifier = Modifier
             )
@@ -129,7 +135,7 @@ fun PageDetailContent(
             HeatLevelSection(modifier = Modifier.padding(horizontal = 16.dp))
         }
         item {
-            SampleCardsSection() // Inner padding handles horizontal scroll spacing
+            SampleCardsSection()
         }
         item {
             HowToPlaySection(modifier = Modifier.padding(horizontal = 16.dp), instruction = exampleText)
@@ -239,7 +245,7 @@ private fun PageDetailBottomBar(
 private fun HeroSection(
     badgeText: String,
     title: String,
-    description: String,
+    thumbnailUrl: String?,
     onPreviewClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -249,7 +255,9 @@ private fun HeroSection(
         ThumbnailSection(
             Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f), screenWidth
+                .aspectRatio(1f),
+            screenWidth,
+            imageUrl = thumbnailUrl
         )
 
         Column(
@@ -262,28 +270,15 @@ private fun HeroSection(
             Spacer(
                 modifier.height(screenWidth / 2)
             )
-            // Trending Badge
             CardBadge(badgeText = badgeText)
-            // Title
             Text(
                 text = title,
                 style = MaterialTheme.typography.displayMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Black
             )
-
-            // Description
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(
-                    alpha = 0.9f
-                ),
-            )
         }
     }
-
-
 }
 
 @Composable
@@ -379,5 +374,4 @@ private fun PreviewPageDetail() {
     PageDetailScreen(
         {}, {}, {}
     )
-
 }

@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,23 +36,37 @@ import com.alantech.boardgame.features.gamesetup.components.AddPlayerDialog
 import com.alantech.boardgame.features.gamesetup.components.GameSetupTopBar
 import com.alantech.boardgame.features.gamesetup.components.HouseRulesSection
 import com.alantech.boardgame.features.gamesetup.components.PlayerSection
+import com.alantech.boardgame.ui.app.LocalSnackbarHostState
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.utils.DialogListener
+import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
 fun GameSetupScreenStateful(
     onBackClick: () -> Unit = {},
     onStartGameClick: () -> Unit = {},
-    vm: GameSetupVM = viewModel()
+    vm: GameSetupVM
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val snackBarHost = LocalSnackbarHostState.current
+    LaunchedEffect(vm.uiEffect) {
+        vm.uiEffect.collectLatest { effect ->
+            when(effect){
+                is GameSetupUIEffect.onToast -> {
+                    snackBarHost.showSnackbar(effect.message)
+                }
+                is GameSetupUIEffect.onGameStart -> {
+                    onStartGameClick.invoke()
+                }
+            }
+        }
+    }
 
     val gameActionHandler = remember {
         object : GameSetupScreenAction {
             override fun onStartGame() {
                 vm.saveGameConfigSession()
-                onStartGameClick()
             }
 
             override fun onDeletePlayer(id: Int) {
