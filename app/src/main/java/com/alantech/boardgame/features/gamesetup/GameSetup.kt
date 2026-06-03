@@ -81,6 +81,10 @@ fun GameSetupScreenStateful(
                 vm.addPlayer(player)
             }
 
+            override fun onNameChange(id: Int, name: String) {
+                vm.updatePlayerName(id, name)
+            }
+
             override fun onRecordDaresChange(b: Boolean) {
                 vm.setRecordDares(b)
             }
@@ -116,14 +120,13 @@ interface GameSetupScreenAction {
     fun onDeletePlayer(id: Int)
     fun onRemoveAllPlayers()
     fun onAddPlayers(player: Int)
+    fun onNameChange(id: Int, name: String)
 
     fun onRecordDaresChange(b: Boolean)
     fun onNSFWContentChange(b: Boolean)
     fun onSpeedModeChange(b: Boolean)
     fun onPenaltyChange(b: Boolean)
     fun onRoundChange(round: Int)
-
-
 }
 
 
@@ -179,6 +182,9 @@ fun GameSetupScreen(
                 },
                 onDeleteAllPlayersClick = {
                     action.onRemoveAllPlayers()
+                },
+                onNameChange = { id, name ->
+                    action.onNameChange(id, name)
                 }
             )
             Spacer(modifier = Modifier.height(48.dp))
@@ -235,42 +241,16 @@ fun GameSetupScreen(
 @Composable
 private fun GameSuPV() {
     val mock = object : GameSetupScreenAction{
-        override fun onStartGame() {
-            TODO("Not yet implemented")
-        }
-
-        override fun onDeletePlayer(id: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onRemoveAllPlayers() {
-            TODO("Not yet implemented")
-        }
-
-        override fun onAddPlayers(player: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onRecordDaresChange(b: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onNSFWContentChange(b: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onSpeedModeChange(b: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onPenaltyChange(b: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onRoundChange(round: Int) {
-            TODO("Not yet implemented")
-        }
-
+        override fun onStartGame() {}
+        override fun onDeletePlayer(id: Int) {}
+        override fun onRemoveAllPlayers() {}
+        override fun onAddPlayers(player: Int) {}
+        override fun onNameChange(id: Int, name: String) {}
+        override fun onRecordDaresChange(b: Boolean) {}
+        override fun onNSFWContentChange(b: Boolean) {}
+        override fun onSpeedModeChange(b: Boolean) {}
+        override fun onPenaltyChange(b: Boolean) {}
+        override fun onRoundChange(round: Int) {}
     }
     with(mock){
         GameSetupScreen {  }

@@ -53,7 +53,7 @@ suspend fun loadingCardsDetailPack(): List<CardDetail> {
                     media = CardDetailMedia(
                         image = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
                         video = null
-                    )
+                    ), hint = ""
 
                 )
             )
@@ -72,7 +72,8 @@ val cardDetailPack = mutableListOf<CardDetail>().also { listData ->
                 media = CardDetailMedia(
                     image = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
                     video = null
-                )
+                ),
+                hint = ""
 
             )
         )

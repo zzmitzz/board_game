@@ -17,12 +17,14 @@ fun CardEffectWrapper(
     modifier : Modifier,
     item: CardDetail,
     penalty: String,
+    onCardHintClick: () -> Unit
 ) {
     ChallengeCard(
         category = item.category,
         challengeText = item.description,
         penaltyText = penalty,
         modifier = modifier.fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 24.dp),
+        onCardHintClick = onCardHintClick
     )
 }

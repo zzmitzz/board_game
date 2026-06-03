@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.ingame.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -16,9 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alantech.boardgame.R
+import com.alantech.boardgame.config.GameSettingConfigCurrentSession
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
-
-
 
 
 @Composable
@@ -26,14 +26,14 @@ fun InGameHeader(
     gameName: String,
     roundText: String,
     onCloseClick: () -> Unit,
-    onPauseClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    timeLeft: Int
 ) = ActiveGameTopBar(
     gameName = gameName,
     roundText = roundText,
     onCloseClick = onCloseClick,
-    onPauseClick = onPauseClick,
-    onSettingsClick = onSettingsClick
+    onSettingsClick = onSettingsClick,
+    timeLeft = timeLeft
 )
 
 
@@ -42,11 +42,11 @@ fun ActiveGameTopBar(
     gameName: String,
     roundText: String,
     onCloseClick: () -> Unit,
-    onPauseClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    timeLeft: Int = 30
 ) {
     val plusJakarta = FontFamily(Font(R.font.plus_jakarta_sans))
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -64,15 +64,17 @@ fun ActiveGameTopBar(
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
-            IconButton(onClick = onPauseClick) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Info",
-                    tint = Color.White
+            AnimatedVisibility(GameSettingConfigCurrentSession.getIsTimerOn()) {
+                Text(
+                    text = timeLeft.toString(),
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = plusJakarta
                 )
             }
         }
-        
+
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -92,7 +94,7 @@ fun ActiveGameTopBar(
                 fontFamily = plusJakarta
             )
         }
-        
+
         IconButton(
             modifier = Modifier.align(Alignment.CenterEnd),
             onClick = onSettingsClick

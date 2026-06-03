@@ -68,7 +68,7 @@ fun ActionButtons(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Forfeit & Drink",
+                text = "Forfeit & Penalty",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,

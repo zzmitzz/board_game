@@ -82,7 +82,7 @@ fun HomeScreen(
 @Composable
 internal fun HomeScreenContent(
     modifier: Modifier = Modifier,
-    uiState: HomeScreenUIState = HomeScreenUIState(trendingPacks = dataCardThumb),
+    uiState: HomeScreenUIState,
     onSettingClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onCardClick: (String) -> Unit = {}
@@ -348,5 +348,7 @@ private fun CommunityHighlightsSection() {
 @Preview
 @Composable
 private fun HomeScreenPV() {
-    HomeScreenContent()
+    HomeScreenContent(
+        uiState = HomeScreenUIState(trendingPacks = dataCardThumb)
+    )
 }

@@ -11,6 +11,7 @@ import com.alantech.boardgame.features.gamesetup.GameSetupScreen
 import com.alantech.boardgame.features.gamesetup.GameSetupScreenStateful
 import com.alantech.boardgame.features.gamesetup.GameSetupVM
 import com.alantech.boardgame.features.home.screen.HomeScreen
+import com.alantech.boardgame.features.home.shareviewmodel.shareViewModel
 import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.screen.ActiveGameScreenStateful
 import com.alantech.boardgame.features.pagedetail.PageDetailScreen
@@ -68,18 +69,27 @@ fun NavGraphBuilder.homeNavigationEntry(
         }
 
         composable<HomeRoute.InGame> { backStackEntry ->
-            val route = backStackEntry.toRoute<HomeRoute.InGame>()
-            val viewModel = hiltViewModel<InGameVM>()
+            val viewModel = navController.shareViewModel<InGameVM>(backStackEntry)
+            val id = backStackEntry.toRoute<HomeRoute.InGame>().id
             ActiveGameScreenStateful(
-                onGameEnd = { navController.navigate(HomeRoute.EndGame) },
-                onBackClick = { navController.popBackStack() },
+                onExitGame = { navController.navigate(HomeRoute.EndGame) },
+                packId = id,
                 mViewModel = viewModel
             )
         }
 
-        composable<HomeRoute.EndGame> {
+        composable<HomeRoute.EndGame> { backStackEntry ->
+            val viewModel = navController.shareViewModel<InGameVM>(backStackEntry)
             GameEndScreen(
-
+                onBackClick = {
+                    navController.navigate(
+                        RootRoute.Home
+                    ){
+                        popUpTo(RootRoute.Home)
+                        launchSingleTop = true
+                    }
+                },
+                vm = viewModel
             )
         }
 

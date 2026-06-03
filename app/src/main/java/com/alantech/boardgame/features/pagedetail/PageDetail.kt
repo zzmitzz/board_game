@@ -51,7 +51,9 @@ import com.alantech.boardgame.features.pagedetail.components.HowToPlaySection
 import com.alantech.boardgame.features.pagedetail.components.SampleCardItem
 import com.alantech.boardgame.features.pagedetail.components.StatCircle
 import com.alantech.boardgame.features.pagedetail.components.ThumbnailSection
+import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.exampleText
+import com.alantech.boardgame.ui.theme.BoardGameTheme
 import com.alantech.boardgame.ui.theme.LightBackground
 
 @Composable
@@ -89,16 +91,14 @@ fun PageDetailTemplate(
         bottomBar = bottomBar,
         modifier = modifier
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                content()
-                PageDetailTopBar(
-                    onBackClick = onBackClick,
-                )
-            }
+        Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            content()
+            PageDetailTopBar(
+                onBackClick = onBackClick,
+            )
         }
     }
 }
@@ -124,21 +124,36 @@ fun PageDetailContent(
                 badgeText = uiState.pack?.creator?.uppercase() ?: "PACK",
                 title = uiState.pack?.titleCard ?: "",
                 thumbnailUrl = uiState.pack?.thumbnail,
-                onPreviewClick = {},
+                description = uiState.pack?.description ?: "",
                 modifier = Modifier
             )
         }
         item {
-            StatsRow(modifier = Modifier.padding(horizontal = 16.dp))
+            StatsRow(
+                totalCards = uiState.pack?.totalCards,
+                estimateTimePlay = uiState.pack?.estimateTimePlay,
+                suggestNumberPlayers = uiState.pack?.suggestNumberPlayers,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
         item {
-            HeatLevelSection(modifier = Modifier.padding(horizontal = 16.dp))
+            HeatLevelSection(
+                heatLevel = ((uiState.pack?.heatLevel?.toFloat() ?: 0f) / 100),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
         item {
-            SampleCardsSection()
+            SampleCardsSection(
+                isLoadingSampleCard = uiState.isLoadingSampleCard,
+                packSampleCard = uiState.packSampleCard ?: emptyList(),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
         item {
-            HowToPlaySection(modifier = Modifier.padding(horizontal = 16.dp), instruction = exampleText)
+            HowToPlaySection(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                instruction = uiState.pack?.howToPlay ?: exampleText
+            )
         }
     }
 }
@@ -203,7 +218,7 @@ private fun PageDetailBottomBar(
                     style = MaterialTheme.typography.labelMedium.copy(
                         textDecoration = TextDecoration.LineThrough
                     ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.White.copy(alpha = 0.5f)
                 )
                 Text(
                     text = stringResource(R.string.free),
@@ -246,7 +261,7 @@ private fun HeroSection(
     badgeText: String,
     title: String,
     thumbnailUrl: String?,
-    onPreviewClick: () -> Unit,
+    description: String,
     modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
@@ -277,12 +292,20 @@ private fun HeroSection(
                 color = Color.White,
                 fontWeight = FontWeight.Black
             )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
+            )
         }
     }
 }
 
 @Composable
 private fun StatsRow(
+    totalCards: Int?,
+    estimateTimePlay: Int?,
+    suggestNumberPlayers: Int?,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -290,19 +313,19 @@ private fun StatsRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         StatCircle(
-            value = "50",
+            value = totalCards?.toString() ?: "-",
             label = "CARDS",
             drawable = R.drawable.card_size,
             modifier = Modifier.weight(1f)
         )
         StatCircle(
-            value = "30m",
+            value = estimateTimePlay?.let { "${it}m" } ?: "-",
             label = "PLAY TIME",
             drawable = R.drawable.timer,
             modifier = Modifier.weight(1f)
         )
         StatCircle(
-            value = "3+",
+            value = suggestNumberPlayers?.let { "${it}+" } ?: "-",
             label = "PLAYERS",
             drawable = R.drawable.player,
             modifier = Modifier.weight(1f)
@@ -315,6 +338,8 @@ private fun StatsRow(
 
 @Composable
 private fun SampleCardsSection(
+    isLoadingSampleCard: Boolean,
+    packSampleCard: List<CardDetail>,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -346,16 +371,10 @@ private fun SampleCardsSection(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
+            items(packSampleCard.size){ index ->
                 SampleCardItem(
-                    tag = "DARE",
-                    content = "Let another player post a status on your social media."
-                )
-            }
-            item {
-                SampleCardItem(
-                    tag = "TRUTH",
-                    content = "What is the most embarrassing thing you've done in public?"
+                    tag = packSampleCard[index].category,
+                    content = packSampleCard[index].description
                 )
             }
         }
@@ -374,4 +393,12 @@ private fun PreviewPageDetail() {
     PageDetailScreen(
         {}, {}, {}
     )
+}
+
+@Preview
+@Composable
+private fun PreviewPageDetailBottomBar() {
+    BoardGameTheme {
+        PageDetailBottomBar(onUnlockClick = {})
+    }
 }

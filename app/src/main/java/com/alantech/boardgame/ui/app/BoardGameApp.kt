@@ -1,5 +1,10 @@
 package com.alantech.boardgame.ui.app
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -9,11 +14,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alantech.boardgame.R
 import com.alantech.boardgame.navigation.NavigationGraph
 import com.alantech.boardgame.ui.state.BoardGameAppState
+import com.alantech.boardgame.ui.theme.LightBackground
 
 
 val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState> {
@@ -43,9 +50,17 @@ fun BoardGameApp(
                 SnackbarHost(hostState = snackBarState)
             }
         ) { contentPadding ->
-            NavigationGraph(
-                appState
-            )
+            Box(
+                modifier = Modifier.fillMaxSize()
+                    .background(
+                        color = LightBackground
+                    )
+                    .padding(top = contentPadding.calculateTopPadding())
+            ){
+                NavigationGraph(
+                    appState
+                )
+            }
         }
     }
 }

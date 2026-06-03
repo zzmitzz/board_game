@@ -1,6 +1,6 @@
 package com.alantech.boardgame.di
 
-import com.alantech.boardgame.data.repository.BoardGameRepository
+import com.alantech.boardgame.data.remote.BoardGameRepository
 import com.alantech.boardgame.data.repository.BoardGameRepositoryImpl
 
 object RepositoryProvider {

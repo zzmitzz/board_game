@@ -6,16 +6,17 @@ class ActiveGameScreenContractImpl(
     val viewModel: InGameVM
 ) : ActiveGameScreenContract {
 
-    override fun onPauseClick() {
-        viewModel.pauseGame()
+    override fun onExitGameClick() {
+        viewModel.onEndGame()
     }
 
 
     override fun onComplete() {
-        viewModel.completeCard()
+        viewModel.onUserDoneCard(true)
     }
 
     override fun onForfeit() {
-        viewModel.completeCard()
+        viewModel.onUserDoneCard(false)
     }
+
 }

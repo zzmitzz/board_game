@@ -21,7 +21,7 @@ import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.utils.PlusJakartaSans
 
 @Composable
-fun WinnerSection(modifier: Modifier = Modifier) {
+fun WinnerSection(winnerName: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -74,7 +74,7 @@ fun WinnerSection(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "Sarah J.",
+            text = winnerName,
             fontFamily = PlusJakartaSans,
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp,

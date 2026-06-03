@@ -13,6 +13,7 @@ object GameSettingConfigCurrentSession {
     private var isRecordMomentOn = false
     private var totalRounds = 5
     private var penalty = false
+    var penaltyInput = "Takes 2 shot"
 
     fun setPlayers(players: Set<GamePlayer>) {
         this.players = players.also {
@@ -20,6 +21,11 @@ object GameSettingConfigCurrentSession {
         }
     }
     fun getPlayers(): List<GamePlayer> = players.toList()
+    fun getIsTimerOn(): Boolean = isTimerOn
+    fun getIsNSFWOn(): Boolean = isNSFWOn
+    fun getIsRecordMomentOn(): Boolean = isRecordMomentOn
+    fun getPenalty(): Boolean = penalty
+    fun getTotalRounds(): Int = totalRounds
     fun setupGameConfig(
         isTimerOn: Boolean = false,
         isNSFWOn: Boolean = false,

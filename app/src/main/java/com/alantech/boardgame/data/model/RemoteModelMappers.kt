@@ -9,7 +9,16 @@ fun RemotePack.toUIModel(): CardPreview {
         id = id.orEmpty(),
         thumbnail = thumb ?: coverImageUrl.orEmpty(),
         titleCard = title.orEmpty(),
-        creator = tag ?: "Premium"
+        creator = tag ?: "Premium",
+        description = description,
+        coverImageUrl = coverImageUrl,
+        thumb = thumb,
+        estimateTimePlay = estimateTimePlay,
+        suggestNumberPlayers = suggestNumberPlayers,
+        tag = tag,
+        heatLevel = heatLevel,
+        totalCards = totalCards,
+        howToPlay = howToPlay
     )
 }
 
@@ -21,6 +30,7 @@ fun RemoteCard.toUIModel(): CardDetail {
         media = CardDetailMedia(
             image = null,
             video = null
-        )
+        ),
+        hint = hint.orEmpty()
     )
 }

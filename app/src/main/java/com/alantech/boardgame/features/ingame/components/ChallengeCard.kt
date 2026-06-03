@@ -3,6 +3,7 @@ package com.alantech.boardgame.features.ingame.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,10 +31,11 @@ fun ChallengeCard(
     category: String,
     challengeText: String,
     penaltyText: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCardHintClick: () -> Unit = {}
 ) {
     val plusJakarta = FontFamily(Font(R.font.plus_jakarta_sans))
-    
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -62,14 +64,16 @@ fun ChallengeCard(
                 fontFamily = plusJakarta
             )
         }
-        
+
         Icon(
             imageVector = Icons.Default.Info,
             contentDescription = "Info",
             tint = Color.White,
-            modifier = Modifier.align(Alignment.TopEnd)
+            modifier = Modifier.align(Alignment.TopEnd).clickable {
+                onCardHintClick()
+            }
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -82,7 +86,7 @@ fun ChallengeCard(
                 modifier = Modifier.size(48.dp)
             )
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Text(
                 text = challengeText,
                 color = Color.White,
@@ -92,9 +96,9 @@ fun ChallengeCard(
                 fontFamily = plusJakarta,
                 lineHeight = 36.sp
             )
-            
+
             Spacer(modifier = Modifier.weight(1f))
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(0.6f)
@@ -110,9 +114,9 @@ fun ChallengeCard(
                 )
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color.DarkGray)
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

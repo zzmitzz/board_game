@@ -2,7 +2,7 @@ package com.alantech.boardgame.features.home.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alantech.boardgame.data.repository.BoardGameRepository
+import com.alantech.boardgame.data.remote.BoardGameRepository
 import com.alantech.boardgame.di.RepositoryProvider
 import com.alantech.boardgame.ui.model.CardPreview
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -45,12 +45,12 @@ interface DialogListener{
 
 @Composable
 fun BlurBackgroundDialog(
-    listener: DialogListener,
+    listener: DialogListener?,
     content: @Composable () -> Unit
 ){
     Dialog(
         onDismissRequest = {
-            listener.onDismiss()
+            listener?.onDismiss()
         },
         properties = DialogProperties(
             usePlatformDefaultWidth = false

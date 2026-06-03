@@ -27,9 +27,9 @@ data class GameSetupUIState(
     val roundAmount: Int = 5
 )
 
-sealed class GameSetupUIEffect(){
+sealed class GameSetupUIEffect() {
     data class onToast(val message: String) : GameSetupUIEffect()
-    object onGameStart: GameSetupUIEffect()
+    object onGameStart : GameSetupUIEffect()
 }
 
 
@@ -37,14 +37,14 @@ class GameSetupVM : ViewModel() {
     private val gameSession by lazy {
         GameSettingConfigCurrentSession
     }
-    private var playerIndexID: Int = 0
 
     private var _uiState: MutableStateFlow<GameSetupUIState> = MutableStateFlow(
         GameSetupUIState()
     )
     val uiState: StateFlow<GameSetupUIState> = _uiState.asStateFlow()
 
-    private var _uiEffect: MutableSharedFlow<GameSetupUIEffect> = MutableSharedFlow<GameSetupUIEffect>()
+    private var _uiEffect: MutableSharedFlow<GameSetupUIEffect> =
+        MutableSharedFlow<GameSetupUIEffect>()
     val uiEffect: SharedFlow<GameSetupUIEffect> = _uiEffect
 
     fun setGamePlayer(players: List<GamePlayer>) {
@@ -54,15 +54,20 @@ class GameSetupVM : ViewModel() {
 
     fun addPlayer(players: Int) {
         val currentPlayer = _uiState.value.players.toMutableSet()
+        if(currentPlayer.size + players >= 20){
+            viewModelScope.launch {
+                _uiEffect.emit(GameSetupUIEffect.onToast("Cannot add more than 20 players"))
+            }
+            return
+        }
         repeat(players) {
             currentPlayer.add(
                 GamePlayer(
-                    id = playerIndexID,
-                    name = "Player ${playerIndexID}",
+                    id = currentPlayer.size + 1,
+                    name = "Player ${currentPlayer.size + 1}",
                     color = Color.random
                 )
             )
-            playerIndexID++
         }
 
         _uiState.update { it.copy(players = currentPlayer) }
@@ -75,6 +80,13 @@ class GameSetupVM : ViewModel() {
 
     fun removeAllPlayers() {
         _uiState.update { it.copy(players = emptySet()) }
+    }
+
+    fun updatePlayerName(id: Int, name: String) {
+        val updated = _uiState.value.players.map { player ->
+            if (player.id == id) player.copy(name = name) else player
+        }.toSet()
+        _uiState.update { it.copy(players = updated) }
     }
 
     fun setRecordDares(b: Boolean) {
@@ -101,7 +113,7 @@ class GameSetupVM : ViewModel() {
     }
 
     fun saveGameConfigSession() {
-        if(_uiState.value.players.size < 2){
+        if (_uiState.value.players.size < 2) {
             viewModelScope.launch {
                 _uiEffect.emit(GameSetupUIEffect.onToast("Please add at least 2 players"))
             }

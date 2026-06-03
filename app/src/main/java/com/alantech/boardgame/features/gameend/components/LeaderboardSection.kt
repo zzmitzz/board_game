@@ -5,6 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +19,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alantech.boardgame.features.ingame.model.GamePlayerScore
+import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.utils.PlusJakartaSans
 
 @Composable
-fun LeaderboardSection(modifier: Modifier = Modifier) {
+fun LeaderboardSection(
+    entries: List<Pair<GamePlayer, GamePlayerScore>>,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -37,17 +45,22 @@ fun LeaderboardSection(modifier: Modifier = Modifier) {
                 color = Color.White
             )
         }
-        
-        LeaderboardItem(rank = 1, name = "Sarah", xp = "1500 XP", isWinner = true)
-        Spacer(modifier = Modifier.height(12.dp))
-        LeaderboardItem(rank = 2, name = "Mike", xp = "1200 XP", isWinner = false)
-        Spacer(modifier = Modifier.height(12.dp))
-        LeaderboardItem(rank = 3, name = "Jessica", xp = "950 XP", isWinner = false)
-        Spacer(modifier = Modifier.height(12.dp))
-        LeaderboardItem(rank = 4, name = "David", xp = "800 XP", isWinner = false)
-        
+
+        entries.forEachIndexed { index, (player, score) ->
+            LeaderboardItem(
+                rank = index + 1,
+                name = player.name,
+                isWinner = index == 0,
+                completed = score.numberCardCompleted,
+                forfeited = score.numberCardForfeited,
+            )
+            if (index < entries.lastIndex) {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Text(
             text = "\"What happens in the game, stays in the game... mostly.\"",
             fontFamily = PlusJakartaSans,
@@ -60,10 +73,16 @@ fun LeaderboardSection(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LeaderboardItem(rank: Int, name: String, xp: String, isWinner: Boolean) {
+fun LeaderboardItem(
+    rank: Int,
+    name: String,
+    isWinner: Boolean,
+    completed: Int,
+    forfeited: Int,
+) {
     val backgroundColor = if (isWinner) Color(0xFF2A153E) else Color(0xFF1E1A22)
     val rankColor = if (isWinner) Color(0xFF9333EA) else Color.Gray
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -85,9 +104,9 @@ fun LeaderboardItem(rank: Int, name: String, xp: String, isWinner: Boolean) {
             color = rankColor,
             modifier = Modifier.width(24.dp)
         )
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Box(contentAlignment = Alignment.BottomEnd) {
             Box(
                 modifier = Modifier
@@ -113,9 +132,9 @@ fun LeaderboardItem(rank: Int, name: String, xp: String, isWinner: Boolean) {
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = name,
@@ -124,22 +143,55 @@ fun LeaderboardItem(rank: Int, name: String, xp: String, isWinner: Boolean) {
                 fontSize = 16.sp,
                 color = Color.White
             )
-            Text(
-                text = xp,
-                fontFamily = PlusJakartaSans,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                CardStatChip(
+                    icon = Icons.Default.Check,
+                    count = completed,
+                    tint = Color(0xFF4ADE80),
+                )
+                CardStatChip(
+                    icon = Icons.Default.Close,
+                    count = forfeited,
+                    tint = Color(0xFFF87171),
+                )
+            }
         }
-        
+
         if (isWinner) {
             Text(
                 text = "Winner",
                 fontFamily = PlusJakartaSans,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = Color.White
+                color = Color(0xFF9333EA)
             )
         }
+    }
+}
+
+@Composable
+private fun CardStatChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    count: Int,
+    tint: Color,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(12.dp)
+        )
+        Text(
+            text = count.toString(),
+            fontFamily = PlusJakartaSans,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            color = tint
+        )
     }
 }

@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.gamesetup.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -21,14 +23,23 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alantech.boardgame.R
@@ -37,10 +48,11 @@ import com.alantech.boardgame.utils.random
 
 @Composable
 fun PlayerSection(
-    mPlayers: Set<GamePlayer> = emptySet(), // Include you
+    mPlayers: Set<GamePlayer> = emptySet(),
     onAddPlayerClick: () -> Unit = {},
     onDeleteAllPlayersClick: () -> Unit = {},
-    onDeletePlayerClick: (Int) -> Unit = {}
+    onDeletePlayerClick: (Int) -> Unit = {},
+    onNameChange: (id: Int, name: String) -> Unit = { _, _ -> }
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -59,16 +71,20 @@ fun PlayerSection(
                 modifier = Modifier,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete Player",
-                    tint = Color(0xFFFFFFFF),
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable {
-                            onDeleteAllPlayersClick.invoke()
-                        }
-                )
+                AnimatedVisibility(
+                    visible = mPlayers.isNotEmpty()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Player",
+                        tint = Color(0xFFFFFFFF),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable {
+                                onDeleteAllPlayersClick.invoke()
+                            }
+                    )
+                }
                 Spacer(modifier = Modifier.width(24.dp))
                 Text(
                     text = "${mPlayers.size} Player(s)",
@@ -100,7 +116,8 @@ fun PlayerSection(
                 itemsIndexed(mPlayers.toList()){ index, player ->
                     PlayerItem(
                         name = player.name,
-                        bgColor = player.color
+                        bgColor = player.color,
+                        onNameChange = { onNameChange(player.id, it) }
                     ) {
                         onDeletePlayerClick.invoke(player.id)
                     }
@@ -156,7 +173,15 @@ fun AddPlayerItem(
 }
 
 @Composable
-fun PlayerItem(name: String, bgColor: Color, onClick: () -> Unit = {}) {
+fun PlayerItem(
+    name: String,
+    bgColor: Color,
+    onNameChange: (String) -> Unit = {},
+    onClick: () -> Unit = {}
+) {
+    val focusRequester = remember { FocusRequester() }
+    var currentName by remember(name) { mutableStateOf(name) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -184,7 +209,7 @@ fun PlayerItem(name: String, bgColor: Color, onClick: () -> Unit = {}) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        tint = Color(0xFF262130),
+                        tint = Color.White.copy(alpha = 0.95f),
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -211,11 +236,24 @@ fun PlayerItem(name: String, bgColor: Color, onClick: () -> Unit = {}) {
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = name,
-            color = Color(0xFFA19AA8),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
+        BasicTextField(
+            value = currentName,
+            onValueChange = { value ->
+                currentName = value
+                onNameChange(value)
+            },
+            modifier = Modifier
+                .width(72.dp)
+                .focusRequester(focusRequester)
+                .clickable { focusRequester.requestFocus() },
+            singleLine = true,
+            cursorBrush = SolidColor(Color(0xFFB975FF)),
+            textStyle = TextStyle(
+                color = Color(0xFFA19AA8),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
         )
     }
 }

@@ -17,4 +17,10 @@
     <string name="cancel_text">Cancel</string>
     <string name="confirm_selection">Confirm</string>
     <string name="whos_playing">Who\'s Playing?</string>
+    <string name="heat_level">Heat Level</string>
+    <string name="confirm_exit_title">Exit Game?</string>
+    <string name="confirm_exit_message">Are you sure you want to exit the current game session? Your unsaved progress might be lost.</string>
+    <string name="confirm_text">Exit</string>
+    <string name="auto_translate">Auto Translate</string>
+    <string name="choose_language">Choose language</string>
 </resources>

@@ -85,4 +85,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+
+    val roomVersion = "2.8.4" // Use the latest stable version
+
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion") // Coroutines support for Room
+    ksp("androidx.room:room-compiler:$roomVersion") // Or use KSP if configured
+    implementation("com.google.code.gson:gson:2.14.0")
 }
