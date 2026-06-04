@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,7 +50,7 @@ fun LeaderboardSection(
         entries.forEachIndexed { index, (player, score) ->
             LeaderboardItem(
                 rank = index + 1,
-                name = player.name,
+                player = player,
                 isWinner = index == 0,
                 completed = score.numberCardCompleted,
                 forfeited = score.numberCardForfeited,
@@ -75,7 +76,7 @@ fun LeaderboardSection(
 @Composable
 fun LeaderboardItem(
     rank: Int,
-    name: String,
+    player: GamePlayer,
     isWinner: Boolean,
     completed: Int,
     forfeited: Int,
@@ -111,9 +112,20 @@ fun LeaderboardItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color.Gray)
-            )
+                    .background(
+                        player.color.copy(
+                            alpha = 0.9f
+                        ), CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.95f),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             if (isWinner) {
                 Box(
                     modifier = Modifier
@@ -137,7 +149,7 @@ fun LeaderboardItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = name,
+                text = player.name,
                 fontFamily = PlusJakartaSans,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,

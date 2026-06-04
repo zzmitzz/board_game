@@ -23,4 +23,5 @@
     <string name="confirm_text">Exit</string>
     <string name="auto_translate">Auto Translate</string>
     <string name="choose_language">Choose language</string>
+    <string name="home">Home</string>
 </resources>

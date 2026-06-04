@@ -67,6 +67,8 @@ class GamePlayerManager private constructor(
         return gamePlayersScore[player]?.cardIds?.contains(cardId) == true
     }
 
-
+    fun clear() {
+        gamePlayersScore.clear()
+    }
 
 }

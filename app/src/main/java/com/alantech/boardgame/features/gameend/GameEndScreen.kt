@@ -19,12 +19,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alantech.boardgame.R
 import com.alantech.boardgame.features.gameend.components.*
 import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.model.GamePlayerScore
@@ -37,15 +39,13 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 fun GameEndScreen(
     onBackClick: () -> Unit = {},
     onPlayAgainClick: () -> Unit = {},
-    onRematchClick: () -> Unit = {},
     vm: InGameVM
 ) {
     GameEndContent(
-        onBackClick = onBackClick,
+        onGoHome = onBackClick,
         onPlayAgainClick = onPlayAgainClick,
-        onRematchClick = onRematchClick,
-        entries = remember(vm.gamePlayerManager.getGamePlayersScore()) {
-            vm.gamePlayerManager.getGamePlayersScore().entries
+        entries = remember(vm.gamePlayerManager!!.getGamePlayersScore()) {
+            vm.gamePlayerManager!!.getGamePlayersScore().entries
                 .map { it.key to it.value }
                 .sortedWith { a, b -> a.second.compareTo(b.second) }
         }
@@ -54,37 +54,21 @@ fun GameEndScreen(
 
 @Composable
 private fun GameEndContent(
-    onBackClick: () -> Unit = {},
+    onGoHome: () -> Unit = {},
     onPlayAgainClick: () -> Unit = {},
-    onRematchClick: () -> Unit = {},
     entries: List<Pair<GamePlayer, GamePlayerScore>>,
 ) {
-    val winnerName = entries.firstOrNull()?.first?.name.orEmpty()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(LightBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding()
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .background(Color(0xFF262130), CircleShape)
-                    .size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
-                )
-            }
             Text(
                 text = "Results",
                 fontFamily = PlusJakartaSans,
@@ -100,7 +84,7 @@ private fun GameEndContent(
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
-                WinnerSection(winnerName = winnerName)
+                WinnerSection(gamePlayer = entries.firstOrNull()?.first!!)
             }
             item {
                 CapturedMomentsSection()
@@ -117,7 +101,7 @@ private fun GameEndContent(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Button(
-                onClick = onRematchClick,
+                onClick = onGoHome,
                 modifier = Modifier
                     .weight(1f)
                     .height(56.dp),
@@ -132,7 +116,7 @@ private fun GameEndContent(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Rematch",
+                    text = stringResource(R.string.home),
                     fontFamily = PlusJakartaSans,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -167,17 +151,34 @@ private fun GameEndContent(
     }
 }
 
-private class GameEndPreviewProvider : PreviewParameterProvider<List<Pair<GamePlayer, GamePlayerScore>>> {
+private class GameEndPreviewProvider :
+    PreviewParameterProvider<List<Pair<GamePlayer, GamePlayerScore>>> {
     override val values = sequenceOf(
         listOf(
             GamePlayer(id = 1, color = ComposeColor(0xFF9D4EDD), name = "Sarah") to
-                    GamePlayerScore(numberCardCompleted = 8, numberCardForfeited = 1, timeSpent = 120),
+                    GamePlayerScore(
+                        numberCardCompleted = 8,
+                        numberCardForfeited = 1,
+                        timeSpent = 120
+                    ),
             GamePlayer(id = 2, color = ComposeColor(0xFF4ADE80), name = "Mike") to
-                    GamePlayerScore(numberCardCompleted = 6, numberCardForfeited = 2, timeSpent = 140),
+                    GamePlayerScore(
+                        numberCardCompleted = 6,
+                        numberCardForfeited = 2,
+                        timeSpent = 140
+                    ),
             GamePlayer(id = 3, color = ComposeColor(0xFFF87171), name = "Jessica") to
-                    GamePlayerScore(numberCardCompleted = 5, numberCardForfeited = 3, timeSpent = 100),
+                    GamePlayerScore(
+                        numberCardCompleted = 5,
+                        numberCardForfeited = 3,
+                        timeSpent = 100
+                    ),
             GamePlayer(id = 4, color = ComposeColor(0xFFFBBF24), name = "David") to
-                    GamePlayerScore(numberCardCompleted = 3, numberCardForfeited = 4, timeSpent = 160),
+                    GamePlayerScore(
+                        numberCardCompleted = 3,
+                        numberCardForfeited = 4,
+                        timeSpent = 160
+                    ),
         )
     )
 }

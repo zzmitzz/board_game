@@ -106,7 +106,7 @@ fun ActiveGameScreenStateful(
         modifier = Modifier
             .fillMaxSize()
             .background(LightBackground)
-            .padding(vertical = 16.dp),
+            .padding(bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         when (val state = uiState.value) {

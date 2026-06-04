@@ -51,6 +51,8 @@ sealed class UIEffect {
 class InGameVM @Inject constructor(
     private val repository: BoardGameRepository
 ) : ViewModel() {
+
+    var currentGameID: String = ""
     private val _uiState = MutableStateFlow<UIState>(UIState.DataLoading)
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
     private val _uiEffect = MutableSharedFlow<UIEffect?>(1)
@@ -58,9 +60,7 @@ class InGameVM @Inject constructor(
 
     var gamePersistenceSetting = MutableStateFlow<PersistenceSetting>(PersistenceSetting())
 
-    val gamePlayerManager by lazy {
-        GamePlayerManager.createGamePlayerManager(gameConfig.getPlayers())
-    }
+    var gamePlayerManager: GamePlayerManager? = null
     val timeLeft: MutableStateFlow<Int> = MutableStateFlow(30)
 
 
@@ -90,7 +90,7 @@ class InGameVM @Inject constructor(
     fun initGame(packId: String) {
         // Check if all configs are valid
         if (!checkUpConfig()) return
-
+        gamePlayerManager = GamePlayerManager.createGamePlayerManager(gameConfig.getPlayers())
         // Initialize game
         Log.d("InGameVM", "packId: $packId")
         scope.launch {
@@ -146,7 +146,7 @@ class InGameVM @Inject constructor(
     ) {
         if (!checkState()) return
         val state = _uiState.value as UIState.InGameUIState
-        gamePlayerManager.onUserCompleteCard(
+        gamePlayerManager?.onUserCompleteCard(
             player = state.currentPlayer,
             isUserComplete = isComplete,
             timeSpent = 30 - timeLeft.value,
@@ -175,7 +175,7 @@ class InGameVM @Inject constructor(
         cards = cards.shuffled()
 
         // 1. Find next player
-        val nextPlayer = gamePlayerManager.getNextPlayer(
+        val nextPlayer = gamePlayerManager?.getNextPlayer(
             currentPlayer = inGameState.currentPlayer
         )
 
@@ -191,20 +191,21 @@ class InGameVM @Inject constructor(
         }
         // 3. Find next card that is not done by the player
         val nextCard = cards.find {
-            !(gamePlayerManager.checkIfCardIsDoneByPlayer(
-                player = nextPlayer,
+            !(gamePlayerManager!!.checkIfCardIsDoneByPlayer(
+                player = nextPlayer!!,
                 cardId = it.id
             ))
         }
 
         if(nextCard == null){
             emitErrorState("No card found")
+            return
         }
 
         _uiState.value = inGameState.copy(
             round = if (playerCountTrack == 0) inGameState.round + 1 else inGameState.round,
-            currentCard = nextCard!!,
-            currentPlayer = nextPlayer
+            currentCard = nextCard,
+            currentPlayer = nextPlayer!!
         )
         resetTimer()
     }
@@ -214,4 +215,16 @@ class InGameVM @Inject constructor(
     ){
         _uiState.value = UIState.DataError(message)
     }
+
+    fun resetAllData() {
+        currentGameID = ""
+        cards = emptyList()
+        playerCountTrack = 0
+        timeLeft.value = 30
+        gamePersistenceSetting.value = PersistenceSetting()
+        gamePlayerManager?.clear()
+        _uiState.value = UIState.DataLoading
+        _uiEffect.tryEmit(null)
+    }
+
 }

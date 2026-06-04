@@ -71,6 +71,7 @@ fun NavGraphBuilder.homeNavigationEntry(
         composable<HomeRoute.InGame> { backStackEntry ->
             val viewModel = navController.shareViewModel<InGameVM>(backStackEntry)
             val id = backStackEntry.toRoute<HomeRoute.InGame>().id
+            viewModel.currentGameID = id
             ActiveGameScreenStateful(
                 onExitGame = { navController.navigate(HomeRoute.EndGame) },
                 packId = id,
@@ -88,6 +89,10 @@ fun NavGraphBuilder.homeNavigationEntry(
                         popUpTo(RootRoute.Home)
                         launchSingleTop = true
                     }
+                },
+                onPlayAgainClick = {
+                    viewModel.resetAllData()
+                    navController.popBackStack<HomeRoute.GameSetupLobby>(inclusive = false)
                 },
                 vm = viewModel
             )

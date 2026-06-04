@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,11 +19,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.utils.PlusJakartaSans
 
 @Composable
-fun WinnerSection(winnerName: String, modifier: Modifier = Modifier) {
+fun WinnerSection(gamePlayer: GamePlayer, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -42,8 +45,18 @@ fun WinnerSection(winnerName: String, modifier: Modifier = Modifier) {
                     }
                     .border(3.dp, Color(0xFF9333EA), CircleShape)
                     .clip(CircleShape)
-                    .background(Color.Gray)
-            )
+                    .background(gamePlayer.color.copy(
+                        alpha = 0.9f
+                    )),
+                contentAlignment = Alignment.Center
+            ){
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.95f),
+                    modifier = Modifier.size(90.dp)
+                )
+            }
             
             // WINNER badge
             Row(
@@ -74,7 +87,7 @@ fun WinnerSection(winnerName: String, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = winnerName,
+            text = gamePlayer.name,
             fontFamily = PlusJakartaSans,
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp,
