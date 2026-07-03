@@ -62,6 +62,7 @@ private fun GameEndContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .background(LightBackground)
     ) {
         Box(

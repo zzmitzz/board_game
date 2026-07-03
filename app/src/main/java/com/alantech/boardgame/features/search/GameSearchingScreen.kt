@@ -51,7 +51,7 @@ fun GameSearchStateful(
     viewModel: GameSearchVM = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isSearching = uiState is SealedGameSearchUIState.GameSearchUIState
+    val isSearching = uiState is SealedGameSearchUIState.GameSearchUIState || uiState is SealedGameSearchUIState.Loading
     val query by viewModel.query.collectAsStateWithLifecycle()
 
     GameSearchingScreen(

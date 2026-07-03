@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BoardGame</string>
+    <string name="app_name">DeepTalk</string>
     <string name="network_connection_fail">You are offline</string>
     <string name="back">Back</string>
     <string name="nav_back">Back</string>

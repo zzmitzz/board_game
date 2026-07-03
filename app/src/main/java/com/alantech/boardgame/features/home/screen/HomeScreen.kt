@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
@@ -40,15 +41,26 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -70,6 +82,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alantech.boardgame.features.home.components.VibePacksSection
 import com.alantech.boardgame.features.home.model.VibeChip
 import com.alantech.boardgame.ui.model.mockVibeChip
+import com.alantech.boardgame.utils.getListGradientColorPacks
+import kotlinx.coroutines.android.awaitFrame
 
 @Composable
 fun HomeScreen(
@@ -80,7 +94,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HomeScreenContent(
-        modifier = Modifier,
+        modifier = Modifier.statusBarsPadding(),
         uiState = uiState,
         onSettingClick = goToSetting,
         onSearchClick = goToSearch,
@@ -101,12 +115,41 @@ internal fun HomeScreenContent(
     onVibeClick: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val packColor = remember {
+        getListGradientColorPacks().random()
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(LightBackground)
             .verticalScroll(scrollState)
-            .padding(top = 24.dp, bottom = 24.dp)
+            .drawWithContent {
+                val patchHeight = 280.dp.toPx()
+
+                drawIntoCanvas { canvas ->
+                    val paint = Paint().apply {
+                        asFrameworkPaint().apply {
+                            isAntiAlias = true
+                            shader = android.graphics.RadialGradient(
+                                size.width / 2f,
+                                0f,
+                                patchHeight,
+                                packColor.map { it.copy(alpha = 0.1f).toArgb() }.toIntArray(),
+                                null,
+                                android.graphics.Shader.TileMode.MIRROR
+                            )
+                            maskFilter = android.graphics.BlurMaskFilter(
+                                160.dp.toPx(),
+                                android.graphics.BlurMaskFilter.Blur.NORMAL
+                            )
+                        }
+                    }
+                    canvas.drawRect(0f, 0f, size.width, patchHeight, paint)
+                }
+                drawContent()
+            }
+            .padding(top = 8.dp, bottom = 24.dp)
     ) {
         HomeHeader(onSettingClick = onSettingClick)
         Spacer(modifier = Modifier.height(24.dp))
@@ -178,11 +221,10 @@ private fun HomeHeader(onSettingClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "Board Game Hub",
-            color = LightTextOnBackground,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+        Image(
+            painter = painterResource(R.drawable.ic_header),
+            modifier = Modifier.height(48.dp),
+            contentDescription = null
         )
         IconButton(
             onClick = onSettingClick,
@@ -207,6 +249,16 @@ fun HomeSearchBar(
     onSearchTextChange: (String) -> Unit = {},
     enableSearch: Boolean = true
 ) {
+
+    val focusRequester = remember { FocusRequester() }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        awaitFrame()
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
     OutlinedTextField(
         value = searchQuery,
         onValueChange = {
@@ -227,6 +279,7 @@ fun HomeSearchBar(
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
             .clickable(onClick = onSearchClick)
+            .focusRequester(focusRequester)
             .height(56.dp),
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(

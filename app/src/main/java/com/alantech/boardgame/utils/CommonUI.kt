@@ -95,3 +95,12 @@ val Color.Companion.random: Color
         blue = Random.nextFloat(),
         alpha = 1f // 1f means fully opaque
     )
+
+
+fun getListGradientColorPacks() = listOf(
+    listOf(Color(0xFFA305F7), Color(0xFFD219D7), Color(0xFFFA2DB6)),
+    listOf(Color(0xFF07C8F9), Color(0xFF0A85ED), Color(0xFF0D41E1)),
+    listOf(Color(0xFFFF4E50), Color(0xFFFC913A), Color(0xFFF9D423)),
+    listOf(Color(0xFF11998E), Color(0xFF38EF7D), Color(0xFF11D4A0)),
+    listOf(Color(0xFFFFD000), Color(0xFFFF8C00), Color(0xFFFF4500)),
+)

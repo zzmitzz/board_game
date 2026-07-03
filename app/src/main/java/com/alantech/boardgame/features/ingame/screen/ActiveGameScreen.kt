@@ -209,7 +209,8 @@ fun ActiveGameScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(LightBackground)
-            .padding(vertical = 16.dp),
+            .statusBarsPadding()
+            .padding(top = 8.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         InGameHeader(
