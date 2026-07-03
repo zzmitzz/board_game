@@ -1,5 +1,7 @@
 package com.alantech.boardgame.features.home.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,7 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,29 +49,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alantech.boardgame.R
+import com.alantech.boardgame.features.home.components.SectionRow
 import com.alantech.boardgame.features.home.components.TrendingCard
-import com.alantech.boardgame.ui.model.CardPreview
+import com.alantech.boardgame.ui.model.PackDetailUIModel
 import com.alantech.boardgame.ui.model.dataCardThumb
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightPrimary
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.ui.theme.LightTextOnBackground
 
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alantech.boardgame.features.home.components.VibePacksSection
+import com.alantech.boardgame.features.home.model.VibeChip
+import com.alantech.boardgame.ui.model.mockVibeChip
 
 @Composable
 fun HomeScreen(
     goToSetting: () -> Unit,
     goToCardDetails: (String) -> Unit,
     goToSearch: () -> Unit,
-    viewModel: HomeScreenVM = viewModel()
+    viewModel: HomeScreenVM
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HomeScreenContent(
@@ -75,7 +84,10 @@ fun HomeScreen(
         uiState = uiState,
         onSettingClick = goToSetting,
         onSearchClick = goToSearch,
-        onCardClick = goToCardDetails
+        onCardClick = goToCardDetails,
+        onVibeClick = {
+            viewModel.selectVibeChip(it)
+        }
     )
 }
 
@@ -85,7 +97,8 @@ internal fun HomeScreenContent(
     uiState: HomeScreenUIState,
     onSettingClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onCardClick: (String) -> Unit = {}
+    onCardClick: (String) -> Unit = {},
+    onVibeClick: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     Column(
@@ -97,13 +110,62 @@ internal fun HomeScreenContent(
     ) {
         HomeHeader(onSettingClick = onSettingClick)
         Spacer(modifier = Modifier.height(24.dp))
-        HomeSearchBar()
+        Box(
+            modifier = Modifier
+                .padding(
+                    horizontal = 24.dp
+                )
+                .background(
+                    color = Color.White.copy(
+                        alpha = 0.05f
+                    ),
+                    shape = RoundedCornerShape(28.dp)
+                )
+        ) {
+            HomeSearchBar(
+                onSearchClick = onSearchClick,
+                onSearchTextChange = { },
+                enableSearch = false
+            )
+        }
         Spacer(modifier = Modifier.height(24.dp))
-        BrowseByVibeSection()
-        Spacer(modifier = Modifier.height(32.dp))
-        TrendingNowSection(uiState.trendingPacks, onCardClick = onCardClick)
-        Spacer(modifier = Modifier.height(32.dp))
-        CommunityHighlightsSection()
+
+        AnimatedVisibility(
+            visible = uiState.listVibePacks.isNotEmpty()
+        ) {
+            Column(
+                modifier = Modifier.wrapContentHeight()
+            ) {
+                BrowseByVibeSection(
+                    vibeChips = uiState.listVibePacks,
+                    onVibeClick = {
+                        onVibeClick(it)
+                    },
+                    currentVibe = uiState.currentSelectedVibeChip
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                AnimatedVisibility(
+                    visible = uiState.listPacksFromVibe.isNotEmpty()
+                ) {
+                    Column(
+                        modifier = Modifier.wrapContentHeight()
+                    ) {
+                        VibePacksSection(
+                            packsData = uiState.listPacksFromVibe
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                    }
+                }
+            }
+        }
+        uiState.sectionPacks.forEach { (section, packs) ->
+            SectionRow(
+                section = section,
+                packs = packs,
+                onCardClick = onCardClick
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+        }
     }
 }
 
@@ -139,11 +201,20 @@ private fun HomeHeader(onSettingClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeSearchBar() {
-    var searchQuery by remember { mutableStateOf("") }
+fun HomeSearchBar(
+    onSearchClick: () -> Unit = {},
+    searchQuery: String = "",
+    onSearchTextChange: (String) -> Unit = {},
+    enableSearch: Boolean = true
+) {
     OutlinedTextField(
         value = searchQuery,
-        onValueChange = { searchQuery = it },
+        onValueChange = {
+            onSearchTextChange(it)
+        },
+        enabled = enableSearch,
+        singleLine = true,
+        readOnly = !enableSearch,
         placeholder = { Text("Search games...", color = Color.Gray) },
         leadingIcon = {
             Icon(
@@ -154,7 +225,8 @@ private fun HomeSearchBar() {
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 8.dp)
+            .clickable(onClick = onSearchClick)
             .height(56.dp),
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(
@@ -164,68 +236,72 @@ private fun HomeSearchBar() {
             focusedBorderColor = Color.Transparent,
             cursorColor = LightTextOnBackground,
             focusedTextColor = LightTextOnBackground,
-            unfocusedTextColor = LightTextOnBackground
+            unfocusedTextColor = LightTextOnBackground,
         )
     )
 }
 
 @Composable
-private fun BrowseByVibeSection() {
+private fun BrowseByVibeSection(
+    vibeChips: List<VibeChip>,
+    onVibeClick: (String) -> Unit = {},
+    currentVibe: VibeChip? = null
+) {
     Column {
         Text(
             text = "Browse by Vibe",
             color = LightTextOnBackground,
-            fontSize = 20.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 24.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Row(
+        LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            VibeChip(
-                text = "Party",
-                icon = Icons.Rounded.Celebration,
-                isSelected = true
-            )
-            VibeChip(
-                text = "Date Night",
-                icon = Icons.Rounded.FavoriteBorder,
-                isSelected = false
-            )
-            VibeChip(
-                text = "Drinking",
-                icon = Icons.Rounded.LocalBar,
-                isSelected = false
-            )
+            itemsIndexed(vibeChips) { index, item ->
+                Box(
+                    modifier = Modifier.clickable{
+                        onVibeClick(item.id)
+                    }
+                ){
+                    VibeChip(
+                        text = item.name,
+                        icon = item.icon,
+                        isSelected = (currentVibe?.id ?: -1) == item.id
+                    )
+                }
+            }
         }
+
     }
 }
 
 @Composable
-private fun VibeChip(text: String, icon: ImageVector, isSelected: Boolean) {
+private fun VibeChip(text: String, icon: Int?, isSelected: Boolean) {
     val backgroundColor = if (isSelected) LightSecondTextOBG else Color.Transparent
     val contentColor = LightTextOnBackground
-    val borderModifier = if (!isSelected) Modifier.border(1.dp, Color.Gray, RoundedCornerShape(24.dp)) else Modifier
+    val borderModifier =
+        if (!isSelected) Modifier.border(1.dp, Color.Gray, RoundedCornerShape(24.dp)) else Modifier
 
     Row(
         modifier = borderModifier
             .background(backgroundColor, RoundedCornerShape(24.dp))
-            .clickable { }
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = text,
-            tint = contentColor,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
+        icon?.let {
+            Image(
+                painter = painterResource(it),
+                contentDescription = text,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
         Text(
             text = text,
             color = contentColor,
@@ -237,7 +313,7 @@ private fun VibeChip(text: String, icon: ImageVector, isSelected: Boolean) {
 
 @Composable
 private fun TrendingNowSection(
-    data: List<CardPreview>,
+    data: List<PackDetailUIModel>,
     onCardClick: (String) -> Unit = {}
 ) {
     Column {
@@ -251,7 +327,7 @@ private fun TrendingNowSection(
             Text(
                 text = stringResource(R.string.trending_now),
                 color = LightTextOnBackground,
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
@@ -268,7 +344,7 @@ private fun TrendingNowSection(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(data.size) { card ->
-                TrendingCard(data[card]){
+                TrendingCard(data[card]) {
                     onCardClick(data[card].id)
                 }
             }
@@ -285,7 +361,7 @@ private fun CommunityHighlightsSection() {
         Text(
             text = "Community Highlights",
             color = LightTextOnBackground,
-            fontSize = 20.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -349,6 +425,6 @@ private fun CommunityHighlightsSection() {
 @Composable
 private fun HomeScreenPV() {
     HomeScreenContent(
-        uiState = HomeScreenUIState(trendingPacks = dataCardThumb)
+        uiState = HomeScreenUIState()
     )
 }

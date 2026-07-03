@@ -251,7 +251,7 @@ Basic preview of a single composable.
 ```kotlin
 @Preview
 @Composable
-fun UserCardPreview() {
+fun UserPackDetailUIModel() {
     UserCard(user = User(1, "Alice"))
 }
 
@@ -259,7 +259,7 @@ fun UserCardPreview() {
 @Preview(name = "Light")
 @Preview(name = "Dark", uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun UserCardPreviews() {
+fun UserPackDetailUIModels() {
     UserCard(user = User(1, "Alice"))
 }
 ```
@@ -270,7 +270,7 @@ Automatically generates light and dark theme previews.
 ```kotlin
 @PreviewLightDark
 @Composable
-fun UserCardPreview() {
+fun UserPackDetailUIModel() {
     MyTheme {
         UserCard(user = User(1, "Alice"))
     }

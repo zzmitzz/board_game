@@ -79,10 +79,9 @@ fun ThumbnailSection(
             modifier = Modifier
                 .fillMaxSize()
                 .blur(12.dp),
-            placeholder = painterResource(R.drawable.test_image),
-            error = painterResource(R.drawable.test_image),
+            error = painterResource(R.drawable.image_error),
             contentDescription = null,
-            contentScale = ContentScale.FillBounds
+            contentScale = ContentScale.Crop
         )
         Box(
             modifier = Modifier

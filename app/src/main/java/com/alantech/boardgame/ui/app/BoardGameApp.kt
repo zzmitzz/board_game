@@ -55,7 +55,6 @@ fun BoardGameApp(
                     .background(
                         color = LightBackground
                     )
-                    .padding(top = contentPadding.calculateTopPadding())
             ){
                 NavigationGraph(
                     appState

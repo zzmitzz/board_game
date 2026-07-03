@@ -1,31 +1,44 @@
 package com.alantech.boardgame.data.repository
 
+import com.alantech.boardgame.data.model.PacksPreview
 import com.alantech.boardgame.data.model.toUIModel
-import com.alantech.boardgame.data.remote.BoardGameAPI
-import com.alantech.boardgame.data.remote.BoardGameRepository
-import com.alantech.boardgame.data.remote.request.SampleCardRequest
+import com.alantech.boardgame.data.remote.BoardGameEndpoint
 import com.alantech.boardgame.ui.model.CardDetail
-import com.alantech.boardgame.ui.model.CardPreview
+import com.alantech.boardgame.ui.model.PackDetailUIModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class BoardGameRepositoryImpl(
-    private val api: BoardGameAPI
+    private val api: BoardGameEndpoint
 ) : BoardGameRepository {
 
-    override suspend fun getPacks(): List<CardPreview> = withContext(Dispatchers.IO) {
+    private val searchHistory = mutableListOf<String>()
+
+    override suspend fun getPacks(): List<PackDetailUIModel> = withContext(Dispatchers.IO) {
         api.getPacks().map { it.toUIModel() }
     }
 
-    override suspend fun getPackById(id: String): CardPreview? = withContext(Dispatchers.IO) {
-        api.getPackById(idQuery = "eq.$id").firstOrNull()?.toUIModel()
+    override suspend fun getPackById(id: String): PackDetailUIModel = withContext(Dispatchers.IO) {
+        api.getPackById(idQuery = id).toUIModel()
     }
 
     override suspend fun getCardsByPackId(packId: String): List<CardDetail> = withContext(Dispatchers.IO) {
-        api.getCards(packIdQuery = "eq.$packId").map { it.toUIModel() }
+        api.getCards(packIdQuery = packId).map { it.toUIModel() }
     }
 
     override suspend fun getSampleCard(packId: String): List<CardDetail> = withContext(Dispatchers.IO) {
-        api.getSampleCard(SampleCardRequest(packId)).cards.map { it.toUIModel() }
+        api.getSampleCard(packId).map { it.toUIModel() }
     }
+
+    override suspend fun getRecentSearch(): List<String> {
+        return searchHistory.subList(0, searchHistory.size.coerceAtMost(5))
+    }
+
+    override suspend fun saveRecentSearch(search: String) {
+        searchHistory.add(search)
+    }
+
+    override suspend fun getSuggestPacks(): List<PacksPreview> = api.getSuggestPacks()
+
+    override suspend fun searchPacksByName(query: String): List<PacksPreview> = api.searchPacksByName(query)
 }

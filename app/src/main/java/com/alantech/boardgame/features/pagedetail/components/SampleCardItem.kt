@@ -83,7 +83,7 @@ fun SampleCardItem(
 
 @Preview
 @Composable
-private fun SampleCardPreview() {
+private fun SamplePackDetailUIModel() {
     SampleCardItem(
         tag = "Tag",
         content = "Content"

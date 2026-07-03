@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession as gameConfig
 import com.alantech.boardgame.config.PersistenceSetting
-import com.alantech.boardgame.data.remote.BoardGameRepository
+import com.alantech.boardgame.data.repository.BoardGameRepository
 import com.alantech.boardgame.features.ingame.model.GamePlayerScore
 import com.alantech.boardgame.features.ingame.utils.GamePlayerManager
 

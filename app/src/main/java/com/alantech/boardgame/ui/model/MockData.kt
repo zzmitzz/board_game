@@ -1,36 +1,38 @@
 package com.alantech.boardgame.ui.model
 
+import com.alantech.boardgame.R
+import com.alantech.boardgame.features.home.model.VibeChip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 
-val dataCardThumb = listOf<CardPreview>(
-    CardPreview(
+val dataCardThumb = listOf<PackDetailUIModel>(
+    PackDetailUIModel(
         id = "1",
         thumbnail = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
         titleCard = "Card 1",
         creator = "Creator 1"
     ),
-    CardPreview(
+    PackDetailUIModel(
         id = "2",
         thumbnail = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
         titleCard = "Card 1",
         creator = "Creator 1"
     ),
-    CardPreview(
+    PackDetailUIModel(
         id = "3",
         thumbnail = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
         titleCard = "Card 1",
         creator = "Creator 1"
     ),
-    CardPreview(
+    PackDetailUIModel(
         id = "4",
         thumbnail = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
         titleCard = "Card 1",
         creator = "Creator 1"
     ),
-    CardPreview(
+    PackDetailUIModel(
         id = "5",
         thumbnail = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
         titleCard = "Card 1",
@@ -62,6 +64,8 @@ suspend fun loadingCardsDetailPack(): List<CardDetail> {
     }
 }
 
+
+
 val cardDetailPack = mutableListOf<CardDetail>().also { listData ->
     repeat(40){
         listData.add(
@@ -79,3 +83,26 @@ val cardDetailPack = mutableListOf<CardDetail>().also { listData ->
         )
     }
 }
+
+val mockVibeChip = listOf<VibeChip>(
+    VibeChip(
+        id = "1",
+        name = "Party",
+        icon = R.drawable.ic_party
+    ),
+    VibeChip(
+        id = "2",
+        name = "Friend",
+        icon = R.drawable.ic_friend
+    ),
+    VibeChip(
+        id = "3",
+        name = "Drinking",
+        icon = R.drawable.ic_beer
+    ),
+    VibeChip(
+        id = "4",
+        name = "Love",
+        icon =  R.drawable.ic_love
+    )
+)

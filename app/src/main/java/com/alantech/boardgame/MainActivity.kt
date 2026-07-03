@@ -38,7 +38,7 @@ import com.alantech.boardgame.ui.theme.BoardGameTheme
 import com.alantech.boardgame.utils.NetworkUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
-
+import kotlinx.coroutines.runBlocking
 
 
 @AndroidEntryPoint
@@ -59,5 +59,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-

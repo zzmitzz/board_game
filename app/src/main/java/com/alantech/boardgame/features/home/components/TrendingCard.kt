@@ -21,13 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.alantech.boardgame.R
-import com.alantech.boardgame.ui.model.CardPreview
+import com.alantech.boardgame.ui.model.PackDetailUIModel
 import com.alantech.boardgame.ui.theme.LightPrimary
 import com.alantech.boardgame.ui.theme.LightTextOnBackground
 
 @Composable
 fun TrendingCard(
-    card: CardPreview,
+    card: PackDetailUIModel,
     onCardClick: (String) -> Unit,
     ) {
 

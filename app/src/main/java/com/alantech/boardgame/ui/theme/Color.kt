@@ -3,7 +3,7 @@ package com.alantech.boardgame.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Light Theme
-val LightBackground = Color(0xFF0F0814)
+val LightBackground = Color(0xFA070309)
 val LightTextOnBackground = Color.White
 val LightSecondTextOBG = Color(0xFFA855F7)
 val LightPrimary = Color(0xFF1A0F26)

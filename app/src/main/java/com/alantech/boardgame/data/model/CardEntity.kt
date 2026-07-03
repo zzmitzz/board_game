@@ -1,5 +1,7 @@
 package com.alantech.boardgame.data.model
 
+import com.alantech.boardgame.ui.model.CardDetail
+import com.alantech.boardgame.ui.model.CardDetailMedia
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -17,3 +19,16 @@ data class RemoteCard(
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null
 )
+
+fun RemoteCard.toUIModel(): CardDetail {
+    return CardDetail(
+        id = id.orEmpty(),
+        category = level ?: type.orEmpty(),
+        description = frontSide.orEmpty(),
+        media = CardDetailMedia(
+            image = null,
+            video = null
+        ),
+        hint = hint.orEmpty()
+    )
+}

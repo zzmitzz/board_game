@@ -1,7 +1,7 @@
 package com.alantech.boardgame.ui.model
 
 
-data class CardPreview(
+data class PackDetailUIModel(
     val id: String,
     val thumbnail: String,
     val titleCard: String,

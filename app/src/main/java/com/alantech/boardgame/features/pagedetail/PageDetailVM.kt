@@ -3,9 +3,9 @@ package com.alantech.boardgame.features.pagedetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alantech.boardgame.data.remote.BoardGameRepository
+import com.alantech.boardgame.data.repository.BoardGameRepository
 import com.alantech.boardgame.ui.model.CardDetail
-import com.alantech.boardgame.ui.model.CardPreview
+import com.alantech.boardgame.ui.model.PackDetailUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import javax.inject.Inject
 data class PageDetailUIState(
     val isLoading: Boolean = false,
     val isLoadingSampleCard: Boolean = false,
-    val pack: CardPreview? = null,
+    val pack: PackDetailUIModel? = null,
     val packSampleCard: List<CardDetail>? = null,
     val errorMessage: String? = null
 )

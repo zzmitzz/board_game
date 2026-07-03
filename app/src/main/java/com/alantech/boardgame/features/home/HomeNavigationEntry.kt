@@ -11,10 +11,12 @@ import com.alantech.boardgame.features.gamesetup.GameSetupScreen
 import com.alantech.boardgame.features.gamesetup.GameSetupScreenStateful
 import com.alantech.boardgame.features.gamesetup.GameSetupVM
 import com.alantech.boardgame.features.home.screen.HomeScreen
+import com.alantech.boardgame.features.home.screen.HomeScreenVM
 import com.alantech.boardgame.features.home.shareviewmodel.shareViewModel
 import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.screen.ActiveGameScreenStateful
 import com.alantech.boardgame.features.pagedetail.PageDetailScreen
+import com.alantech.boardgame.features.search.GameSearchStateful
 import com.alantech.boardgame.navigation.RootRoute
 import kotlinx.serialization.Serializable
 
@@ -34,6 +36,9 @@ sealed class HomeRoute {
     data object EndGame
 
     @Serializable
+    data object GameSearch
+
+    @Serializable
     data object Setting : HomeRoute()
 }
 
@@ -44,10 +49,20 @@ fun NavGraphBuilder.homeNavigationEntry(
         startDestination = HomeRoute.Main
     ) {
         composable<HomeRoute.Main> {
+            val mViewModel = hiltViewModel<HomeScreenVM>()
             HomeScreen(
                 {}, { packID ->
                     navController.navigate(HomeRoute.PackDetail(packID))
-                }, {}
+                }, {
+                    navController.navigate(HomeRoute.GameSearch)
+                },
+                viewModel = mViewModel
+            )
+        }
+
+        composable<HomeRoute.GameSearch> {
+            GameSearchStateful(
+                onBackClick = { navController.popBackStack() }
             )
         }
         composable<HomeRoute.PackDetail> { backStackEntry ->

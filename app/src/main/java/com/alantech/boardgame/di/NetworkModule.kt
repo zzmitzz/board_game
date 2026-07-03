@@ -1,6 +1,7 @@
 package com.alantech.boardgame.di
 
-import com.alantech.boardgame.data.remote.BoardGameAPI
+import com.alantech.boardgame.data.remote.BoardGameEndpoint
+import com.alantech.boardgame.data.remote.HomeDataEndpoint
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,7 +14,14 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideBoardGameAPI(): BoardGameAPI {
+    fun provideBoardGameAPI(): BoardGameEndpoint {
         return RetrofitClient.apiService
     }
+
+    @Provides
+    @Singleton
+    fun provideHomeDataAPI(): HomeDataEndpoint {
+        return RetrofitClient.homeDataEndpoint
+    }
+
 }
