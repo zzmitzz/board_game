@@ -2,31 +2,38 @@ package com.alantech.boardgame.features.ingame
 
 import android.content.Context
 import android.util.Log
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.R
-import com.alantech.boardgame.config.GameSettingConfigCurrentSession as gameConfig
 import com.alantech.boardgame.config.PersistenceSetting
 import com.alantech.boardgame.data.repository.BoardGameRepository
+import com.alantech.boardgame.features.gamesetup.GameSetupVM
 import com.alantech.boardgame.features.ingame.utils.GamePlayerManager
-
 import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.GamePlayer
+import com.alantech.boardgame.utils.DataStoreUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import com.alantech.boardgame.config.GameSettingConfigCurrentSession as gameConfig
 
 
 sealed class UIState {
@@ -40,6 +47,7 @@ sealed class UIState {
         val currentPlayer: GamePlayer,
         val gameTitle: String,
         val penalty: String,
+        val persistenceSetting: PersistenceSetting,
     ) : UIState()
 }
 
@@ -48,33 +56,43 @@ sealed class UIEffect {
     data object OnTimeUp : UIEffect()
     data class ShowToast(val message: String) : UIEffect()
     data object OnGameEnd : UIEffect()
-    data class OnGameError (
+    data class OnGameError(
         val message: String
     ) : UIEffect()
+
+    data object OnShuffleCards : UIEffect()
 }
 
 @HiltViewModel
 class InGameVM @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val repository: BoardGameRepository
+    private val repository: BoardGameRepository,
+    private val dataStoreUtils: DataStoreUtils,
 ) : ViewModel() {
+
+    companion object {
+        val PREF_USER_SETTING = stringPreferencesKey("pref_user_setting")
+    }
 
     var currentGameID: String = ""
     private val _uiState = MutableStateFlow<UIState>(UIState.DataLoading)
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
-    private val _uiEffect = MutableSharedFlow<UIEffect?>(1)
+    private val _uiEffect = MutableSharedFlow<UIEffect?>(0)
     val uiEffect: SharedFlow<UIEffect?> = _uiEffect.asSharedFlow()
 
-    var gamePersistenceSetting = MutableStateFlow<PersistenceSetting>(PersistenceSetting())
-
     var gamePlayerManager: GamePlayerManager? = null
-    val timeLeft: MutableStateFlow<Int> = MutableStateFlow(30)
+    val timeLeft: MutableStateFlow<Float> = MutableStateFlow(30f)
 
     private val mGameStateListener = object : GamePlayerManager.OnStateChange {
         override fun onGameEnded() {
             onEndGame()
         }
 
+        override fun onRoundEnded() {
+            scope.launch {
+                _uiEffect.emit(UIEffect.OnShuffleCards)
+            }
+        }
     }
 
     private val scope = viewModelScope + CoroutineExceptionHandler { _, _ ->
@@ -97,13 +115,13 @@ class InGameVM @Inject constructor(
     }
 
     fun initGame(packId: String) {
-        // Check if all configs are valid
+        _uiEffect.tryEmit(null)
         if (!checkUpConfig()) return
-        // Initialize game
         Log.d("InGameVM", "packId: $packId")
         scope.launch {
             try {
-                val cards =  repository.getCardsByPackId(packId)
+                val mSetting = getSettingAsFlow().first() ?: PersistenceSetting()
+                val cards = repository.getCardsByPackId(packId, mSetting.language)
                 if (cards.isEmpty()) {
                     throw Exception("No cards found for this pack")
                 }
@@ -113,25 +131,57 @@ class InGameVM @Inject constructor(
                 )
                 gamePlayerManager?.setOnStateChangeListener(mGameStateListener)
                 val pack = repository.getPackById(packId)
-
                 startTimerCountDown()
-                gamePlayerManager?.gameEngineState?.collectLatest { gameState ->
-                    _uiState.value = UIState.InGameUIState(
-                        round = gameState.currentRound,
-                        totalRound = gameConfig.getTotalRounds(),
-                        currentCardIndex = gamePlayerManager?.getCurrentCardIndex() ?: -1,
-                        currentPlayer = gameState.activePlayer,
-                        gameTitle = pack?.titleCard ?: context.getString(R.string.board_game),
-                        currentPackCards = gameState.currentCards.toList(),
-                        penalty = gameConfig.penaltyInput,
-                    )
-                    resetTimer()
+                val settingFow = getSettingAsFlow()
+                gamePlayerManager?.gameEngineState?.let { gameStateFlow ->
+                    combine(
+                        settingFow, gameStateFlow
+                    ) { setting, gameState ->
+                        _uiState.value = UIState.InGameUIState(
+                            round = gameState.currentRound,
+                            totalRound = gameConfig.getTotalRounds(),
+                            currentCardIndex = gamePlayerManager?.getCurrentCardIndex() ?: -1,
+                            currentPlayer = gameState.activePlayer,
+                            gameTitle = pack?.titleCard ?: context.getString(R.string.board_game),
+                            currentPackCards = gameState.currentCards.toList(),
+                            penalty = gameConfig.penaltyInput,
+                            persistenceSetting = setting ?: PersistenceSetting(),
+                        )
+                    }
+                        .stateIn(
+                            scope = this,
+                            started = SharingStarted.Eagerly,
+                            UIState.DataLoading
+                        )
                 }
+                resetTimer()
             } catch (e: Exception) {
                 emitErrorState(e.message.toString())
             }
         }
     }
+
+    fun saveSetting(
+        isHapticEnable: Boolean,
+        isSoundEnable: Boolean
+    ) {
+        viewModelScope.launch {
+            val setting = dataStoreUtils.getSerializedData(
+                GameSetupVM.PREF_USER_SETTING,
+                PersistenceSetting::class.java
+            )
+                ?: PersistenceSetting()
+            dataStoreUtils.setSerializedData(
+                GameSetupVM.PREF_USER_SETTING, setting.copy(
+                    isHapticOn = isHapticEnable,
+                    isSoundOn = isSoundEnable
+                )
+            )
+        }
+    }
+
+    private fun getSettingAsFlow(): Flow<PersistenceSetting?> =
+        dataStoreUtils.getFlow(PREF_USER_SETTING, PersistenceSetting::class.java)
 
     private fun startTimerCountDown() {
         if (!gameConfig.getIsTimerOn()) {
@@ -139,21 +189,21 @@ class InGameVM @Inject constructor(
         }
         viewModelScope.launch {
             while (true) {
-                if(timeLeft.value == 0){
+                if (timeLeft.value <= 0f) {
                     delay(1000.milliseconds)
                     _uiEffect.emit(UIEffect.OnTimeUp)
                 }
                 if (timeLeft.value > 0) {
-                    timeLeft.value -= 1
+                    timeLeft.value -= 0.1f
                 }
-                delay(1000.milliseconds)
+                delay(100.milliseconds)
             }
         }
     }
 
 
     private fun resetTimer() {
-        timeLeft.value = 30
+        timeLeft.value = 30f
     }
 
     fun onCardComplete(
@@ -161,12 +211,12 @@ class InGameVM @Inject constructor(
     ) {
         if (!checkState()) return
         val state = _uiState.value as UIState.InGameUIState
-        if(isComplete){
+        if (isComplete) {
             gamePlayerManager?.onCardCompleted(
-                timeSpent = 30 - timeLeft.value,
+                timeSpent = 30f - timeLeft.value,
                 cardId = state.currentPackCards[state.currentCardIndex].id
             )
-        }else{
+        } else {
             gamePlayerManager?.onCardForfeited(
                 timeSpent = 30 - timeLeft.value,
                 cardId = state.currentPackCards[state.currentCardIndex].id
@@ -174,29 +224,23 @@ class InGameVM @Inject constructor(
         }
     }
 
-    fun onSaveSetting(
-        setting: PersistenceSetting
-    ) {
-        gamePersistenceSetting.value = setting
-    }
 
     fun onEndGame() {
-        _uiEffect.tryEmit(
-            UIEffect.OnGameEnd
-        )
+        scope.launch {
+            _uiEffect.emit(UIEffect.OnGameEnd)
+        }
     }
 
-    private fun emitErrorState(
-        message: String
-    ){
+    private fun emitErrorState(message: String) {
         _uiState.value = UIState.DataError(message)
-        _uiEffect.tryEmit(UIEffect.OnGameError(message))
+        scope.launch {
+            _uiEffect.emit(UIEffect.OnGameError(message))
+        }
     }
 
     fun resetAllData() {
         currentGameID = ""
-        timeLeft.value = 30
-        gamePersistenceSetting.value = PersistenceSetting()
+        timeLeft.value = 30f
         gamePlayerManager?.removeOnStateChangeListener()
         gamePlayerManager?.resetSession()
         _uiState.value = UIState.DataLoading

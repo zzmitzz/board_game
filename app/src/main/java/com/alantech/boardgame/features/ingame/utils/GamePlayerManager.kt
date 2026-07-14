@@ -1,5 +1,8 @@
 package com.alantech.boardgame.features.ingame.utils
 
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession
 import com.alantech.boardgame.features.ingame.model.GamePlayerScore
 import com.alantech.boardgame.ui.model.CardDetail
@@ -7,6 +10,7 @@ import com.alantech.boardgame.ui.model.GamePlayer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import okhttp3.internal.http2.Http2Reader
 
 
 data class GameEngineState(
@@ -18,11 +22,11 @@ data class GameEngineState(
 interface IGamePlayManager {
     fun startGameEngine()
     fun onCardCompleted(
-        timeSpent: Int, // seconds
+        timeSpent: Float, // seconds
         cardId: String
     )
     fun onCardForfeited(
-        timeSpent: Int = 30, // seconds
+        timeSpent: Float , // seconds
         cardId: String
     )
     fun resetSession()
@@ -43,6 +47,8 @@ class GamePlayerManager private constructor(
 
     interface OnStateChange {
         fun onGameEnded ()
+
+        fun onRoundEnded ()
     }
 
     private var listener : OnStateChange? = null
@@ -51,6 +57,9 @@ class GamePlayerManager private constructor(
     val gameEngineState: StateFlow<GameEngineState> = mGameEngineState
 
     private val _gamePlayersScore = mutableMapOf<GamePlayer, GamePlayerScore>()
+
+    private val mHandler = Handler(Looper.getMainLooper())
+
 
     val gamePlayersScore: Map<GamePlayer, GamePlayerScore>
         get() = _gamePlayersScore
@@ -85,26 +94,26 @@ class GamePlayerManager private constructor(
     }
 
     override fun onCardCompleted(
-        timeSpent: Int,
+        timeSpent: Float,
         cardId: String
     ) {
         val activePlayer = mGameEngineState.value.activePlayer
         val gamePlayerScore = _gamePlayersScore[activePlayer] ?: return
-        with(gamePlayerScore){
+        with(gamePlayerScore) {
             this.timeSpent += timeSpent
             this.cardIds.add(cardId)
-            this.numberCardCompleted.inc()
+            this.numberCardCompleted += 1
         }
         onPlayerDone()
     }
 
-    override fun onCardForfeited(timeSpent: Int, cardId: String) {
+    override fun onCardForfeited(timeSpent: Float, cardId: String) {
         val activePlayer = mGameEngineState.value.activePlayer
         val gamePlayerScore = _gamePlayersScore[activePlayer] ?: return
-        with(gamePlayerScore){
+        with(gamePlayerScore) {
             this.timeSpent += timeSpent
             this.cardIds.add(cardId)
-            this.numberCardCompleted.dec()
+            this.numberCardForfeited += 1
         }
         onPlayerDone()
     }
@@ -124,14 +133,16 @@ class GamePlayerManager private constructor(
     }
 
     private fun nextRound(){
-
         if(mGameEngineState.value.currentRound == GameSettingConfigCurrentSession.getTotalRounds()){
             listener?.onGameEnded()
             return
         }
+        listener?.onRoundEnded()
 
         val rawData = originalGamePacks.shuffled().toList()
         val alreadyAddedCard = mutableSetOf<CardDetail>()
+
+
         val newShuffledCards = mutableSetOf<CardDetail>()
 
         for (i in originalGamePlayers.indices){
@@ -145,11 +156,15 @@ class GamePlayerManager private constructor(
             alreadyAddedCard.add(cardForPlayerI)
         }
 
-        mGameEngineState.value = GameEngineState(
-            mGameEngineState.value.currentRound + 1,
-            originalGamePlayers.first(),
-            newShuffledCards.toSet()
-        )
+        Log.d("GamePlayerManager", "newShuffledCards: ${newShuffledCards.map { it.description }}")
+
+        mHandler.postDelayed({
+            mGameEngineState.value = GameEngineState(
+                mGameEngineState.value.currentRound + 1,
+                originalGamePlayers.first(),
+                newShuffledCards.toSet()
+            )
+        },1000)
     }
 
     private fun nextTurn(){
@@ -167,7 +182,8 @@ class GamePlayerManager private constructor(
 
     // Since the card index is the same as the player index
     fun getCurrentCardIndex(): Int {
-        return originalGamePlayers.indexOf(mGameEngineState.value.activePlayer)
+        val currIndexPlayer = originalGamePlayers.indexOf(mGameEngineState.value.activePlayer)
+        return currIndexPlayer
     }
 
 

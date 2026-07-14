@@ -1,8 +1,13 @@
 package com.alantech.boardgame.features.gameend.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,28 +17,60 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alantech.boardgame.features.gameend.utils.staggeredEntrance
 import com.alantech.boardgame.features.ingame.model.GamePlayerScore
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.utils.PlusJakartaSans
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun LeaderboardSection(
     entries: List<Pair<GamePlayer, GamePlayerScore>>,
     modifier: Modifier = Modifier,
 ) {
+
+    val alphaAnimationList = remember {
+        mutableStateListOf<Animatable<Float, AnimationVector1D>>().apply {
+            addAll(List(entries.size) { Animatable(0f) })
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        entries.forEachIndexed { index, _ ->
+            delay((index * 100L).milliseconds)
+            alphaAnimationList[index].animateTo(1f, tween(300))
+        }
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "\"What happens in the game, stays in the game... mostly.\"",
+            fontFamily = PlusJakartaSans,
+            fontSize = 12.sp,
+            color = Color.White.copy(alpha = 0.5f),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+        )
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(vertical = 16.dp)
@@ -47,29 +84,28 @@ fun LeaderboardSection(
             )
         }
 
+
         entries.forEachIndexed { index, (player, score) ->
-            LeaderboardItem(
-                rank = index + 1,
-                player = player,
-                isWinner = index == 0,
-                completed = score.numberCardCompleted,
-                forfeited = score.numberCardForfeited,
-            )
+            Box(
+                modifier = Modifier
+                    .graphicsLayer{
+                        this.alpha = alphaAnimationList[index].value
+                    }
+            ){
+                LeaderboardItem(
+                    rank = index + 1,
+                    player = player,
+                    isWinner = index == 0,
+                    completed = score.numberCardCompleted,
+                    forfeited = score.numberCardForfeited,
+                )
+            }
             if (index < entries.lastIndex) {
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "\"What happens in the game, stays in the game... mostly.\"",
-            fontFamily = PlusJakartaSans,
-            fontSize = 12.sp,
-            color = Color.White.copy(alpha = 0.5f),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.ingame.components
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -30,7 +31,7 @@ private const val STACK_SCALE_STEP = 0.04f
 
 private const val FLY_OFF_DURATION_MS = 320
 private const val FLY_OFF_ROTATION_DEG = -18f
-
+private const val TAG = "TinderCardStack"
 @Composable
 fun TinderCardStack(
     modifier: Modifier = Modifier,
@@ -51,7 +52,10 @@ fun TinderCardStack(
     var departingIndex by remember { mutableIntStateOf(-1) }
     var arrivingIndex by remember { mutableIntStateOf(-1) }
     LaunchedEffect(currentIndex) {
-        if (currentIndex == 0 && departingIndex == -1) return@LaunchedEffect
+        if (currentIndex == 0 && departingIndex == -1){
+            lazyListState.scrollToItem(0)
+            return@LaunchedEffect
+        }
         val anchorIndex = maxOf(0, currentIndex)
         departingIndex = currentIndex - 1
         arrivingIndex = currentIndex
@@ -96,7 +100,6 @@ fun TinderCardStack(
                 animationSpec = tween(durationMillis = 200)
             )
         }
-
         lazyListState.animateScrollToItem(anchorIndex)
 
         departingIndex = -1
@@ -121,7 +124,9 @@ fun TinderCardStack(
         itemsIndexed(items = cards, key = { _, card -> card.id }) { index, card ->
             val isDeparting = index == departingIndex
             val isArriving = index == arrivingIndex
-
+            LaunchedEffect(Unit) {
+                Log.d(TAG, "Card $index: Departing=$isDeparting, Arriving=$isArriving")
+            }
             CardEffectWrapper(
                 modifier = Modifier
                     .fillParentMaxWidth()
@@ -165,7 +170,7 @@ fun TinderCardStack(
                     },
                 item = card,
                 penalty = penalty,
-                onCardHintClick = if (index == currentIndex) onCardHintClick else ({}),
+                onCardHintClick = onCardHintClick,
             )
         }
     }
@@ -183,8 +188,7 @@ fun CardEffectWrapper(
         challengeText = item.description,
         penaltyText = penalty,
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .fillMaxWidth(),
         onCardHintClick = onCardHintClick
     )
 }

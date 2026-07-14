@@ -2,7 +2,9 @@ package com.alantech.boardgame.config
 
 data class PersistenceSetting(
     val isAutoTranslate: Boolean = false,
-    val language: String = "en"
+    val isHapticOn: Boolean = false,
+    val isSoundOn: Boolean = false,
+    val language: String = listLanguageCodeSupport[0]
 )
 
-val listLanguageSupport = listOf("en", "vi")
+val listLanguageCodeSupport = listOf("en", "hi", "es", "fr", "id", "tr", "de", "it", "ja", "ko", "pt", "ru", "vi")

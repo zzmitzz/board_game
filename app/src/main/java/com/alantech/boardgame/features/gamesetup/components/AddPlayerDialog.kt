@@ -40,13 +40,14 @@ import com.alantech.boardgame.ui.theme.LightDialogBackground
 import com.alantech.boardgame.ui.theme.LightTextColor
 import com.alantech.boardgame.utils.BlurBackgroundDialog
 import com.alantech.boardgame.utils.DialogListener
+import com.alantech.boardgame.utils.DialogPlayerListener
 import com.alantech.boardgame.utils.PlusJakartaSans
 import com.alantech.boardgame.utils.clickInterval
 
 
 @Composable
 fun AddPlayerDialog(
-    dialogListener: DialogListener
+    dialogListener: DialogPlayerListener
 ) {
 
     var lastClickTime = remember { 0L }
@@ -254,10 +255,12 @@ fun CustomPlayerBox(
 @Preview
 @Composable
 private fun SpecPlayerBox() {
-    AddPlayerDialog(object : DialogListener {
-        override fun onConfirm(a: Int) {}
+    AddPlayerDialog(object : DialogPlayerListener() {
         override fun onCancel() {}
         override fun onDismiss() {}
+        override fun onConfirm(numberPlayer: Int) {
+
+        }
     })
 }
 

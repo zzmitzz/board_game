@@ -1,4 +1,4 @@
-package com.alantech.boardgame.features.ingame.dialog
+package com.alantech.boardgame.features.ingame.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,8 +10,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -28,45 +32,53 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alantech.boardgame.R
-import com.alantech.boardgame.config.PersistenceSetting
-import com.alantech.boardgame.config.listLanguageCodeSupport
-import com.alantech.boardgame.features.ingame.components.CustomizeSpinner
 import com.alantech.boardgame.ui.theme.LightDialogBackground
 import com.alantech.boardgame.ui.theme.LightTextColor
 import com.alantech.boardgame.utils.PlusJakartaSans
 
+
 @Composable
-fun SettingDialog(
-    initialSetting: PersistenceSetting,
-    onSave: (PersistenceSetting) -> Unit,
+fun InGameSettingDialog(
+    hapticEnabled: Boolean = false,
+    soundEnabled: Boolean = false,
+    onSave: (Boolean, Boolean) -> Unit,
     onCancel: () -> Unit
 ) {
-    var isAutoTranslate by remember { mutableStateOf(initialSetting.isAutoTranslate) }
-    var currLanguage by remember { mutableStateOf(initialSetting.language) }
-
+    var isHapticsEnabled by remember { mutableStateOf(hapticEnabled) }
+    var isSoundEnabled by remember { mutableStateOf(soundEnabled) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 32.dp)
             .background(color = LightDialogBackground, RoundedCornerShape(24.dp))
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- Auto Translate Row ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // Swapped to SpaceBetween for better alignment with spinners
         ) {
+            Icon(
+                imageVector = Icons.Filled.Vibration,
+                tint = LightTextColor,
+                contentDescription = stringResource(R.string.enable_haptics)
+            )
+            Spacer(
+                modifier = Modifier
+                    .width(8.dp)
+            )
             Text(
-                text = stringResource(R.string.auto_translate),
+                text = stringResource(R.string.enable_haptics),
                 color = LightTextColor,
                 fontFamily = PlusJakartaSans,
                 fontWeight = FontWeight.Bold
             )
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+            )
             Switch(
-                checked = isAutoTranslate,
-                onCheckedChange = { isAutoTranslate = it },
+                checked = isHapticsEnabled,
+                onCheckedChange = { isHapticsEnabled = it },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color(0xFF3F007D),
                     checkedTrackColor = Color(0xFFE8D4FF),
@@ -75,34 +87,48 @@ fun SettingDialog(
                 )
             )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // --- Language Selection Row ---
+        Spacer(
+            modifier = Modifier
+                .height(16.dp)
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            Icon(
+                imageVector = Icons.Filled.Audiotrack,
+                tint = LightTextColor,
+                contentDescription = stringResource(R.string.enable_haptics)
+            )
+            Spacer(
+                modifier = Modifier
+                    .width(8.dp)
+            )
             Text(
-                text = stringResource(R.string.choose_language),
-                color = if (isAutoTranslate) LightTextColor else LightTextColor.copy(alpha = 0.4f),
+                text = stringResource(R.string.enable_sound),
+                color = LightTextColor,
                 fontFamily = PlusJakartaSans,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            CustomizeSpinner(
-                options = listLanguageCodeSupport,
-                selectedOption = currLanguage,
-                onOptionSelected = { language -> currLanguage = language },
-                label = stringResource(R.string.choose_language),
-                enabled = isAutoTranslate
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+            )
+            Switch(
+                checked = isSoundEnabled,
+                onCheckedChange = { isSoundEnabled = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color(0xFF3F007D),
+                    checkedTrackColor = Color(0xFFE8D4FF),
+                    uncheckedThumbColor = Color(0xFFA19AA8),
+                    uncheckedTrackColor = Color(0xFF4A4453)
+                )
             )
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // --- Action Buttons Row (Exit/Save) ---
+        Spacer(
+            modifier = Modifier
+                .height(16.dp)
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
@@ -123,12 +149,7 @@ fun SettingDialog(
             Button(
                 onClick = {
                     // Constructs a copy of the setting with the freshly mutated state variables
-                    onSave(
-                        initialSetting.copy(
-                            isAutoTranslate = isAutoTranslate,
-                            language = currLanguage
-                        )
-                    )
+                    onSave(isHapticsEnabled, isSoundEnabled)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF3F007D) // Color matching your active Switch thumb

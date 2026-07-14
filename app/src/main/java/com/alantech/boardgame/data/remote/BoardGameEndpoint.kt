@@ -19,11 +19,13 @@ interface BoardGameEndpoint {
     @GET("api/v1/packs/cards")
     suspend fun getCards(
         @Query("pack_id") packIdQuery: String,
+        @Query("lang") languageQuery: String
     ): List<RemoteCard>
 
     @GET("api/v1/packs/cards/sample")
     suspend fun getSampleCard(
         @Query("pack_id") packIdQuery: String,
+        @Query("lang") languageQuery: String
         ): List<RemoteCard>
 
     @GET("api/v1/packs/suggest")

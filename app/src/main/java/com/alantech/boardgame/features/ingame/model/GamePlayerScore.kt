@@ -5,7 +5,7 @@ import com.alantech.boardgame.ui.model.GamePlayer
 data class GamePlayerScore(
     var numberCardCompleted: Int = 0,
     var numberCardForfeited: Int = 0,
-    var timeSpent: Long = 0,
+    var timeSpent: Float = 0f,
     val cardIds: MutableSet<String> = mutableSetOf()
 ): Comparable<GamePlayerScore>{
     fun getScore(): Int {

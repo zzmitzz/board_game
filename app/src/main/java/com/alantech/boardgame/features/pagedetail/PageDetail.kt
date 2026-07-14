@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.pagedetail
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alantech.boardgame.R
 import com.alantech.boardgame.features.pagedetail.components.CardBadge
 import com.alantech.boardgame.features.pagedetail.components.HeatLevelSection
@@ -340,31 +344,42 @@ private fun SampleCardsSection(
     packSampleCard: List<CardDetail>,
     modifier: Modifier = Modifier
 ) {
+
+    val lottie by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(R.raw.loading)
+    )
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .fillMaxWidth(),
+            
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(R.string.sample_cards),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            Text(
-                text = "SWIPE",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFFD0A5FF),
-                fontWeight = FontWeight.Bold
-            )
         }
 
+        AnimatedVisibility(
+            isLoadingSampleCard
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ){
+                LottieAnimation(
+                    composition = lottie,
+                    modifier = Modifier.size(100.dp)
+                )
+            }
+        }
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)

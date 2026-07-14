@@ -26,21 +26,17 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 
 
-@Composable
-fun ButtonText(
-    modifier: Modifier,
-    text: String,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit
-) {
-
-}
-
-
 interface DialogListener{
-    fun onConfirm(numberPlayer: Int)
     fun onCancel()
     fun onDismiss()
+}
+
+abstract class DialogPlayerListener : DialogListener{
+    abstract fun onConfirm(numberPlayer: Int)
+}
+
+abstract class SettingDialogListener: DialogListener{
+    abstract fun onConfirm(hapticEnabled: Boolean, soundEnabled: Boolean)
 }
 
 @Composable

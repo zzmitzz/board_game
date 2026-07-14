@@ -22,12 +22,12 @@ class BoardGameRepositoryImpl(
         api.getPackById(idQuery = id).toUIModel()
     }
 
-    override suspend fun getCardsByPackId(packId: String): List<CardDetail> = withContext(Dispatchers.IO) {
-        api.getCards(packIdQuery = packId).map { it.toUIModel() }
+    override suspend fun getCardsByPackId(packId: String, language: String): List<CardDetail> = withContext(Dispatchers.IO) {
+        api.getCards(packIdQuery = packId, languageQuery = language).map { it.toUIModel() }
     }
 
-    override suspend fun getSampleCard(packId: String): List<CardDetail> = withContext(Dispatchers.IO) {
-        api.getSampleCard(packId).map { it.toUIModel() }
+    override suspend fun getSampleCard(packId: String, language: String): List<CardDetail> = withContext(Dispatchers.IO) {
+        api.getSampleCard(packId, language).map { it.toUIModel() }
     }
 
     override suspend fun getRecentSearch(): List<String> {

@@ -40,11 +40,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,6 +86,8 @@ import com.alantech.boardgame.features.home.model.VibeChip
 import com.alantech.boardgame.ui.model.mockVibeChip
 import com.alantech.boardgame.utils.getListGradientColorPacks
 import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -94,19 +98,34 @@ fun HomeScreen(
     viewModel: HomeScreenVM
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeScreenContent(
-        modifier = Modifier.statusBarsPadding(),
-        uiState = uiState,
-        onSettingClick = goToSetting,
-        onSearchClick = goToSearch,
-        onCardClick = goToCardDetails,
-        onVibeClick = {
-            viewModel.selectVibeChip(it)
-        },
-        onSeeAllClick = {
-            onSeeAllClick(it)
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            scope.launch {
+                isRefreshing = true
+                delay(2000)
+                viewModel.refreshAllData()
+                isRefreshing = false
+            }
         }
-    )
+    ) {
+        HomeScreenContent(
+            modifier = Modifier.statusBarsPadding(),
+            uiState = uiState,
+            onSettingClick = goToSetting,
+            onSearchClick = goToSearch,
+            onCardClick = goToCardDetails,
+            onVibeClick = {
+                viewModel.selectVibeChip(it)
+            },
+            onSeeAllClick = {
+                onSeeAllClick(it)
+            }
+        )
+    }
+
 }
 
 @Composable

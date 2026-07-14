@@ -43,7 +43,6 @@ sealed class HomeScreenUIEffect{
 
 @HiltViewModel
 class HomeScreenVM @Inject constructor(
-    private val repository: BoardGameRepository,
     private val homeDataRepository: HomeDataRepository,
 ) : ViewModel() {
 
@@ -58,6 +57,14 @@ class HomeScreenVM @Inject constructor(
     }
 
     init {
+        loadAllSectionsPacks()
+        loadVibePacks()
+    }
+
+    fun refreshAllData(){
+        _uiState.update {
+            HomeScreenUIState()
+        }
         loadAllSectionsPacks()
         loadVibePacks()
     }

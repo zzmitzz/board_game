@@ -1,15 +1,19 @@
 package com.alantech.boardgame.features.ingame.screen
 
+import android.widget.Space
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -18,34 +22,44 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alantech.boardgame.R
+import com.alantech.boardgame.config.GameSettingConfigCurrentSession
+import com.alantech.boardgame.config.PersistenceSetting
 import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.UIEffect
 import com.alantech.boardgame.features.ingame.UIState
 import com.alantech.boardgame.features.ingame.components.ActionButtons
 import com.alantech.boardgame.features.ingame.components.CardEffectWrapper
+import com.alantech.boardgame.features.ingame.components.EdgeToEdgeProgressBar
 import com.alantech.boardgame.features.ingame.components.InGameHeader
+import com.alantech.boardgame.features.ingame.components.InGameSettingDialog
 import com.alantech.boardgame.features.ingame.components.PlayerTurnChip
 import com.alantech.boardgame.features.ingame.components.TinderCardStack
 import com.alantech.boardgame.features.ingame.dialog.CardHintDialog
 import com.alantech.boardgame.features.ingame.dialog.ConfirmExitDialog
-import com.alantech.boardgame.features.ingame.dialog.SettingDialog
 import com.alantech.boardgame.ui.app.LocalSnackbarHostState
 import com.alantech.boardgame.ui.common.ErrorComponent
-import com.alantech.boardgame.ui.common.LoadingComponent
 import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.CardDetailMedia
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.ui.theme.LightBackground
+import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.utils.BlurBackgroundDialog
 import com.alantech.boardgame.utils.DialogListener
+import com.alantech.boardgame.utils.DialogPlayerListener
+import com.alantech.boardgame.utils.PlusJakartaSans
+import com.alantech.boardgame.utils.SettingDialogListener
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -59,13 +73,18 @@ fun ActiveGameScreenStateful(
     val toast = LocalSnackbarHostState.current
     val uiState = mViewModel.uiState.collectAsStateWithLifecycle()
     val timeLeft = mViewModel.timeLeft.collectAsStateWithLifecycle()
-    val gamePermissionSetting = mViewModel.gamePersistenceSetting.collectAsStateWithLifecycle()
     val activeGameContext = remember { ActiveGameScreenContractImpl(mViewModel) }
     val isCardHintOpen = remember { mutableStateOf(false) }
     val dialogOnExitGame = remember { mutableStateOf(false) }
-    val dialogOnSetting = remember { mutableStateOf(false) }
+    val lottieShuffle by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(R.raw.lottie_shuffle_card)
+    )
+    var settingDialog by remember { mutableStateOf(false) }
+    var mTriggerEffect by remember {
+        mutableIntStateOf(-1)
+    }
     val onDialogListener = remember {
-        object : DialogListener {
+        object : DialogPlayerListener() {
             override fun onConfirm(numberPlayer: Int) {
                 mViewModel.onEndGame()
             }
@@ -73,50 +92,82 @@ fun ActiveGameScreenStateful(
             override fun onCancel() {
                 dialogOnExitGame.value = false
                 isCardHintOpen.value = false
-                dialogOnSetting.value = false
             }
 
             override fun onDismiss() {
                 dialogOnExitGame.value = false
                 isCardHintOpen.value = false
-                dialogOnSetting.value = false
             }
 
         }
     }
-    val uiEffect = mViewModel.uiEffect.collectAsStateWithLifecycle(
-        initialValue = null
-    )
 
-    LaunchedEffect(Unit) {
+    val onDialogSettingListener = remember {
+        object : SettingDialogListener() {
+            override fun onConfirm(hapticEnabled: Boolean, soundEnabled: Boolean) {
+                settingDialog = false
+                mViewModel.saveSetting(hapticEnabled, soundEnabled)
+            }
+
+            override fun onCancel() {
+                settingDialog = false
+            }
+
+            override fun onDismiss() {
+                settingDialog = false
+            }
+
+
+        }
+    }
+    LaunchedEffect("initGame") {
         mViewModel.initGame(packId)
     }
 
-    LaunchedEffect(key1 = uiEffect.value) {
-        when (val effect = uiEffect.value) {
-            is UIEffect.OnGameEnd -> {
-                onExitGame()
-            }
+    LaunchedEffect("observeEffect") {
+        mViewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is UIEffect.OnGameEnd -> {
+                    onExitGame()
+                }
 
-            is UIEffect.ShowToast -> {
-                toast.showSnackbar(
-                    message = effect.message,
-                    duration = SnackbarDuration.Short
-                )
-            }
+                is UIEffect.ShowToast -> {
+                    toast.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
 
-            is UIEffect.OnTimeUp -> {
-                mViewModel.onCardComplete(false)
-            }
+                is UIEffect.OnTimeUp -> {
+                    mViewModel.onCardComplete(false)
+                }
 
-            is UIEffect.OnGameError -> {
-                toast.showSnackbar(
-                    message = effect.message,
-                    duration = SnackbarDuration.Long
-                )
-            }
+                is UIEffect.OnGameError -> {
+                    toast.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Long
+                    )
+                }
 
-            else -> {}
+                is UIEffect.OnShuffleCards -> {
+                    mTriggerEffect++
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    var mTextLoading by remember { mutableStateOf("") }
+
+    LaunchedEffect(uiState.value) {
+        if (uiState.value == UIState.DataLoading) {
+            delay(500)
+            mTextLoading = "Loading..."
+            delay(3000)
+            mTextLoading = "Translating Cards..."
+            delay(3000)
+            mTextLoading = "Shuffling Cards..."
         }
     }
 
@@ -129,7 +180,29 @@ fun ActiveGameScreenStateful(
     ) {
         when (val state = uiState.value) {
             is UIState.DataLoading -> {
-                LoadingComponent()
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    LottieAnimation(
+                        composition = lottieShuffle,
+                        iterations = LottieConstants.IterateForever,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 40.dp)
+                            .height(300.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AnimatedVisibility(mTextLoading.isNotBlank()) {
+                        Text(
+                            text = mTextLoading,
+                            fontSize = 20.sp,
+                            fontFamily = PlusJakartaSans,
+                            color = Color.White
+                        )
+                    }
+                }
             }
 
             is UIState.DataError -> {
@@ -143,16 +216,31 @@ fun ActiveGameScreenStateful(
                             dialogOnExitGame.value = true
                         },
                         onSettingsClick = {
-                            dialogOnSetting.value = true
+                            settingDialog = true
                         },
                         onCardHintClick = {
                             isCardHintOpen.value = true
                         },
                         state = state,
-                        timeLeft = if (timeLeft.value != 0) timeLeft.value.toString() else stringResource(
-                            id = R.string.time_up
-                        )
+                        triggerEffect = mTriggerEffect,
+                        timeLeft = timeLeft.value
                     )
+                }
+                AnimatedVisibility(
+                    visible = settingDialog
+                ) {
+                    BlurBackgroundDialog(
+                        listener = onDialogSettingListener
+                    ) {
+                        InGameSettingDialog(
+                            hapticEnabled = state.persistenceSetting.isHapticOn,
+                            soundEnabled = state.persistenceSetting.isSoundOn,
+                            onSave = { haptic,sound -> onDialogSettingListener.onConfirm(haptic, sound)},
+                            onCancel = {
+                                onDialogSettingListener.onCancel()
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -174,39 +262,21 @@ fun ActiveGameScreenStateful(
         }
     }
     AnimatedVisibility(
-        visible = dialogOnSetting.value
-    ) {
-        BlurBackgroundDialog(
-            listener = onDialogListener
-        ) {
-            SettingDialog(
-                initialSetting = gamePermissionSetting.value,
-                onSave = {
-                    dialogOnSetting.value = false
-                    mViewModel.onSaveSetting(it)
-                },
-                onCancel = {
-                    dialogOnSetting.value = false
-                    onDialogListener.onCancel()
-                }
-            )
-        }
-    }
-
-    AnimatedVisibility(
         visible = isCardHintOpen.value && (uiState.value is UIState.InGameUIState)
     ) {
         BlurBackgroundDialog(
             listener = onDialogListener
         ) {
             val currentCard = (uiState.value as UIState.InGameUIState).currentPackCards[
-                    (uiState.value as UIState.InGameUIState).currentCardIndex
+                (uiState.value as UIState.InGameUIState).currentCardIndex
             ]
             CardHintDialog(
                 cardHint = currentCard.hint
             )
         }
     }
+
+
 }
 
 
@@ -225,11 +295,25 @@ fun ActiveGameScreen(
     onSettingsClick: () -> Unit,
     onCardHintClick: () -> Unit = {},
     state: UIState.InGameUIState,
-    timeLeft: String = ""
+    triggerEffect: Int = 0,
+    timeLeft: Float = 0f
 ) {
 
     var showShuffleCardsAnimation by remember { mutableStateOf(false) }
-    LaunchedEffect(state.round) {
+    val onCardComplete = {
+        if (!showShuffleCardsAnimation) {
+            actionContext.onComplete()
+        }
+    }
+    val onCardForfeit = {
+        if (!showShuffleCardsAnimation) {
+            actionContext.onForfeit()
+        }
+    }
+    LaunchedEffect(key1 = triggerEffect) {
+        if (triggerEffect == -1) {
+            return@LaunchedEffect
+        }
         launch {
             showShuffleCardsAnimation = true
             delay(2000L)
@@ -256,7 +340,6 @@ fun ActiveGameScreen(
             roundText = "${stringResource(R.string.round)} ${state.round}/${state.totalRound}",
             onCloseClick = onBackClick,
             onSettingsClick = onSettingsClick,
-            timeLeft = timeLeft
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -284,25 +367,34 @@ fun ActiveGameScreen(
                     .fillMaxSize()
                     .graphicsLayer { alpha = 1f - alphaVisible.value }
             ) {
-                TinderCardStack(
+                EdgeToEdgeProgressBar(
+                    isEnable = GameSettingConfigCurrentSession.getIsTimerOn(),
+                    progress = timeLeft / 30f,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    cards = state.currentPackCards,
-                    currentIndex = state.currentCardIndex,
-                    penalty = state.penalty,
-                    onCardHintClick = onCardHintClick
-                )
+                    ropeThickness = 4.dp,
+                    ropeColor = LightSecondTextOBG,
+                    trackColor = Color(0xFF333333),
+                    cardBackgroundColor = Color.Transparent,
+                    cornerRadius = 24.dp
+                ) {
+                    TinderCardStack(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        cards = state.currentPackCards,
+                        currentIndex = state.currentCardIndex,
+                        penalty = state.penalty,
+                        onCardHintClick = onCardHintClick
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                     ActionButtons(
-                        onComplete = {
-                            actionContext.onComplete()
-                        },
-                        onForfeit = {
-                            actionContext.onForfeit()
-                        }
+                        onComplete = onCardComplete,
+                        onForfeit = onCardForfeit
                     )
                 }
 
@@ -335,17 +427,19 @@ private fun PVActiveGame() {
             state = UIState.InGameUIState(
                 0, 0,
                 0, mutableListOf<CardDetail>().apply {
-                    add(CardDetail(
-                        id = "",
-                        category = "Dare",
-                        description = "There is the card-th",
-                        media = CardDetailMedia(
-                            image = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
-                            video = null
-                        ), hint = ""
+                    add(
+                        CardDetail(
+                            id = "",
+                            category = "Dare",
+                            description = "There is the card-th",
+                            media = CardDetailMedia(
+                                image = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
+                                video = null
+                            ), hint = ""
 
-                    ))
-                }, GamePlayer(1, Color(0xFF000000), "Player1"), "", "",
+                        )
+                    )
+                }, GamePlayer(1, Color(0xFF000000), "Player1"), "", "", PersistenceSetting()
             )
         )
     }

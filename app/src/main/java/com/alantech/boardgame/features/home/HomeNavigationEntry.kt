@@ -1,11 +1,14 @@
 package com.alantech.boardgame.features.home
 
+import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
+import coil.util.Logger
 import com.alantech.boardgame.features.gameend.GameEndScreen
 import com.alantech.boardgame.features.gamesetup.GameSetupScreen
 import com.alantech.boardgame.features.gamesetup.GameSetupScreenStateful
@@ -94,6 +97,9 @@ fun NavGraphBuilder.homeNavigationEntry(
 
         composable<HomeRoute.InGame> { backStackEntry ->
             val viewModel = navController.shareViewModel<InGameVM>(backStackEntry)
+            LaunchedEffect(Unit) {
+                Log.d("HomeNavigationEntry", "InGame: ${viewModel.hashCode()}")
+            }
             val id = backStackEntry.toRoute<HomeRoute.InGame>().id
             viewModel.currentGameID = id
             ActiveGameScreenStateful(
@@ -105,6 +111,9 @@ fun NavGraphBuilder.homeNavigationEntry(
 
         composable<HomeRoute.EndGame> { backStackEntry ->
             val viewModel = navController.shareViewModel<InGameVM>(backStackEntry)
+            LaunchedEffect(Unit) {
+                Log.d("HomeNavigationEntry", "EndGame: ${viewModel.hashCode()}")
+            }
             GameEndScreen(
                 onBackClick = {
                     navController.navigate(

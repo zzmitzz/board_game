@@ -32,14 +32,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.alantech.boardgame.config.PersistenceSetting
 import com.alantech.boardgame.features.gamesetup.components.AddPlayerDialog
 import com.alantech.boardgame.features.gamesetup.components.GameSetupTopBar
 import com.alantech.boardgame.features.gamesetup.components.HouseRulesSection
 import com.alantech.boardgame.features.gamesetup.components.PlayerSection
+import com.alantech.boardgame.features.ingame.dialog.SettingDialog
 import com.alantech.boardgame.ui.app.LocalSnackbarHostState
 import com.alantech.boardgame.ui.model.GamePlayer
+import com.alantech.boardgame.utils.BlurBackgroundDialog
 import com.alantech.boardgame.utils.DialogListener
+import com.alantech.boardgame.utils.DialogPlayerListener
 import kotlinx.coroutines.flow.collectLatest
 
 
@@ -105,6 +108,10 @@ fun GameSetupScreenStateful(
             override fun onRoundChange(round: Int) {
                 vm.setRoundAmount(round)
             }
+
+            override fun onSaveSetting(setting: com.alantech.boardgame.config.PersistenceSetting) {
+                vm.onSaveSetting(setting)
+            }
         }
     }
 
@@ -128,6 +135,7 @@ interface GameSetupScreenAction {
     fun onSpeedModeChange(b: Boolean)
     fun onPenaltyChange(b: Boolean)
     fun onRoundChange(round: Int)
+    fun onSaveSetting(setting: PersistenceSetting)
 }
 
 
@@ -139,8 +147,9 @@ fun GameSetupScreen(
 ) {
 
     var showAddingMemberDialog by remember { mutableStateOf(false) }
+    var showSettingDialog by remember { mutableStateOf(false) }
     val dialogListener = remember {
-        object : DialogListener {
+        object : DialogPlayerListener() {
             override fun onConfirm(players: Int) {
                 showAddingMemberDialog = false
                 action.onAddPlayers(players)
@@ -148,14 +157,15 @@ fun GameSetupScreen(
 
             override fun onCancel() {
                 showAddingMemberDialog = false
+                showSettingDialog = false
             }
 
             override fun onDismiss() {
                 showAddingMemberDialog = false
+                showSettingDialog = false
             }
         }
     }
-
 
 
     Column(
@@ -166,7 +176,10 @@ fun GameSetupScreen(
             .padding(horizontal = 24.dp)
             .padding(bottom = 32.dp)
     ) {
-        GameSetupTopBar(onBackClick = onBackClick)
+        GameSetupTopBar(
+            onBackClick = onBackClick,
+            onSettingClick = { showSettingDialog = true }
+        )
 
         Column(
             modifier = Modifier
@@ -236,6 +249,22 @@ fun GameSetupScreen(
         AddPlayerDialog(dialogListener)
     }
 
+    AnimatedVisibility(visible = showSettingDialog) {
+        BlurBackgroundDialog(listener = dialogListener) {
+            SettingDialog(
+                initialSetting = uiState.setting,
+                onSave = {
+                    showSettingDialog = false
+                    action.onSaveSetting(it)
+                },
+                onCancel = {
+                    showSettingDialog = false
+                    dialogListener.onCancel()
+                }
+            )
+        }
+    }
+
 }
 
 @Preview
@@ -252,6 +281,7 @@ private fun GameSuPV() {
         override fun onSpeedModeChange(b: Boolean) {}
         override fun onPenaltyChange(b: Boolean) {}
         override fun onRoundChange(round: Int) {}
+        override fun onSaveSetting(setting: PersistenceSetting) {}
     }
     with(mock){
         GameSetupScreen {  }

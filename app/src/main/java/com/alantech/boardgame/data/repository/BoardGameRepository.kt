@@ -7,8 +7,8 @@ import com.alantech.boardgame.ui.model.PackDetailUIModel
 interface BoardGameRepository {
     suspend fun getPacks(): List<PackDetailUIModel>
     suspend fun getPackById(id: String): PackDetailUIModel?
-    suspend fun getCardsByPackId(packId: String): List<CardDetail>
-    suspend fun getSampleCard(packId: String): List<CardDetail>
+    suspend fun getCardsByPackId(packId: String, language: String): List<CardDetail>
+    suspend fun getSampleCard(packId: String, language: String): List<CardDetail>
     suspend fun getRecentSearch(): List<String>
     suspend fun saveRecentSearch(search: String)
     suspend fun getSuggestPacks(): List<PacksPreview>

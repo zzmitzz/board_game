@@ -1,14 +1,15 @@
 package com.alantech.boardgame.features.gamesetup
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alantech.boardgame.R
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession
+import com.alantech.boardgame.config.PersistenceSetting
 import com.alantech.boardgame.ui.model.GamePlayer
+import com.alantech.boardgame.utils.DataStoreUtils
 import com.alantech.boardgame.utils.random
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
 data class GameSetupUIState(
@@ -24,7 +26,8 @@ data class GameSetupUIState(
     val nsfwEnable: Boolean = false,
     val speedRun: Boolean = false,
     val penalty: Boolean = false,
-    val roundAmount: Int = 5
+    val roundAmount: Int = 5,
+    val setting: PersistenceSetting = PersistenceSetting()
 )
 
 sealed class GameSetupUIEffect() {
@@ -33,7 +36,15 @@ sealed class GameSetupUIEffect() {
 }
 
 
-class GameSetupVM : ViewModel() {
+@HiltViewModel
+class GameSetupVM @Inject constructor(
+    private val dataStoreUtils: DataStoreUtils
+) : ViewModel() {
+
+    companion object {
+        val PREF_USER_SETTING = stringPreferencesKey("pref_user_setting")
+    }
+
     private val gameSession by lazy {
         GameSettingConfigCurrentSession
     }
@@ -46,6 +57,25 @@ class GameSetupVM : ViewModel() {
     private var _uiEffect: MutableSharedFlow<GameSetupUIEffect> =
         MutableSharedFlow<GameSetupUIEffect>()
     val uiEffect: SharedFlow<GameSetupUIEffect> = _uiEffect
+
+    init {
+        loadSetting()
+    }
+
+    private fun loadSetting() {
+        viewModelScope.launch {
+            val setting = dataStoreUtils.getSerializedData(PREF_USER_SETTING, PersistenceSetting::class.java)
+                ?: PersistenceSetting()
+            _uiState.update { it.copy(setting = setting) }
+        }
+    }
+
+    fun onSaveSetting(setting: PersistenceSetting) {
+        viewModelScope.launch {
+            dataStoreUtils.setSerializedData(PREF_USER_SETTING, setting)
+            _uiState.update { it.copy(setting = setting) }
+        }
+    }
 
     fun setGamePlayer(players: List<GamePlayer>) {
         val newPlayers = players.toSet()

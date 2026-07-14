@@ -6,8 +6,9 @@ import com.google.gson.reflect.TypeToken
 
 
 
-inline fun <reified T> Gson.fromJsonWithTypeToken(value: String): T =
+fun <T> Gson.fromJsonWithTypeToken(value: String): T =
     this.fromJson(value, object : TypeToken<T>() {}.type)
 
-inline fun <reified T> Gson.toJsonWithTypeToken(obj: T): String =
+fun <T> Gson.toJsonWithTypeToken(obj: T): String =
     this.toJson(obj, object : TypeToken<T>() {}.type)
+

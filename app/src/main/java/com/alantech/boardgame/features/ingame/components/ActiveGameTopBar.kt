@@ -30,13 +30,11 @@ fun InGameHeader(
     roundText: String,
     onCloseClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    timeLeft: String
 ) = ActiveGameTopBar(
     gameName = gameName,
     roundText = roundText,
     onCloseClick = onCloseClick,
     onSettingsClick = onSettingsClick,
-    timeLeft = timeLeft
 )
 
 
@@ -46,7 +44,6 @@ fun ActiveGameTopBar(
     roundText: String,
     onCloseClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    timeLeft: String
 ) {
     val plusJakarta = FontFamily(Font(R.font.plus_jakarta_sans))
 
@@ -64,19 +61,6 @@ fun ActiveGameTopBar(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
                     tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            AnimatedVisibility(GameSettingConfigCurrentSession.getIsTimerOn()) {
-                Text(
-                    text = timeLeft,
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = plusJakarta,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.widthIn(max = 40.dp),
-                    overflow = TextOverflow.Clip
                 )
             }
         }
@@ -109,6 +93,7 @@ fun ActiveGameTopBar(
                 fontFamily = plusJakarta
             )
         }
+
 
         IconButton(
             modifier = Modifier.align(Alignment.CenterEnd),

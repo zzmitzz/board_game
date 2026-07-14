@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.gameend
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
@@ -58,6 +60,11 @@ private fun GameEndContent(
     onPlayAgainClick: () -> Unit = {},
     entries: List<Pair<GamePlayer, GamePlayerScore>>,
 ) {
+    BackHandler(
+        enabled = true
+    ) {
+        onGoHome()
+    }
 
     Column(
         modifier = Modifier
@@ -87,9 +94,9 @@ private fun GameEndContent(
             item {
                 WinnerSection(gamePlayer = entries.firstOrNull()?.first!!)
             }
-            item {
-                CapturedMomentsSection()
-            }
+//            item {
+//                CapturedMomentsSection()
+//            }
             item {
                 LeaderboardSection(entries = entries)
             }
@@ -110,7 +117,7 @@ private fun GameEndContent(
                 shape = RoundedCornerShape(28.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Sync,
+                    imageVector = Icons.Filled.Home,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
@@ -142,7 +149,7 @@ private fun GameEndContent(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
-                    imageVector = Icons.Filled.SkipNext,
+                    imageVector = Icons.Filled.Sync,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
@@ -160,25 +167,25 @@ private class GameEndPreviewProvider :
                     GamePlayerScore(
                         numberCardCompleted = 8,
                         numberCardForfeited = 1,
-                        timeSpent = 120
+                        timeSpent = 120f
                     ),
             GamePlayer(id = 2, color = ComposeColor(0xFF4ADE80), name = "Mike") to
                     GamePlayerScore(
                         numberCardCompleted = 6,
                         numberCardForfeited = 2,
-                        timeSpent = 140
+                        timeSpent = 140f
                     ),
             GamePlayer(id = 3, color = ComposeColor(0xFFF87171), name = "Jessica") to
                     GamePlayerScore(
                         numberCardCompleted = 5,
                         numberCardForfeited = 3,
-                        timeSpent = 100
+                        timeSpent = 100f
                     ),
             GamePlayer(id = 4, color = ComposeColor(0xFFFBBF24), name = "David") to
                     GamePlayerScore(
                         numberCardCompleted = 3,
                         numberCardForfeited = 4,
-                        timeSpent = 160
+                        timeSpent = 160f
                     ),
         )
     )
