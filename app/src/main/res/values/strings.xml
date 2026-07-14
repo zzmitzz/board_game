@@ -24,4 +24,10 @@
     <string name="auto_translate">Auto Translate</string>
     <string name="choose_language">Choose language</string>
     <string name="home">Home</string>
+    <string name="setting">Setting</string>
+    <string name="developer">\@Develop by Mitz</string>
+    <string name="feature_is_soon_available">Feature is soon available</string>
+    <string name="time_up">Time up</string>
+    <string name="board_game">Board game</string>
+    <string name="round">ROUND</string>
 </resources>

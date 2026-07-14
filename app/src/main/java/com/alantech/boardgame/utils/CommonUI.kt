@@ -104,3 +104,6 @@ fun getListGradientColorPacks() = listOf(
     listOf(Color(0xFF11998E), Color(0xFF38EF7D), Color(0xFF11D4A0)),
     listOf(Color(0xFFFFD000), Color(0xFFFF8C00), Color(0xFFFF4500)),
 )
+
+
+const val clickInterval: Long = 800L

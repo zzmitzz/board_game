@@ -90,6 +90,7 @@ fun HomeScreen(
     goToSetting: () -> Unit,
     goToCardDetails: (String) -> Unit,
     goToSearch: () -> Unit,
+    onSeeAllClick: (String) -> Unit = {},
     viewModel: HomeScreenVM
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -101,6 +102,9 @@ fun HomeScreen(
         onCardClick = goToCardDetails,
         onVibeClick = {
             viewModel.selectVibeChip(it)
+        },
+        onSeeAllClick = {
+            onSeeAllClick(it)
         }
     )
 }
@@ -112,7 +116,8 @@ internal fun HomeScreenContent(
     onSettingClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onCardClick: (String) -> Unit = {},
-    onVibeClick: (String) -> Unit = {}
+    onVibeClick: (String) -> Unit = {},
+    onSeeAllClick: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val packColor = remember {
@@ -204,8 +209,9 @@ internal fun HomeScreenContent(
         uiState.sectionPacks.forEach { (section, packs) ->
             SectionRow(
                 section = section,
-                packs = packs,
-                onCardClick = onCardClick
+                packs = packs.subList(0, packs.size.coerceAtMost(5)),
+                onCardClick = onCardClick,
+                onSeeAllClick = onSeeAllClick
             )
             Spacer(modifier = Modifier.height(32.dp))
         }

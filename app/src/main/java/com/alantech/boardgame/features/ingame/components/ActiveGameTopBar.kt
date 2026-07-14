@@ -1,6 +1,7 @@
 package com.alantech.boardgame.features.ingame.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -14,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alantech.boardgame.R
@@ -27,7 +30,7 @@ fun InGameHeader(
     roundText: String,
     onCloseClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    timeLeft: Int
+    timeLeft: String
 ) = ActiveGameTopBar(
     gameName = gameName,
     roundText = roundText,
@@ -43,7 +46,7 @@ fun ActiveGameTopBar(
     roundText: String,
     onCloseClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    timeLeft: Int = 30
+    timeLeft: String
 ) {
     val plusJakarta = FontFamily(Font(R.font.plus_jakarta_sans))
 
@@ -66,11 +69,14 @@ fun ActiveGameTopBar(
             Spacer(modifier = Modifier.width(8.dp))
             AnimatedVisibility(GameSettingConfigCurrentSession.getIsTimerOn()) {
                 Text(
-                    text = timeLeft.toString(),
+                    text = timeLeft,
                     color = Color.White,
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = plusJakarta
+                    fontFamily = plusJakarta,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.widthIn(max = 40.dp),
+                    overflow = TextOverflow.Clip
                 )
             }
         }
@@ -84,7 +90,16 @@ fun ActiveGameTopBar(
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = plusJakarta
+                fontFamily = plusJakarta,
+                modifier = Modifier
+                    .widthIn(
+                        max = 120.dp
+                    )
+                    .basicMarquee(
+                        iterations = Int.MAX_VALUE,
+                    ),
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
             )
             Text(
                 text = roundText.uppercase(),

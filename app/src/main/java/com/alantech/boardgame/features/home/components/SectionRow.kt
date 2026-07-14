@@ -53,12 +53,14 @@ fun SectionRow(
     section: SectionEntity,
     packs: List<PacksPreview>,
     onCardClick: (String) -> Unit,
+    onSeeAllClick: (String) -> Unit= {},
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         SectionHeader(
             title = section.name.orEmpty(),
-            modifier = Modifier.padding(horizontal = 24.dp)
+            modifier = Modifier.padding(horizontal = 24.dp),
+            onSeeAllClick = { onSeeAllClick(section.id.orEmpty()) }
         )
         Spacer(modifier = Modifier.height(16.dp))
         when (SectionUiType.from(section.uiType)) {
@@ -71,7 +73,7 @@ fun SectionRow(
 }
 
 @Composable
-private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
+private fun SectionHeader(title: String, modifier: Modifier = Modifier, onSeeAllClick: () -> Unit = {}) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -88,7 +90,9 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
             color = LightSecondTextOBG,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.clickable { }
+            modifier = Modifier.clickable {
+                onSeeAllClick()
+            }
         )
     }
 }
@@ -133,7 +137,7 @@ private fun GridSection(
 }
 
 @Composable
-private fun ListSection(
+ fun ListSection(
     packs: List<PacksPreview>,
     onCardClick: (String) -> Unit,
 ) {

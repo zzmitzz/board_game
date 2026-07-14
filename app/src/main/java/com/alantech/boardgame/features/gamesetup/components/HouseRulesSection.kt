@@ -29,9 +29,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.alantech.boardgame.R
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession
+import com.alantech.boardgame.ui.app.LocalSnackbarHostState
 import com.alantech.boardgame.utils.PlusJakartaSans
+import kotlinx.coroutines.launch
 
 @Composable
 fun HouseRulesSection(
@@ -51,6 +57,9 @@ fun HouseRulesSection(
     var penaltyInputString = remember {
         mutableStateOf(GameSettingConfigCurrentSession.penaltyInput)
     }
+    val snackBar = LocalSnackbarHostState.current
+    val featureIsSoonAvailable = stringResource(R.string.feature_is_soon_available)
+    val scopedCoroutine = rememberCoroutineScope ()
 
     Column(modifier = modifier.fillMaxWidth().padding(
         bottom = 16.dp
@@ -76,7 +85,16 @@ fun HouseRulesSection(
                 )
             },
             isChecked = recordDares,
-            onCheckedChange = { onRecordDaresChange(it) }
+            onCheckedChange = {
+                scopedCoroutine.launch {
+                    snackBar.showSnackbar(
+                        message = featureIsSoonAvailable,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+//                onRecordDaresChange(it)
+            },
+            isAvailable = false
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -132,6 +150,7 @@ fun HouseRulesSection(
             onInputTextChange = {
                 penaltyInputString.value = it
                 GameSettingConfigCurrentSession.penaltyInput = it
+
             }
         )
 
@@ -162,12 +181,17 @@ fun RuleItem(
     iconColor: Color,
     icon: @Composable () -> Unit,
     isChecked: Boolean,
+    isAvailable: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF332D3B), RoundedCornerShape(32.dp))
+            .alpha(
+                if(isAvailable) 1f else 0.5f
+            )
             .padding(8.dp)
             .padding(end = 8.dp),
         verticalAlignment = Alignment.CenterVertically

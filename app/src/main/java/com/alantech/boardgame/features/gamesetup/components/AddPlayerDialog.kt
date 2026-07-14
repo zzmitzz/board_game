@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,12 +41,16 @@ import com.alantech.boardgame.ui.theme.LightTextColor
 import com.alantech.boardgame.utils.BlurBackgroundDialog
 import com.alantech.boardgame.utils.DialogListener
 import com.alantech.boardgame.utils.PlusJakartaSans
+import com.alantech.boardgame.utils.clickInterval
 
 
 @Composable
 fun AddPlayerDialog(
     dialogListener: DialogListener
 ) {
+
+    var lastClickTime = remember { 0L }
+
     BlurBackgroundDialog(dialogListener) {
         var selectedCount by remember { mutableStateOf("1") }
         var customValue by remember { mutableStateOf("") }
@@ -105,24 +111,44 @@ fun AddPlayerDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.cancel_text),
-                    color = Color(0xFFCFC2D6), // Light grayish purple from your code
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                        .align(Alignment.CenterVertically)
-                        .clickable { dialogListener.onCancel() }
-                )
+                Button(
+                    onClick = {
+                        dialogListener.onCancel()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Transparent
+                    ),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel_text),
+                        color = Color(0xFFCFC2D6), // Light grayish purple from your code
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .align(Alignment.CenterVertically)
+                    )
+                }
 
                 // 2. Confirm Selection Button
                 Surface(
-                    onClick = { dialogListener.onConfirm(selectedCount.toInt()) },
+                    onClick = {
+                        if(System.currentTimeMillis() - lastClickTime > clickInterval){
+                            lastClickTime = System.currentTimeMillis()
+                            if(selectedCount.isNotBlank()){
+                                val players = selectedCount.toIntOrNull()
+                                players?.let {
+                                    dialogListener.onConfirm(it)
+                                }
+                            }
+                        }
+                    },
                     shape = CircleShape, // Makes it pill-shaped
                     color = Color(0xFFD7B4F3), // The bright lilac/purple from the image
                     tonalElevation = 8.dp, // Adds that slight glow/shadow effect
-                    modifier = Modifier.padding(start = 16.dp)
+                    modifier = Modifier.padding(start = 16.dp).weight(1f)
                 ) {
                     Text(
                         text = stringResource(R.string.confirm_selection),

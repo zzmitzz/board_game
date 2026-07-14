@@ -44,8 +44,8 @@ fun GameEndScreen(
     GameEndContent(
         onGoHome = onBackClick,
         onPlayAgainClick = onPlayAgainClick,
-        entries = remember(vm.gamePlayerManager!!.getGamePlayersScore()) {
-            vm.gamePlayerManager!!.getGamePlayersScore().entries
+        entries = remember(vm.gamePlayerManager!!.gamePlayersScore) {
+            vm.gamePlayerManager!!.gamePlayersScore.entries
                 .map { it.key to it.value }
                 .sortedWith { a, b -> a.second.compareTo(b.second) }
         }

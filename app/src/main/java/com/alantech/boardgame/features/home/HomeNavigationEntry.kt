@@ -12,6 +12,7 @@ import com.alantech.boardgame.features.gamesetup.GameSetupScreenStateful
 import com.alantech.boardgame.features.gamesetup.GameSetupVM
 import com.alantech.boardgame.features.home.screen.HomeScreen
 import com.alantech.boardgame.features.home.screen.HomeScreenVM
+import com.alantech.boardgame.features.home.section_detail.SectionDetailScreens
 import com.alantech.boardgame.features.home.shareviewmodel.shareViewModel
 import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.screen.ActiveGameScreenStateful
@@ -40,6 +41,9 @@ sealed class HomeRoute {
 
     @Serializable
     data object Setting : HomeRoute()
+
+    @Serializable
+    data class SectionDetail(val sectionID: String) : HomeRoute()
 }
 
 fun NavGraphBuilder.homeNavigationEntry(
@@ -51,10 +55,15 @@ fun NavGraphBuilder.homeNavigationEntry(
         composable<HomeRoute.Main> {
             val mViewModel = hiltViewModel<HomeScreenVM>()
             HomeScreen(
-                {}, { packID ->
+                {
+                    navController.navigate(RootRoute.Setting)
+                }, { packID ->
                     navController.navigate(HomeRoute.PackDetail(packID))
                 }, {
                     navController.navigate(HomeRoute.GameSearch)
+                },
+                onSeeAllClick = {
+                    navController.navigate(HomeRoute.SectionDetail(it))
                 },
                 viewModel = mViewModel
             )
@@ -110,6 +119,13 @@ fun NavGraphBuilder.homeNavigationEntry(
                     navController.popBackStack<HomeRoute.GameSetupLobby>(inclusive = false)
                 },
                 vm = viewModel
+            )
+        }
+
+        composable<HomeRoute.SectionDetail> { backStackEntry ->
+            SectionDetailScreens(
+                onBackClick = { navController.popBackStack() },
+                onCardClick = { navController.navigate(HomeRoute.PackDetail(it)) }
             )
         }
 

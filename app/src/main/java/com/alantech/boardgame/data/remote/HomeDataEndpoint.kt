@@ -19,6 +19,11 @@ interface HomeDataEndpoint {
     @GET("/api/v1/sections")
     suspend fun getSections(): List<SectionEntity>
 
+    @GET("/api/v1/sections/detail")
+    suspend fun getSectionDetail(
+        @Query("section_id") sectionId: String
+    ): SectionEntity
+
     @GET("/api/v1/sections/packs")
     suspend fun getSectionPacks(
         @Query("section_id") sectionId: String

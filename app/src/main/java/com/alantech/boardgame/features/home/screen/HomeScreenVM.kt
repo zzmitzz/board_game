@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,27 +62,31 @@ class HomeScreenVM @Inject constructor(
         loadVibePacks()
     }
 
-    private fun loadVibePacks(){
-        _uiState.update { it.copy(
-            isVibeComponentLoading = true
-        ) }
+    private fun loadVibePacks() {
+        // 1. Atomically set loading to true
+        _uiState.update { it.copy(isVibeComponentLoading = true) }
 
         viewModelScope.launch {
             try {
                 val vibes = homeDataRepository.getAllVibesData()
-                if(vibes.isSuccess){
-                    updateUIState(_uiState.value.copy(
-                        isVibeComponentLoading = false,
-                        listVibePacks = vibes.getOrNull() ?: listOf()
-                    ))
-                }else if(vibes.isFailure){
-                    updateUIState(_uiState.value.copy(
-                        isVibeComponentLoading = false,
-                        errorMessage = vibes.exceptionOrNull()?.message
-                    ))
-                    showErrorToast(vibes.exceptionOrNull()?.message ?: "Failed to load vibes")
+                if (vibes.isSuccess) {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            isVibeComponentLoading = false,
+                            listVibePacks = vibes.getOrNull().orEmpty()
+                        )
+                    }
+                } else if (vibes.isFailure) {
+                    val errorMsg = vibes.exceptionOrNull()?.message ?: "Failed to load vibes"
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            isVibeComponentLoading = false,
+                            errorMessage = errorMsg
+                        )
+                    }
+                    showErrorToast(errorMsg)
                 }
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 showErrorToast(e.message ?: "Failed to load vibes")
             }
         }
@@ -95,30 +100,47 @@ class HomeScreenVM @Inject constructor(
 
     private fun loadAllSectionsPacks() {
         _uiState.update { it.copy(isTrendingComponentLoading = true) }
+
         viewModelScope.launch {
-            withContext(Dispatchers.IO){
+            // Dispatchers.IO is correct for heavy networking/DB work
+            withContext(Dispatchers.IO) {
                 try {
                     val sectionResult = homeDataRepository.getSections()
-                    if(sectionResult.isSuccess){
+                    if (sectionResult.isSuccess) {
                         val mapData = mutableMapOf<SectionEntity, List<PacksPreview>>()
-                        val packs = sectionResult.getOrNull() ?: listOf()
-                        packs.map {
+                        val packs = sectionResult.getOrNull().orEmpty()
+
+                        // Concurrent fetching using async
+                        packs.map { section ->
                             async {
-                                mapData[it] =
-                                    homeDataRepository.getSectionPacks(it.id!!).getOrNull() ?: listOf()
+                                val sectionPacks = homeDataRepository.getSectionPacks(section.id!!).getOrNull().orEmpty()
+                                // Synchronize map access because multiple async blocks write to it concurrently
+                                synchronized(mapData) {
+                                    mapData[section] = sectionPacks
+                                }
                             }
                         }.awaitAll()
-                        updateUIState(_uiState.value.copy(
-                            isTrendingComponentLoading = false,
-                            sectionPacks = mapData.toSortedMap { section, _ -> section.displayOrder ?: 0 }
-                        ))
-                    }else if(sectionResult.isFailure){
-                        updateUIState(_uiState.value.copy(
-                            isTrendingComponentLoading = false,
-                            errorMessage = sectionResult.exceptionOrNull()?.message ?: "Failed to load packs"
-                        ))
-                    }
 
+                        val sortedPacks = mapData.toSortedMap { section1, section2 ->
+                            (section1.displayOrder ?: 0).compareTo(section2.displayOrder ?: 0)
+                        }
+
+                        // 3. Atomically update the state with sorted section packs
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                isTrendingComponentLoading = false,
+                                sectionPacks = sortedPacks
+                            )
+                        }
+                    } else if (sectionResult.isFailure) {
+                        val errorMsg = sectionResult.exceptionOrNull()?.message ?: "Failed to load packs"
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                isTrendingComponentLoading = false,
+                                errorMessage = errorMsg
+                            )
+                        }
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, e.message ?: "Failed to load packs")
                 }

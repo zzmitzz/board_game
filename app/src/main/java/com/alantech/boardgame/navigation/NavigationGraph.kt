@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.alantech.boardgame.features.home.homeNavigationEntry
 import com.alantech.boardgame.features.onboard.onBoardingGraph
+import com.alantech.boardgame.features.setting.settingNavigationEntry
 import com.alantech.boardgame.ui.state.BoardGameAppState
 
 
@@ -19,5 +20,6 @@ fun NavigationGraph(
     ) {
         onBoardingGraph(mRootNavController)
         homeNavigationEntry(mRootNavController)
+        settingNavigationEntry(mRootNavController)
     }
 }

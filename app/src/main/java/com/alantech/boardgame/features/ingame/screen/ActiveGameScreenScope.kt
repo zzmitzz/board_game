@@ -12,11 +12,11 @@ class ActiveGameScreenContractImpl(
 
 
     override fun onComplete() {
-        viewModel.onUserDoneCard(true)
+        viewModel.onCardComplete(true)
     }
 
     override fun onForfeit() {
-        viewModel.onUserDoneCard(false)
+        viewModel.onCardComplete(false)
     }
 
 }

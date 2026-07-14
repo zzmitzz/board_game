@@ -9,16 +9,12 @@ plugins {
 
 android {
     namespace = "com.alantech.boardgame"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.alantech.boardgame"
         minSdk = 25
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -92,4 +88,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion") // Coroutines support for Room
     ksp("androidx.room:room-compiler:$roomVersion") // Or use KSP if configured
     implementation("com.google.code.gson:gson:2.14.0")
+
+
+    implementation("com.airbnb.android:lottie-compose:6.7.1")
 }

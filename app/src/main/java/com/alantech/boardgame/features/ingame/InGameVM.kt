@@ -1,19 +1,19 @@
 package com.alantech.boardgame.features.ingame
 
+import android.content.Context
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.alantech.boardgame.R
 import com.alantech.boardgame.config.GameSettingConfigCurrentSession as gameConfig
 import com.alantech.boardgame.config.PersistenceSetting
 import com.alantech.boardgame.data.repository.BoardGameRepository
-import com.alantech.boardgame.features.ingame.model.GamePlayerScore
 import com.alantech.boardgame.features.ingame.utils.GamePlayerManager
 
 import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.GamePlayer
-import com.alantech.boardgame.ui.model.loadingCardsDetailPack
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,10 +22,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import javax.inject.Inject
-import kotlin.math.round
+import kotlin.time.Duration.Companion.milliseconds
 
 
 sealed class UIState {
@@ -34,7 +35,8 @@ sealed class UIState {
     data class InGameUIState(
         val round: Int,
         val totalRound: Int,
-        val currentCard: CardDetail,
+        val currentCardIndex: Int,
+        val currentPackCards: List<CardDetail>,
         val currentPlayer: GamePlayer,
         val gameTitle: String,
         val penalty: String,
@@ -43,12 +45,17 @@ sealed class UIState {
 
 
 sealed class UIEffect {
+    data object OnTimeUp : UIEffect()
     data class ShowToast(val message: String) : UIEffect()
     data object OnGameEnd : UIEffect()
+    data class OnGameError (
+        val message: String
+    ) : UIEffect()
 }
 
 @HiltViewModel
 class InGameVM @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: BoardGameRepository
 ) : ViewModel() {
 
@@ -63,14 +70,16 @@ class InGameVM @Inject constructor(
     var gamePlayerManager: GamePlayerManager? = null
     val timeLeft: MutableStateFlow<Int> = MutableStateFlow(30)
 
+    private val mGameStateListener = object : GamePlayerManager.OnStateChange {
+        override fun onGameEnded() {
+            onEndGame()
+        }
 
-    // This variable is used to track number of player that have completed a card in the current round
-    private var playerCountTrack: Int = 0
+    }
+
     private val scope = viewModelScope + CoroutineExceptionHandler { _, _ ->
         _uiState.value = UIState.DataError("Something went wrong")
     }
-
-    private var cards: List<CardDetail> = emptyList()
 
 
     private fun checkState(): Boolean = _uiState.value is UIState.InGameUIState
@@ -90,37 +99,39 @@ class InGameVM @Inject constructor(
     fun initGame(packId: String) {
         // Check if all configs are valid
         if (!checkUpConfig()) return
-        gamePlayerManager = GamePlayerManager.createGamePlayerManager(gameConfig.getPlayers())
         // Initialize game
         Log.d("InGameVM", "packId: $packId")
         scope.launch {
             try {
-                cards = getCardsByPackId(packId)
+                val cards =  repository.getCardsByPackId(packId)
                 if (cards.isEmpty()) {
-                    emitErrorState("No cards found for this pack")
-                    return@launch
+                    throw Exception("No cards found for this pack")
                 }
-
-                _uiState.value = UIState.InGameUIState(
-                    round = 1,
-                    totalRound = gameConfig.getTotalRounds(),
-                    currentCard = cards.first(),
-                    currentPlayer = gameConfig.getPlayers().first(),
-                    gameTitle = "Board Game",
-                    penalty = gameConfig.penaltyInput,
+                gamePlayerManager = GamePlayerManager.createGamePlayerManager(
+                    gamePlayers = gameConfig.getPlayers(),
+                    gamePacks = cards
                 )
+                gamePlayerManager?.setOnStateChangeListener(mGameStateListener)
+                val pack = repository.getPackById(packId)
+
                 startTimerCountDown()
+                gamePlayerManager?.gameEngineState?.collectLatest { gameState ->
+                    _uiState.value = UIState.InGameUIState(
+                        round = gameState.currentRound,
+                        totalRound = gameConfig.getTotalRounds(),
+                        currentCardIndex = gamePlayerManager?.getCurrentCardIndex() ?: -1,
+                        currentPlayer = gameState.activePlayer,
+                        gameTitle = pack?.titleCard ?: context.getString(R.string.board_game),
+                        currentPackCards = gameState.currentCards.toList(),
+                        penalty = gameConfig.penaltyInput,
+                    )
+                    resetTimer()
+                }
             } catch (e: Exception) {
-                _uiState.value = UIState.DataError(e.message.toString())
+                emitErrorState(e.message.toString())
             }
         }
     }
-
-    private suspend fun getCardsByPackId(packId: String) = if (packId.isNotEmpty()) {
-        repository.getCardsByPackId(packId)
-    } else {
-        loadingCardsDetailPack()
-    }.shuffled()
 
     private fun startTimerCountDown() {
         if (!gameConfig.getIsTimerOn()) {
@@ -128,10 +139,14 @@ class InGameVM @Inject constructor(
         }
         viewModelScope.launch {
             while (true) {
+                if(timeLeft.value == 0){
+                    delay(1000.milliseconds)
+                    _uiEffect.emit(UIEffect.OnTimeUp)
+                }
                 if (timeLeft.value > 0) {
                     timeLeft.value -= 1
                 }
-                delay(1000)
+                delay(1000.milliseconds)
             }
         }
     }
@@ -141,18 +156,22 @@ class InGameVM @Inject constructor(
         timeLeft.value = 30
     }
 
-    fun onUserDoneCard(
+    fun onCardComplete(
         isComplete: Boolean = true
     ) {
         if (!checkState()) return
         val state = _uiState.value as UIState.InGameUIState
-        gamePlayerManager?.onUserCompleteCard(
-            player = state.currentPlayer,
-            isUserComplete = isComplete,
-            timeSpent = 30 - timeLeft.value,
-            cardId = state.currentCard.id
-        )
-        nextCardAction()
+        if(isComplete){
+            gamePlayerManager?.onCardCompleted(
+                timeSpent = 30 - timeLeft.value,
+                cardId = state.currentPackCards[state.currentCardIndex].id
+            )
+        }else{
+            gamePlayerManager?.onCardForfeited(
+                timeSpent = 30 - timeLeft.value,
+                cardId = state.currentPackCards[state.currentCardIndex].id
+            )
+        }
     }
 
     fun onSaveSetting(
@@ -167,62 +186,19 @@ class InGameVM @Inject constructor(
         )
     }
 
-
-    private fun nextCardAction() {
-        if (!checkState()) return
-        val inGameState = (_uiState.value as UIState.InGameUIState)
-
-        cards = cards.shuffled()
-
-        // 1. Find next player
-        val nextPlayer = gamePlayerManager?.getNextPlayer(
-            currentPlayer = inGameState.currentPlayer
-        )
-
-        // 2. Update player count track, if all players have completed a card in the round, reset the count and + 1-th round
-        playerCountTrack += 1
-
-        if (playerCountTrack == gameConfig.getPlayers().size) {
-            playerCountTrack = 0
-            if(inGameState.round + 1 > inGameState.totalRound){
-                onEndGame()
-                return
-            }
-        }
-        // 3. Find next card that is not done by the player
-        val nextCard = cards.find {
-            !(gamePlayerManager!!.checkIfCardIsDoneByPlayer(
-                player = nextPlayer!!,
-                cardId = it.id
-            ))
-        }
-
-        if(nextCard == null){
-            emitErrorState("No card found")
-            return
-        }
-
-        _uiState.value = inGameState.copy(
-            round = if (playerCountTrack == 0) inGameState.round + 1 else inGameState.round,
-            currentCard = nextCard,
-            currentPlayer = nextPlayer!!
-        )
-        resetTimer()
-    }
-
     private fun emitErrorState(
         message: String
     ){
         _uiState.value = UIState.DataError(message)
+        _uiEffect.tryEmit(UIEffect.OnGameError(message))
     }
 
     fun resetAllData() {
         currentGameID = ""
-        cards = emptyList()
-        playerCountTrack = 0
         timeLeft.value = 30
         gamePersistenceSetting.value = PersistenceSetting()
-        gamePlayerManager?.clear()
+        gamePlayerManager?.removeOnStateChangeListener()
+        gamePlayerManager?.resetSession()
         _uiState.value = UIState.DataLoading
         _uiEffect.tryEmit(null)
     }

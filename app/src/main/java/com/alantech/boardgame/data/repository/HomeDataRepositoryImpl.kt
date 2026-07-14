@@ -53,6 +53,19 @@ class HomeDataRepositoryImpl(
         }
     }
 
+    override suspend fun getSectionDetail(sectionID: String): Result<SectionEntity> {
+        return runCatching {
+            try {
+                apiHomeData.getSectionDetail(sectionID)
+            }catch (e: CancellationException){
+                throw e
+            }catch (e: Exception){
+                throw Exception(e.message)
+            }
+        }
+
+    }
+
     override suspend fun getSectionPacks(sectionId: String): Result<List<PacksPreview>> {
         return runCatching {
             try {

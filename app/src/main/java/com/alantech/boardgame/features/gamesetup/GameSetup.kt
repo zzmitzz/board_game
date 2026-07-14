@@ -230,9 +230,8 @@ fun GameSetupScreen(
             )
         }
     }
-
     AnimatedVisibility(
-        visible = showAddingMemberDialog
+        visible = showAddingMemberDialog,
     ) {
         AddPlayerDialog(dialogListener)
     }

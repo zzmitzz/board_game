@@ -1,44 +1,53 @@
 package com.alantech.boardgame.features.ingame.screen
 
-import android.app.Dialog
-import androidx.activity.ExperimentalActivityApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColor
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.alantech.boardgame.config.PersistenceSetting
-import com.alantech.boardgame.features.home.HomeRoute
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.alantech.boardgame.R
 import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.UIEffect
 import com.alantech.boardgame.features.ingame.UIState
 import com.alantech.boardgame.features.ingame.components.ActionButtons
-import com.alantech.boardgame.features.ingame.components.ActiveGameTopBar
 import com.alantech.boardgame.features.ingame.components.CardEffectWrapper
-import com.alantech.boardgame.features.ingame.components.ChallengeCard
 import com.alantech.boardgame.features.ingame.components.InGameHeader
 import com.alantech.boardgame.features.ingame.components.PlayerTurnChip
+import com.alantech.boardgame.features.ingame.components.TinderCardStack
 import com.alantech.boardgame.features.ingame.dialog.CardHintDialog
 import com.alantech.boardgame.features.ingame.dialog.ConfirmExitDialog
 import com.alantech.boardgame.features.ingame.dialog.SettingDialog
 import com.alantech.boardgame.ui.app.LocalSnackbarHostState
+import com.alantech.boardgame.ui.common.ErrorComponent
 import com.alantech.boardgame.ui.common.LoadingComponent
+import com.alantech.boardgame.ui.model.CardDetail
+import com.alantech.boardgame.ui.model.CardDetailMedia
 import com.alantech.boardgame.ui.model.GamePlayer
-import com.alantech.boardgame.ui.model.cardDetailPack
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.utils.BlurBackgroundDialog
 import com.alantech.boardgame.utils.DialogListener
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -96,9 +105,18 @@ fun ActiveGameScreenStateful(
                 )
             }
 
-            else -> {
-
+            is UIEffect.OnTimeUp -> {
+                mViewModel.onCardComplete(false)
             }
+
+            is UIEffect.OnGameError -> {
+                toast.showSnackbar(
+                    message = effect.message,
+                    duration = SnackbarDuration.Long
+                )
+            }
+
+            else -> {}
         }
     }
 
@@ -115,7 +133,7 @@ fun ActiveGameScreenStateful(
             }
 
             is UIState.DataError -> {
-
+                ErrorComponent(message = state.message)
             }
 
             is UIState.InGameUIState -> {
@@ -131,7 +149,9 @@ fun ActiveGameScreenStateful(
                             isCardHintOpen.value = true
                         },
                         state = state,
-                        timeLeft = timeLeft.value
+                        timeLeft = if (timeLeft.value != 0) timeLeft.value.toString() else stringResource(
+                            id = R.string.time_up
+                        )
                     )
                 }
             }
@@ -179,8 +199,11 @@ fun ActiveGameScreenStateful(
         BlurBackgroundDialog(
             listener = onDialogListener
         ) {
+            val currentCard = (uiState.value as UIState.InGameUIState).currentPackCards[
+                    (uiState.value as UIState.InGameUIState).currentCardIndex
+            ]
             CardHintDialog(
-                cardHint = (uiState.value as (UIState.InGameUIState)).currentCard.hint
+                cardHint = currentCard.hint
             )
         }
     }
@@ -202,9 +225,24 @@ fun ActiveGameScreen(
     onSettingsClick: () -> Unit,
     onCardHintClick: () -> Unit = {},
     state: UIState.InGameUIState,
-    timeLeft: Int = 30
-
+    timeLeft: String = ""
 ) {
+
+    var showShuffleCardsAnimation by remember { mutableStateOf(false) }
+    LaunchedEffect(state.round) {
+        launch {
+            showShuffleCardsAnimation = true
+            delay(2000L)
+            showShuffleCardsAnimation = false
+        }
+    }
+    val lottieShuffle by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(R.raw.lottie_shuffle_card)
+    )
+    val alphaVisible = animateFloatAsState(
+        targetValue = if (showShuffleCardsAnimation) 1f else 0f,
+        animationSpec = tween(durationMillis = 400)
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -215,7 +253,7 @@ fun ActiveGameScreen(
     ) {
         InGameHeader(
             gameName = state.gameTitle,
-            roundText = "ROUND ${state.round}/${state.totalRound}",
+            roundText = "${stringResource(R.string.round)} ${state.round}/${state.totalRound}",
             onCloseClick = onBackClick,
             onSettingsClick = onSettingsClick,
             timeLeft = timeLeft
@@ -226,29 +264,51 @@ fun ActiveGameScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        CardEffectWrapper(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            item = state.currentCard,
-            penalty = state.penalty,
-            onCardHintClick = onCardHintClick
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Box(modifier = Modifier.padding(horizontal = 24.dp)) {
-            ActionButtons(
-                onComplete = {
-                    actionContext.onComplete()
-                },
-                onForfeit = {
-                    actionContext.onForfeit()
-                }
+                .weight(1f)
+        ) {
+            LottieAnimation(
+                composition = lottieShuffle,
+                iterations = LottieConstants.IterateForever,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp)
+                    .height(300.dp)
+                    .graphicsLayer { alpha = alphaVisible.value }
             )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = 1f - alphaVisible.value }
+            ) {
+                TinderCardStack(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    cards = state.currentPackCards,
+                    currentIndex = state.currentCardIndex,
+                    penalty = state.penalty,
+                    onCardHintClick = onCardHintClick
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    ActionButtons(
+                        onComplete = {
+                            actionContext.onComplete()
+                        },
+                        onForfeit = {
+                            actionContext.onForfeit()
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
     }
 }
 
@@ -274,7 +334,18 @@ private fun PVActiveGame() {
             {}, {},
             state = UIState.InGameUIState(
                 0, 0,
-                cardDetailPack[0], GamePlayer(1, Color(0xFF000000), "Player1"), "", "",
+                0, mutableListOf<CardDetail>().apply {
+                    add(CardDetail(
+                        id = "",
+                        category = "Dare",
+                        description = "There is the card-th",
+                        media = CardDetailMedia(
+                            image = "https://play-lh.googleusercontent.com/6y8IP2DxJl3d9avDZTG3tZSssk9m26akjMjuv-k5-tScdzNAqjwodmNPFns02DAaBNc=w480-h960-rw",
+                            video = null
+                        ), hint = ""
+
+                    ))
+                }, GamePlayer(1, Color(0xFF000000), "Player1"), "", "",
             )
         )
     }

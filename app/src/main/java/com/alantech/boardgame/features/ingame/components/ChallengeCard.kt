@@ -2,6 +2,7 @@ package com.alantech.boardgame.features.ingame.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,10 +22,12 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alantech.boardgame.R
+import com.alantech.boardgame.config.GameSettingConfigCurrentSession as gameConfig
 
 @Composable
 fun ChallengeCard(
@@ -99,45 +102,55 @@ fun ChallengeCard(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(0.6f)
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.DarkGray)
-                Text(
-                    text = "OR",
-                    color = Color.Gray,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    fontFamily = plusJakarta,
-                    fontWeight = FontWeight.SemiBold
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.DarkGray)
-            }
+            if(gameConfig.getPenalty()){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(0.6f)
+                ) {
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.DarkGray)
+                    Text(
+                        text = "OR",
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        fontFamily = plusJakarta,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.DarkGray)
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, Color.DarkGray, RoundedCornerShape(24.dp))
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.bomb_24px),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = "Wine Glass"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Penalty: $penaltyText",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = plusJakarta
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color.DarkGray, RoundedCornerShape(24.dp))
+                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.bomb_24px),
+                        modifier = Modifier.size(24.dp),
+                        contentDescription = "Wine Glass"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Penalty: $penaltyText",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = plusJakarta,
+                        // 1. Force the text to stay on a single line so it can overflow horizontally
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip,
+                        modifier = Modifier
+                            .basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                            )
+                            .padding(horizontal = 8.dp)
+                    )
+                }
             }
         }
     }
