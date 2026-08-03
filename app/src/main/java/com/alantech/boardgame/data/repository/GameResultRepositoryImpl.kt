@@ -10,4 +10,6 @@ class GameResultRepositoryImpl @Inject constructor(
 ) : GameResultRepository {
 
     override suspend fun saveGame(data: GameResult) = dao.insert(data)
+
+    override suspend fun getAll(): List<GameResult> = dao.queryAll()
 }

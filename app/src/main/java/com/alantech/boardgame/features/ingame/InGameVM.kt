@@ -7,15 +7,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.R
 import com.alantech.boardgame.config.PersistenceSetting
+import com.alantech.boardgame.data.local.GameResultRepository
+import com.alantech.boardgame.data.local.entity.GameResult
 import com.alantech.boardgame.data.repository.BoardGameRepository
 import com.alantech.boardgame.features.gamesetup.GameSetupVM
 import com.alantech.boardgame.features.ingame.utils.GamePlayerManager
 import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.utils.DataStoreUtils
+import com.alantech.boardgame.utils.HapticUtils
+import com.alantech.boardgame.utils.ListSound
+import com.alantech.boardgame.utils.SoundUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -67,6 +75,7 @@ sealed class UIEffect {
 class InGameVM @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: BoardGameRepository,
+    private val gameResultRepository: GameResultRepository,
     private val dataStoreUtils: DataStoreUtils,
 ) : ViewModel() {
 
@@ -75,6 +84,8 @@ class InGameVM @Inject constructor(
     }
 
     var currentGameID: String = ""
+    private var currentPackId: String = ""
+    private var currentPackName: String = ""
     private val _uiState = MutableStateFlow<UIState>(UIState.DataLoading)
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
     private val _uiEffect = MutableSharedFlow<UIEffect?>(0)
@@ -83,26 +94,48 @@ class InGameVM @Inject constructor(
     var gamePlayerManager: GamePlayerManager? = null
     val timeLeft: MutableStateFlow<Float> = MutableStateFlow(30f)
 
+    private var sessionScope = CoroutineScope(viewModelScope.coroutineContext + SupervisorJob())
+
+    private val currentSetting: PersistenceSetting?
+        get() = (_uiState.value as? UIState.InGameUIState)?.persistenceSetting
+
     private val mGameStateListener = object : GamePlayerManager.OnStateChange {
         override fun onGameEnded() {
+            currentSetting?.let {
+                if (it.isHapticOn) HapticUtils.endGame(context)
+                if (it.isSoundOn) SoundUtils.play(ListSound.ACHIEVEMENT)
+            }
             onEndGame()
         }
 
         override fun onRoundEnded() {
-            scope.launch {
+            resetTimer()
+            currentSetting?.let {
+                if (it.isHapticOn) HapticUtils.nextRound(context)
+                if (it.isSoundOn) SoundUtils.play(ListSound.START)
+            }
+            viewModelScope.launch {
                 _uiEffect.emit(UIEffect.OnShuffleCards)
             }
         }
-    }
 
-    private val scope = viewModelScope + CoroutineExceptionHandler { _, _ ->
-        _uiState.value = UIState.DataError("Something went wrong")
+        override fun onNextTurn() {
+            currentSetting?.let {
+                if (it.isHapticOn) HapticUtils.short(context)
+                if (it.isSoundOn) SoundUtils.play(ListSound.PLAY)
+            }
+        }
+
+        override fun onResetTimer() {
+            resetTimer()
+        }
     }
 
 
     private fun checkState(): Boolean = _uiState.value is UIState.InGameUIState
 
     private fun checkUpConfig(): Boolean {
+        Log.d("InGameVM", "checkUpConfig: $gameConfig")
         if (gameConfig.getPlayers().size < 2) {
             emitErrorState("No players found")
             return false
@@ -115,10 +148,11 @@ class InGameVM @Inject constructor(
     }
 
     fun initGame(packId: String) {
+        // Clear effects
         _uiEffect.tryEmit(null)
         if (!checkUpConfig()) return
         Log.d("InGameVM", "packId: $packId")
-        scope.launch {
+        viewModelScope.launch {
             try {
                 val mSetting = getSettingAsFlow().first() ?: PersistenceSetting()
                 val cards = repository.getCardsByPackId(packId, mSetting.language)
@@ -131,6 +165,9 @@ class InGameVM @Inject constructor(
                 )
                 gamePlayerManager?.setOnStateChangeListener(mGameStateListener)
                 val pack = repository.getPackById(packId)
+                currentPackId = packId
+                currentPackName = pack?.titleCard ?: ""
+                resetTimer()
                 startTimerCountDown()
                 val settingFow = getSettingAsFlow()
                 gamePlayerManager?.gameEngineState?.let { gameStateFlow ->
@@ -149,12 +186,11 @@ class InGameVM @Inject constructor(
                         )
                     }
                         .stateIn(
-                            scope = this,
+                            scope = sessionScope,
                             started = SharingStarted.Eagerly,
                             UIState.DataLoading
                         )
                 }
-                resetTimer()
             } catch (e: Exception) {
                 emitErrorState(e.message.toString())
             }
@@ -187,7 +223,7 @@ class InGameVM @Inject constructor(
         if (!gameConfig.getIsTimerOn()) {
             return
         }
-        viewModelScope.launch {
+        sessionScope.launch {
             while (true) {
                 if (timeLeft.value <= 0f) {
                     delay(1000.milliseconds)
@@ -225,26 +261,49 @@ class InGameVM @Inject constructor(
     }
 
 
-    fun onEndGame() {
-        scope.launch {
+    fun onEndGame(
+        isUserExitGame: Boolean = false
+    ) {
+        if (!isUserExitGame) {
+            saveGameResult()
+        }
+        viewModelScope.launch {
             _uiEffect.emit(UIEffect.OnGameEnd)
+        }
+    }
+
+    private fun saveGameResult() {
+        val scores = gamePlayerManager?.gamePlayersScore ?: return
+        viewModelScope.launch {
+            gameResultRepository.saveGame(
+                GameResult(
+                    packID = currentPackId,
+                    packName = currentPackName,
+                    timeStamp = System.currentTimeMillis(),
+                    gameScore = scores.toMap()
+                )
+            )
         }
     }
 
     private fun emitErrorState(message: String) {
         _uiState.value = UIState.DataError(message)
-        scope.launch {
+        viewModelScope.launch {
             _uiEffect.emit(UIEffect.OnGameError(message))
         }
     }
 
     fun resetAllData() {
         currentGameID = ""
+        currentPackId = ""
+        currentPackName = ""
         timeLeft.value = 30f
-        gamePlayerManager?.removeOnStateChangeListener()
-        gamePlayerManager?.resetSession()
         _uiState.value = UIState.DataLoading
         _uiEffect.tryEmit(null)
+        sessionScope.cancel()
+        sessionScope = CoroutineScope(viewModelScope.coroutineContext + SupervisorJob())
+        gamePlayerManager?.removeOnStateChangeListener()
+        gamePlayerManager?.resetSession()
     }
 
 }

@@ -41,12 +41,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 
 
+import com.alantech.boardgame.utils.LocaleUtils
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val mViewModel: MainActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val app = applicationContext as BoardGameApplication
+        app.applyStoredLocale()
+        LocaleUtils.setLocale(this, app.getLanguageCode())
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

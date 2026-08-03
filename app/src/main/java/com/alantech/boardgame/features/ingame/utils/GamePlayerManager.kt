@@ -46,9 +46,13 @@ class GamePlayerManager private constructor(
     }
 
     interface OnStateChange {
-        fun onGameEnded ()
+        fun onGameEnded()
 
-        fun onRoundEnded ()
+        fun onRoundEnded()
+
+        fun onNextTurn()
+
+        fun onResetTimer()
     }
 
     private var listener : OnStateChange? = null
@@ -72,14 +76,13 @@ class GamePlayerManager private constructor(
         this.listener = null
     }
 
-
     // Internal variable to keep track of the turn order
     private var mTurnOrder = 1
-
 
     init {
         startGameEngine()
     }
+
     override fun startGameEngine(){
         mGameEngineState.value = GameEngineState(1, originalGamePlayers.first(), originalGamePacks.shuffled().toSet())
         if(originalGamePacks.size < originalGamePlayers.size){
@@ -164,11 +167,11 @@ class GamePlayerManager private constructor(
                 originalGamePlayers.first(),
                 newShuffledCards.toSet()
             )
+            listener?.onResetTimer()
         },1000)
     }
 
     private fun nextTurn(){
-        // Find next player
         val currentPlayerIndex =
             originalGamePlayers.indexOf(mGameEngineState.value.activePlayer)
         val nextPlayerIndex = ((currentPlayerIndex + 1) % originalGamePlayers.size)
@@ -178,6 +181,8 @@ class GamePlayerManager private constructor(
                 activePlayer = nextPlayer,
             )
         }
+        listener?.onNextTurn()
+        listener?.onResetTimer()
     }
 
     // Since the card index is the same as the player index
@@ -195,5 +200,6 @@ class GamePlayerManager private constructor(
     }
 
 
+    
 
 }

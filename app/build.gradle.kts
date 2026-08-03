@@ -37,6 +37,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        viewBinding = true
     }
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         compilerOptions {
@@ -92,4 +93,7 @@ dependencies {
 
     implementation("com.airbnb.android:lottie-compose:6.7.1")
     implementation("androidx.datastore:datastore-preferences:1.1.2")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.2")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
 }

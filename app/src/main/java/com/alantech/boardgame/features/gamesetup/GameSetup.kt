@@ -54,6 +54,7 @@ fun GameSetupScreenStateful(
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val snackBarHost = LocalSnackbarHostState.current
+    var lastClickStart = remember { 0L }
     LaunchedEffect(vm.uiEffect) {
         vm.uiEffect.collectLatest { effect ->
             when(effect){
@@ -70,6 +71,9 @@ fun GameSetupScreenStateful(
     val gameActionHandler = remember {
         object : GameSetupScreenAction {
             override fun onStartGame() {
+                val now = System.currentTimeMillis()
+                if (now - lastClickStart < 1000) return
+                lastClickStart = now
                 vm.saveGameConfigSession()
             }
 

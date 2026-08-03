@@ -70,10 +70,17 @@ fun PageDetailScreen(
     viewModel: PageDetailVM = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var lastClick = remember { 0L }
+
     PageDetailTemplate(
         bottomBar = {
             PageDetailBottomBar(
-                onUnlockClick = onUnlockClick
+                onUnlockClick = {
+                    if(System.currentTimeMillis() - lastClick >= 5_000L){
+                        lastClick = System.currentTimeMillis()
+                        onUnlockClick.invoke()
+                    }
+                }
             )
         },
         modifier = Modifier,
@@ -96,7 +103,7 @@ fun PageDetailTemplate(
     Scaffold(
         bottomBar = bottomBar,
         modifier = modifier
-    ) { paddingValues ->
+    ) { _ ->
         Box(
             Modifier.fillMaxSize(),
             contentAlignment = Alignment.TopCenter
@@ -215,13 +222,13 @@ private fun PageDetailBottomBar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text(
-                    text = "$4.99",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        textDecoration = TextDecoration.LineThrough
-                    ),
-                    color = Color.White.copy(alpha = 0.5f)
-                )
+//                Text(
+//                    text = "$4.99",
+//                    style = MaterialTheme.typography.labelMedium.copy(
+//                        textDecoration = TextDecoration.LineThrough
+//                    ),
+//                    color = Color.White.copy(alpha = 0.5f)
+//                )
                 Text(
                     text = stringResource(R.string.free),
                     style = MaterialTheme.typography.titleLarge,
@@ -243,7 +250,7 @@ private fun PageDetailBottomBar(
                 )
             ) {
                 Text(
-                    text = "Play this pack",
+                    text = stringResource(R.string.play_game),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

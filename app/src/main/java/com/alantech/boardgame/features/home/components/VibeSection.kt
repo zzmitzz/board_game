@@ -1,6 +1,7 @@
 package com.alantech.boardgame.features.home.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +28,8 @@ import com.alantech.boardgame.data.model.PacksPreview
 @Composable
 fun VibePacksSection(
     packsData: List<PacksPreview>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (PacksPreview) -> Unit = {}
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
@@ -35,7 +37,10 @@ fun VibePacksSection(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(packsData, key = { it.id.orEmpty() }) { pack ->
-            PackThumbItem(pack = pack)
+            PackThumbItem(
+                pack = pack,
+                onClick = onClick
+            )
         }
     }
 }
@@ -43,7 +48,8 @@ fun VibePacksSection(
 @Composable
 private fun PackThumbItem(
     pack: PacksPreview,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (PacksPreview) -> Unit = {}
 ) {
     Column(
         modifier = modifier.width(72.dp),
@@ -52,6 +58,9 @@ private fun PackThumbItem(
     ) {
         Box(
             modifier = Modifier
+                .clickable {
+                    onClick(pack)
+                }
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(8.dp))

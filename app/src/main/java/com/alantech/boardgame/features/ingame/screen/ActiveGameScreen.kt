@@ -1,6 +1,5 @@
 package com.alantech.boardgame.features.ingame.screen
 
-import android.widget.Space
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -19,12 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,7 +35,6 @@ import com.alantech.boardgame.features.ingame.InGameVM
 import com.alantech.boardgame.features.ingame.UIEffect
 import com.alantech.boardgame.features.ingame.UIState
 import com.alantech.boardgame.features.ingame.components.ActionButtons
-import com.alantech.boardgame.features.ingame.components.CardEffectWrapper
 import com.alantech.boardgame.features.ingame.components.EdgeToEdgeProgressBar
 import com.alantech.boardgame.features.ingame.components.InGameHeader
 import com.alantech.boardgame.features.ingame.components.InGameSettingDialog
@@ -56,7 +50,6 @@ import com.alantech.boardgame.ui.model.GamePlayer
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.utils.BlurBackgroundDialog
-import com.alantech.boardgame.utils.DialogListener
 import com.alantech.boardgame.utils.DialogPlayerListener
 import com.alantech.boardgame.utils.PlusJakartaSans
 import com.alantech.boardgame.utils.SettingDialogListener
@@ -86,7 +79,7 @@ fun ActiveGameScreenStateful(
     val onDialogListener = remember {
         object : DialogPlayerListener() {
             override fun onConfirm(numberPlayer: Int) {
-                mViewModel.onEndGame()
+                mViewModel.onEndGame(true)
             }
 
             override fun onCancel() {

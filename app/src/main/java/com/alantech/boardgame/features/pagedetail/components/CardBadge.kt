@@ -79,7 +79,7 @@ fun ThumbnailSection(
             modifier = Modifier
                 .fillMaxSize()
                 .blur(12.dp),
-            error = painterResource(R.drawable.image_error),
+//            error = painterResource(R.drawable.image_error),
             contentDescription = null,
             contentScale = ContentScale.Crop
         )

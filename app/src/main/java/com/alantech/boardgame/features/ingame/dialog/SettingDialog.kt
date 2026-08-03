@@ -29,11 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alantech.boardgame.R
 import com.alantech.boardgame.config.PersistenceSetting
-import com.alantech.boardgame.config.listLanguageCodeSupport
 import com.alantech.boardgame.features.ingame.components.CustomizeSpinner
 import com.alantech.boardgame.ui.theme.LightDialogBackground
 import com.alantech.boardgame.ui.theme.LightTextColor
 import com.alantech.boardgame.utils.PlusJakartaSans
+import com.alantech.boardgame.utils.listLanguageSupport
 
 @Composable
 fun SettingDialog(
@@ -42,7 +42,9 @@ fun SettingDialog(
     onCancel: () -> Unit
 ) {
     var isAutoTranslate by remember { mutableStateOf(initialSetting.isAutoTranslate) }
-    var currLanguage by remember { mutableStateOf(initialSetting.language) }
+    var currLanguage by remember { mutableStateOf(
+        listLanguageSupport.find { it.code.equals(initialSetting.language, ignoreCase = true) } ?: listLanguageSupport[0]
+    ) }
 
     Column(
         modifier = Modifier
@@ -92,9 +94,11 @@ fun SettingDialog(
             )
             Spacer(modifier = Modifier.width(16.dp))
             CustomizeSpinner(
-                options = listLanguageCodeSupport,
-                selectedOption = currLanguage,
-                onOptionSelected = { language -> currLanguage = language },
+                options = listLanguageSupport,
+                selectedOption = currLanguage.fullName,
+                onOptionSelected = { language ->
+                    currLanguage = language
+                },
                 label = stringResource(R.string.choose_language),
                 enabled = isAutoTranslate
             )
@@ -126,7 +130,7 @@ fun SettingDialog(
                     onSave(
                         initialSetting.copy(
                             isAutoTranslate = isAutoTranslate,
-                            language = currLanguage
+                            language = currLanguage.code
                         )
                     )
                 },

@@ -52,12 +52,14 @@ private data class SettingItem(
 @Composable
 fun SettingScreen(
     onBackClick: () -> Unit = {},
+    onLanguageClick: () -> Unit = {},
+    onPlayHistoryClick: () -> Unit = {},
 ) {
     val items = listOf(
-        SettingItem(Icons.Default.Language, "Language") {},
-        SettingItem(Icons.Default.Star, "Rate Us") {},
-        SettingItem(Icons.Default.Info, "About Us") {},
-        SettingItem(Icons.Default.History, "Play History") {},
+        SettingItem(Icons.Default.Language, stringResource(R.string.language)) { onLanguageClick() },
+        SettingItem(Icons.Default.Star, stringResource(R.string.rate_us)) {},
+        SettingItem(Icons.Default.Info, stringResource(R.string.about)) {},
+        SettingItem(Icons.Default.History, stringResource(R.string.play_history)) { onPlayHistoryClick() },
     )
 
     Column(

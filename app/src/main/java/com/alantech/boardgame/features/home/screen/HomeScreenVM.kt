@@ -33,7 +33,6 @@ data class HomeScreenUIState(
     val currentSelectedVibeChip: VibeChip? = null,
     val listPacksFromVibe: List<PacksPreview> = emptyList(),
     val sectionPacks: Map<SectionEntity,List<PacksPreview>> = emptyMap(),
-
     val errorMessage: String? = null,
 )
 

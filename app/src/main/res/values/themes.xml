@@ -2,4 +2,11 @@
 <resources>
 
     <style name="Theme.BoardGame" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.BoardGame.NoActionBar">
+        <item name="android:windowBackground">#1A0D2E</item>
+        <item name="android:statusBarColor">#1A0D2E</item>
+        <item name="android:navigationBarColor">#1A0D2E</item>
+    </style>
+
 </resources>

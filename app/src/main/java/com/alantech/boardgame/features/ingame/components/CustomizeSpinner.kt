@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.alantech.boardgame.ui.theme.LightTextColor
+import com.alantech.boardgame.utils.LanguageItem
 import com.alantech.boardgame.utils.PlusJakartaSans
 
 private val SpinnerPurple = Color(0xFF3F007D)
@@ -26,9 +27,9 @@ private val SpinnerDisabledText = Color(0xFF7A7080)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomizeSpinner(
-    options: List<String>,
+    options: List<LanguageItem>,
     selectedOption: String,
-    onOptionSelected: (String) -> Unit,
+    onOptionSelected: (LanguageItem) -> Unit,
     label: String = "Select an option",
     modifier: Modifier = Modifier,
     enabled: Boolean = true
@@ -80,7 +81,7 @@ fun CustomizeSpinner(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = option,
+                            text = option.fullName,
                             fontFamily = PlusJakartaSans,
                             fontWeight = FontWeight.Medium
                         )

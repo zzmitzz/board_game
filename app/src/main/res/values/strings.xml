@@ -33,4 +33,19 @@
     <string name="setup_your_game">Game setup</string>
     <string name="enable_haptics">Haptics</string>
     <string name="enable_sound">Sound</string>
+    <string name="play_game">Play this pack</string>
+    <string name="no_packs_found">No packs found</string>
+    <string name="language">Language</string>
+    <string name="select_language">Select Language</string>
+    <string name="rate_us">Rate us</string>
+    <string name="about">About Us</string>
+    <string name="play_history">Play History</string>
+    <string name="save">Apply</string>
+    <string name="get_started">Get Started</string>
+    <string name="onboarding_title_1">Play Together, Laugh Together</string>
+    <string name="onboarding_description_1">Gather your crew and dive into questions that spark laughter, stories, and real connections. DeepTalk turns any hangout into an unforgettable game night.</string>
+    <string name="onboarding_title_2">Hundreds of Themed Packs</string>
+    <string name="onboarding_description_2">From late-night parties to intimate date nights — explore curated question packs for every mood, group, and occasion. New packs added regularly.</string>
+    <string name="onboarding_title_3">One Card, Real Conversations</string>
+    <string name="onboarding_description_3">Every round, a question card breaks the ice and reveals something new. No awkward silences — just genuine moments you\'ll talk about for years.</string>
 </resources>

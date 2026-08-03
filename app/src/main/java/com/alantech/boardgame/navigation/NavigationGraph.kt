@@ -1,10 +1,15 @@
 package com.alantech.boardgame.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.alantech.boardgame.features.home.homeNavigationEntry
-import com.alantech.boardgame.features.onboard.onBoardingGraph
+import com.alantech.boardgame.features.language.languageNavigationEntry
 import com.alantech.boardgame.features.setting.settingNavigationEntry
 import com.alantech.boardgame.ui.state.BoardGameAppState
 
@@ -16,10 +21,26 @@ fun NavigationGraph(
     val mRootNavController = rememberNavController()
     NavHost(
         navController = mRootNavController,
-        startDestination = RootRoute.Home
+        startDestination = RootRoute.Home,
+        enterTransition = {
+            scaleIn(initialScale = 0.92f, animationSpec = tween(300)) +
+                fadeIn(animationSpec = tween(300))
+        },
+        exitTransition = {
+            scaleOut(targetScale = 1.08f, animationSpec = tween(300)) +
+                fadeOut(animationSpec = tween(300))
+        },
+        popEnterTransition = {
+            scaleIn(initialScale = 1.08f, animationSpec = tween(300)) +
+                fadeIn(animationSpec = tween(300))
+        },
+        popExitTransition = {
+            scaleOut(targetScale = 0.92f, animationSpec = tween(300)) +
+                fadeOut(animationSpec = tween(300))
+        }
     ) {
-        onBoardingGraph(mRootNavController)
         homeNavigationEntry(mRootNavController)
         settingNavigationEntry(mRootNavController)
+        languageNavigationEntry(mRootNavController)
     }
 }

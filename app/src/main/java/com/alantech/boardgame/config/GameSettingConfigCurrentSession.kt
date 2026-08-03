@@ -41,4 +41,9 @@ object GameSettingConfigCurrentSession {
     }
 
 
+    override fun toString(): String {
+        return "GameSettingConfigCurrentSession(players=$players, isTimerOn=$isTimerOn, isNSFWOn=$isNSFWOn, isRecordMomentOn=$isRecordMomentOn, penalty=$penalty, penaltyInput=$penaltyInput, totalRounds=$totalRounds)"
+    }
+
+
 }

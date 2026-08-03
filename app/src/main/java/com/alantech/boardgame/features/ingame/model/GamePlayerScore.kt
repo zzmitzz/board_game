@@ -1,13 +1,14 @@
 package com.alantech.boardgame.features.ingame.model
 
-import com.alantech.boardgame.ui.model.GamePlayer
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class GamePlayerScore(
     var numberCardCompleted: Int = 0,
     var numberCardForfeited: Int = 0,
     var timeSpent: Float = 0f,
     val cardIds: MutableSet<String> = mutableSetOf()
-): Comparable<GamePlayerScore>{
+) : Comparable<GamePlayerScore> {
     fun getScore(): Int {
         return numberCardCompleted - numberCardForfeited
     }

@@ -1,6 +1,8 @@
 package com.alantech.boardgame.features.home.screen
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +39,7 @@ import androidx.compose.material.icons.rounded.LocalBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -81,6 +84,9 @@ import com.alantech.boardgame.ui.theme.LightTextOnBackground
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alantech.boardgame.features.home.components.VibePacksSection
 import com.alantech.boardgame.features.home.model.VibeChip
 import com.alantech.boardgame.ui.model.mockVibeChip
@@ -143,6 +149,11 @@ internal fun HomeScreenContent(
         getListGradientColorPacks().random()
     }
 
+    val lottie by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(R.raw.loading)
+    )
+
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -198,6 +209,24 @@ internal fun HomeScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         AnimatedVisibility(
+            modifier = Modifier.fillMaxWidth()
+                .weight(1f),
+            visible = uiState.isTrendingComponentLoading || uiState.isVibeComponentLoading,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ){
+                LottieAnimation(
+                    composition = lottie,
+                    modifier = Modifier.size(100.dp)
+                )
+            }
+        }
+
+        AnimatedVisibility(
             visible = uiState.listVibePacks.isNotEmpty()
         ) {
             Column(
@@ -218,11 +247,31 @@ internal fun HomeScreenContent(
                         modifier = Modifier.wrapContentHeight()
                     ) {
                         VibePacksSection(
-                            packsData = uiState.listPacksFromVibe
+                            packsData = uiState.listPacksFromVibe,
+                            onClick = {pack -> onCardClick(pack.id!!)}
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
+                AnimatedVisibility(
+                    visible = uiState.listPacksFromVibe.isEmpty() && uiState.currentSelectedVibeChip != null
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_packs_found),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
             }
         }
         uiState.sectionPacks.forEach { (section, packs) ->

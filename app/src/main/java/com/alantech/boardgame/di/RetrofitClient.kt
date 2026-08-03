@@ -16,6 +16,7 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.concurrent.TimeUnit
+import okhttp3.ConnectionPool
 
 object RetrofitClient {
 
@@ -50,6 +51,8 @@ object RetrofitClient {
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
+        .connectionPool(ConnectionPool(5, 30, TimeUnit.SECONDS))
         .eventListener(object : EventListener() {
             override fun callStart(call: Call) {
                 println("OkHttpTrace: Call Started")
