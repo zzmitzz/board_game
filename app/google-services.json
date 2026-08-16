@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "41693521910",
+    "project_id": "board-game-d2776",
+    "storage_bucket": "board-game-d2776.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:41693521910:android:3ecbb3ab786ff09a0e89d7",
+        "android_client_info": {
+          "package_name": "con.alantech.boardgame"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5gkgXOTzmCcvkuQY0WsDcS4F1j08VZsI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
