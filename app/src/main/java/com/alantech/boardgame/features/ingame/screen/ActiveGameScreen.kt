@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.ingame.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -59,10 +60,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ActiveGameScreenStateful(
+    onBackClick: () -> Unit = {},
     onExitGame: () -> Unit = {},
     packId: String = "",
     mViewModel: InGameVM,
 ) {
+
+
     val toast = LocalSnackbarHostState.current
     val uiState = mViewModel.uiState.collectAsStateWithLifecycle()
     val timeLeft = mViewModel.timeLeft.collectAsStateWithLifecycle()
@@ -76,6 +80,7 @@ fun ActiveGameScreenStateful(
     var mTriggerEffect by remember {
         mutableIntStateOf(-1)
     }
+    mViewModel.triggerGameFlow?.collectAsStateWithLifecycle()
     val onDialogListener = remember {
         object : DialogPlayerListener() {
             override fun onConfirm(numberPlayer: Int) {
@@ -161,6 +166,16 @@ fun ActiveGameScreenStateful(
             mTextLoading = "Translating Cards..."
             delay(3000)
             mTextLoading = "Shuffling Cards..."
+        }
+    }
+
+    BackHandler(
+        enabled = true
+    ) {
+        if(uiState.value is UIState.InGameUIState || uiState.value is UIState.DataLoading){
+            dialogOnExitGame.value = true
+        }else{
+            onBackClick()
         }
     }
 

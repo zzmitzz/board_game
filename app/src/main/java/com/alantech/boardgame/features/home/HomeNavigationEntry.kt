@@ -113,7 +113,8 @@ fun NavGraphBuilder.homeNavigationEntry(
             }
         ) {
             GameSearchStateful(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onPackClick = { packId -> navController.navigate(HomeRoute.PackDetail(packId)) }
             )
         }
         composable<HomeRoute.PackDetail>(
@@ -181,6 +182,7 @@ fun NavGraphBuilder.homeNavigationEntry(
             val id = backStackEntry.toRoute<HomeRoute.InGame>().id
             viewModel.currentGameID = id
             ActiveGameScreenStateful(
+                onBackClick = { navController.popBackStack() },
                 onExitGame = { navController.navigate(HomeRoute.EndGame) },
                 packId = id,
                 mViewModel = viewModel

@@ -26,11 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.alantech.boardgame.R
 import com.alantech.boardgame.data.model.PacksPreview
 import com.alantech.boardgame.data.model.SectionEntity
 import com.alantech.boardgame.ui.theme.LightPrimary
@@ -86,7 +88,7 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier, onSeeAll
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            text = "See all",
+            text = stringResource(R.string.see_all),
             color = LightSecondTextOBG,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,

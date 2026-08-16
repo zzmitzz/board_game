@@ -5,12 +5,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import com.alantech.boardgame.MainActivity
 import com.alantech.boardgame.R
 import com.alantech.boardgame.databinding.ActivityOnboadingBinding
 import com.alantech.boardgame.onboarding.fragments.OnboardingFragment
+import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 
 class OnBoardingActivity : AppCompatActivity(), OnboardingFragment.OnboardingCompleteListener {
 
@@ -22,8 +27,15 @@ class OnBoardingActivity : AppCompatActivity(), OnboardingFragment.OnboardingCom
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(mBinding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(mBinding.root) { view, insets ->
+            val statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.updatePadding(top = statusBarInset.top)
+            insets
+        }
         setupViewPager()
+
     }
 
     private fun setupViewPager() {
@@ -65,11 +77,14 @@ class OnBoardingActivity : AppCompatActivity(), OnboardingFragment.OnboardingCom
     }
 
     override fun onOnboardingComplete() {
-        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(com.alantech.boardgame.splash.SplashScreenActivity.KEY_ONBOARDING_DONE, true)
-            .apply()
         startActivity(Intent(this, MainActivity::class.java))
+        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit {
+                putBoolean(
+                    com.alantech.boardgame.splash.SplashScreenActivity.KEY_ONBOARDING_DONE,
+                    true
+                )
+            }
         finish()
     }
 

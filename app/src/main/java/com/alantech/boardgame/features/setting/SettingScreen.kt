@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.ManageHistory
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +45,7 @@ import com.alantech.boardgame.ui.theme.LightPrimary
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.ui.theme.LightTextColor
 import com.alantech.boardgame.ui.theme.LightTextOnBackground
+import com.alantech.boardgame.utils.openWebPage
 
 private data class SettingItem(
     val icon: ImageVector,
@@ -49,17 +53,33 @@ private data class SettingItem(
     val onClick: () -> Unit
 )
 
+
 @Composable
 fun SettingScreen(
     onBackClick: () -> Unit = {},
     onLanguageClick: () -> Unit = {},
     onPlayHistoryClick: () -> Unit = {},
 ) {
+    val mContext = LocalContext.current
     val items = listOf(
-        SettingItem(Icons.Default.Language, stringResource(R.string.language)) { onLanguageClick() },
-        SettingItem(Icons.Default.Star, stringResource(R.string.rate_us)) {},
-        SettingItem(Icons.Default.Info, stringResource(R.string.about)) {},
-        SettingItem(Icons.Default.History, stringResource(R.string.play_history)) { onPlayHistoryClick() },
+        SettingItem(
+            Icons.Default.Language,
+            stringResource(R.string.language)
+        ) { onLanguageClick() },
+        SettingItem(Icons.Default.Star, stringResource(R.string.rate_us)) {
+        },
+        SettingItem(Icons.Default.DocumentScanner, stringResource(R.string.term_condition)) {
+
+            mContext.openWebPage("https://inclined-scarlet-jn0reqb4.edgeone.dev/")
+        },
+        SettingItem(Icons.Default.PrivacyTip, stringResource(R.string.privacy_policy)) {
+
+            mContext.openWebPage("https://uncertain-amethyst-pvpmhpc5.edgeone.dev/")
+        },
+        SettingItem(
+            Icons.Default.History,
+            stringResource(R.string.play_history)
+        ) { onPlayHistoryClick() },
     )
 
     Column(
@@ -91,7 +111,8 @@ fun SettingScreen(
         Text(
             text = stringResource(R.string.developer),
             color = Color.White.copy(alpha = 0.3f),
-            modifier = Modifier.wrapContentSize()
+            modifier = Modifier
+                .wrapContentSize()
                 .align(Alignment.CenterHorizontally)
         )
     }

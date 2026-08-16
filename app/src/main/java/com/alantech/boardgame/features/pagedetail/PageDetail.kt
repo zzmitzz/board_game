@@ -151,7 +151,7 @@ fun PageDetailContent(
         }
         item {
             HeatLevelSection(
-                heatLevel = ((uiState.pack?.heatLevel?.toFloat() ?: 0f) / 100),
+                heatLevel = ((uiState.pack?.heatLevel ?: 0)),
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }

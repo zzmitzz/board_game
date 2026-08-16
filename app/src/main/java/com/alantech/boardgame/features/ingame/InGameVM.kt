@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -99,6 +100,8 @@ class InGameVM @Inject constructor(
     private val currentSetting: PersistenceSetting?
         get() = (_uiState.value as? UIState.InGameUIState)?.persistenceSetting
 
+    var triggerGameFlow : StateFlow<Any>? = null
+
     private val mGameStateListener = object : GamePlayerManager.OnStateChange {
         override fun onGameEnded() {
             currentSetting?.let {
@@ -148,8 +151,7 @@ class InGameVM @Inject constructor(
     }
 
     fun initGame(packId: String) {
-        // Clear effects
-        _uiEffect.tryEmit(null)
+        resetAllData()
         if (!checkUpConfig()) return
         Log.d("InGameVM", "packId: $packId")
         viewModelScope.launch {
@@ -171,7 +173,7 @@ class InGameVM @Inject constructor(
                 startTimerCountDown()
                 val settingFow = getSettingAsFlow()
                 gamePlayerManager?.gameEngineState?.let { gameStateFlow ->
-                    combine(
+                    triggerGameFlow = combine(
                         settingFow, gameStateFlow
                     ) { setting, gameState ->
                         _uiState.value = UIState.InGameUIState(
@@ -187,7 +189,7 @@ class InGameVM @Inject constructor(
                     }
                         .stateIn(
                             scope = sessionScope,
-                            started = SharingStarted.Eagerly,
+                            started = SharingStarted.WhileSubscribed(5000),
                             UIState.DataLoading
                         )
                 }

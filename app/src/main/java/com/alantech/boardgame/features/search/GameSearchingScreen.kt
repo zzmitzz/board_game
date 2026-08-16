@@ -23,12 +23,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.alantech.boardgame.R
 import com.alantech.boardgame.data.model.PacksPreview
 import com.alantech.boardgame.features.home.screen.HomeSearchBar
 import com.alantech.boardgame.ui.theme.BoardGameTheme
@@ -48,11 +51,21 @@ import com.alantech.boardgame.ui.theme.LightTextOnBackground
 @Composable
 fun GameSearchStateful(
     onBackClick: () -> Unit,
+    onPackClick: (packId: String) -> Unit,
     viewModel: GameSearchVM = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isSearching = uiState is SealedGameSearchUIState.GameSearchUIState || uiState is SealedGameSearchUIState.Loading
     val query by viewModel.query.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadRecentData()
+        viewModel.navEvent.collect { event ->
+            when (event) {
+                is GameSearchNavEvent.NavigateToPackDetail -> onPackClick(event.packId)
+            }
+        }
+    }
 
     GameSearchingScreen(
         uiState = uiState,
@@ -61,7 +74,9 @@ fun GameSearchStateful(
             if (isSearching) viewModel.clearQuery() else onBackClick()
         },
         onQueryChange = viewModel::onQueryChange,
-        query = query
+        query = query,
+        onPackClick = viewModel::onPackClick,
+        onRecentSearchClick = viewModel::onRecentSearchClick
     )
 }
 
@@ -71,7 +86,9 @@ fun GameSearchingScreen(
     isSearching: Boolean,
     onLeadingIconClick: () -> Unit,
     onQueryChange: (String) -> Unit,
-    query: String= ""
+    query: String = "",
+    onPackClick: (packId: String, packTitle: String) -> Unit = { _, _ -> },
+    onRecentSearchClick: (String) -> Unit = {}
 ) {
     Scaffold { contentPadding ->
         Column(
@@ -108,8 +125,15 @@ fun GameSearchingScreen(
 
             when (uiState) {
                 is SealedGameSearchUIState.Loading -> LoadingSection()
-                is SealedGameSearchUIState.InitUIState -> InitSection(state = uiState)
-                is SealedGameSearchUIState.GameSearchUIState -> SearchResultsSection(results = uiState.results)
+                is SealedGameSearchUIState.InitUIState -> InitSection(
+                    state = uiState,
+                    onPackClick = onPackClick,
+                    onRecentSearchClick = onRecentSearchClick
+                )
+                is SealedGameSearchUIState.GameSearchUIState -> SearchResultsSection(
+                    results = uiState.results,
+                    onPackClick = onPackClick
+                )
                 is SealedGameSearchUIState.Error -> ErrorSection(message = uiState.message)
             }
         }
@@ -124,10 +148,14 @@ private fun LoadingSection() {
 }
 
 @Composable
-private fun InitSection(state: SealedGameSearchUIState.InitUIState) {
+private fun InitSection(
+    state: SealedGameSearchUIState.InitUIState,
+    onPackClick: (packId: String, packTitle: String) -> Unit,
+    onRecentSearchClick: (String) -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
-            text = "RECENT",
+            text = stringResource(R.string.recent),
             color = Color.White.copy(alpha = 0.5f),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
@@ -137,17 +165,21 @@ private fun InitSection(state: SealedGameSearchUIState.InitUIState) {
         Spacer(modifier = Modifier.height(12.dp))
         if (state.recentSearch.isNotEmpty()) {
             LazyColumn {
-                items(state.recentSearch) { pack ->
+                items(state.recentSearch) { query ->
                     Text(
-                        text = pack,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                        text = query,
+                        color = LightSecondTextOBG,
                         fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onRecentSearchClick(query) }
+                            .padding(horizontal = 24.dp, vertical = 12.dp)
                     )
                 }
             }
         } else {
             Text(
-                text = "No recent search",
+                text = stringResource(R.string.no_recent_search),
                 color = Color.White.copy(alpha = 0.8f),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -162,7 +194,7 @@ private fun InitSection(state: SealedGameSearchUIState.InitUIState) {
 
         if (state.suggestPacks.isNotEmpty()) {
             Text(
-                text = "SUGGESTED",
+                text = stringResource(R.string.suggested),
                 color = Color.White.copy(alpha = 0.5f),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -172,7 +204,7 @@ private fun InitSection(state: SealedGameSearchUIState.InitUIState) {
             Spacer(modifier = Modifier.height(12.dp))
             LazyColumn {
                 items(state.suggestPacks, key = { it.id.orEmpty() }) { pack ->
-                    SearchResultItem(pack = pack)
+                    SearchResultItem(pack = pack, onPackClick = onPackClick)
                 }
             }
         }
@@ -180,7 +212,10 @@ private fun InitSection(state: SealedGameSearchUIState.InitUIState) {
 }
 
 @Composable
-private fun SearchResultsSection(results: List<PacksPreview>) {
+private fun SearchResultsSection(
+    results: List<PacksPreview>,
+    onPackClick: (packId: String, packTitle: String) -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
             text = "SEARCH RESULTS",
@@ -193,7 +228,7 @@ private fun SearchResultsSection(results: List<PacksPreview>) {
         Spacer(modifier = Modifier.height(12.dp))
         LazyColumn {
             items(results, key = { it.id.orEmpty() }) { pack ->
-                SearchResultItem(pack = pack)
+                SearchResultItem(pack = pack, onPackClick = onPackClick)
             }
         }
     }
@@ -207,10 +242,14 @@ private fun ErrorSection(message: String) {
 }
 
 @Composable
-private fun SearchResultItem(pack: PacksPreview) {
+private fun SearchResultItem(
+    pack: PacksPreview,
+    onPackClick: (packId: String, packTitle: String) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onPackClick(pack.id.orEmpty(), pack.title.orEmpty()) }
             .padding(horizontal = 24.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -248,30 +287,18 @@ private fun SearchResultItem(pack: PacksPreview) {
 fun GameSearchingScreenPreview() {
     BoardGameTheme {
         GameSearchingScreen(
-//            uiState = SealedGameSearchUIState.GameSearchUIState(
-//                query = "Card",
-//                results = listOf(
-//                    PacksPreview(
-//                        id = "1",
-//                        title = "Card Game",
-//                        keywordsSummarise = "Fun • 2-4 players",
-//                        thumb = null
-//                    )
-//                )
-//            ),
             uiState = SealedGameSearchUIState.InitUIState(
-                recentSearch = emptyList(),
-                suggestPacks =
-                    listOf(
-                        PacksPreview(
-                            id = "1",
-                            title = "Card Game",
-                            keywordsSummarise = "Fun • 2-4 players",
-                            thumb = null
-                        )
+                recentSearch = listOf("Card Game", "Dice"),
+                suggestPacks = listOf(
+                    PacksPreview(
+                        id = "1",
+                        title = "Card Game",
+                        keywordsSummarise = "Fun • 2-4 players",
+                        thumb = null
                     )
+                )
             ),
-            isSearching = true,
+            isSearching = false,
             onLeadingIconClick = {},
             onQueryChange = {}
         )

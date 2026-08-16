@@ -43,6 +43,7 @@ import com.alantech.boardgame.utils.DialogListener
 import com.alantech.boardgame.utils.DialogPlayerListener
 import com.alantech.boardgame.utils.PlusJakartaSans
 import com.alantech.boardgame.utils.clickInterval
+import com.alantech.boardgame.utils.userClick
 
 
 @Composable
@@ -178,7 +179,7 @@ fun SpecificPlayerBox(
                 color = if (isSelected) Color(0xFFDDB7FF) else Color(0xFF39323D),
                 shape = RoundedCornerShape(24.dp)
             )
-            .clickable {
+            .userClick {
                 onClick(players)
             },
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.alantech.boardgame" />
+                  <option name="mobileSdkAppId" value="1:41693521910:android:496a9910a7d904450e89d7" />
+                  <option name="projectId" value="board-game-d2776" />
+                  <option name="projectNumber" value="41693521910" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

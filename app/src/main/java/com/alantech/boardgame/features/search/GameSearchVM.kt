@@ -4,18 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.data.model.PacksPreview
 import com.alantech.boardgame.data.repository.BoardGameRepository
-import com.alantech.boardgame.ui.model.PackDetailUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 
 
 sealed class SealedGameSearchUIState {
@@ -37,6 +38,9 @@ sealed class SealedGameSearchUIState {
     ) : SealedGameSearchUIState()
 }
 
+sealed class GameSearchNavEvent {
+    data class NavigateToPackDetail(val packId: String) : GameSearchNavEvent()
+}
 
 @HiltViewModel
 class GameSearchVM @Inject constructor(
@@ -48,6 +52,10 @@ class GameSearchVM @Inject constructor(
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
+
+    private val _navEvent = MutableSharedFlow<GameSearchNavEvent>(extraBufferCapacity = 1)
+    val navEvent: SharedFlow<GameSearchNavEvent> = _navEvent.asSharedFlow()
+
     private var cachedInitState: SealedGameSearchUIState.InitUIState = SealedGameSearchUIState.InitUIState()
 
     init {
@@ -64,17 +72,21 @@ class GameSearchVM @Inject constructor(
         _uiState.update { cachedInitState }
     }
 
+    fun onPackClick(packId: String, packTitle: String) {
+        viewModelScope.launch {
+            repository.saveRecentSearch(packTitle)
+            _navEvent.emit(GameSearchNavEvent.NavigateToPackDetail(packId))
+        }
+    }
+
+    fun onRecentSearchClick(query: String) {
+        _query.update { query }
+    }
+
     private fun loadInitData() {
         _uiState.update { SealedGameSearchUIState.Loading }
-        viewModelScope.launch {
-            try {
-                val recentSearch = repository.getRecentSearch()
-                cachedInitState = cachedInitState.copy(recentSearch = recentSearch)
-                _uiState.update { cachedInitState }
-            } catch (e: Exception) {
-            }
-        }
 
+        loadRecentData()
         viewModelScope.launch {
             try {
                 val suggestPack = repository.getSuggestPacks()
@@ -82,6 +94,17 @@ class GameSearchVM @Inject constructor(
                 _uiState.update { current ->
                     if (current is SealedGameSearchUIState.InitUIState) cachedInitState else current
                 }
+            } catch (e: Exception) {
+            }
+        }
+    }
+
+    fun loadRecentData(){
+        viewModelScope.launch {
+            try {
+                val recentSearch = repository.getRecentSearch()
+                cachedInitState = cachedInitState.copy(recentSearch = recentSearch)
+                _uiState.update { cachedInitState }
             } catch (e: Exception) {
             }
         }

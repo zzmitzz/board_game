@@ -20,7 +20,7 @@ import okhttp3.ConnectionPool
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://localhost:8000/"
+    private const val BASE_URL = "http://103.78.3.184:8000/"
     private const val API_KEY = "sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM"
     private val json = Json {
         ignoreUnknownKeys = true

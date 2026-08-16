@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:41693521910:android:3ecbb3ab786ff09a0e89d7",
+        "mobilesdk_app_id": "1:41693521910:android:496a9910a7d904450e89d7",
         "android_client_info": {
-          "package_name": "con.alantech.boardgame"
+          "package_name": "com.alantech.boardgame"
         }
       },
       "oauth_client": [],

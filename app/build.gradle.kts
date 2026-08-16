@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
-
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -96,4 +96,8 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.2")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
+
+    // Firebase SDK
+    implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
+    implementation("com.google.firebase:firebase-analytics")
 }

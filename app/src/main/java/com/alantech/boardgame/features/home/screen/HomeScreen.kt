@@ -208,23 +208,6 @@ internal fun HomeScreenContent(
         }
         Spacer(modifier = Modifier.height(24.dp))
 
-        AnimatedVisibility(
-            modifier = Modifier.fillMaxWidth()
-                .weight(1f),
-            visible = uiState.isTrendingComponentLoading || uiState.isVibeComponentLoading,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                LottieAnimation(
-                    composition = lottie,
-                    modifier = Modifier.size(100.dp)
-                )
-            }
-        }
 
         AnimatedVisibility(
             visible = uiState.listVibePacks.isNotEmpty()
@@ -254,7 +237,7 @@ internal fun HomeScreenContent(
                     }
                 }
                 AnimatedVisibility(
-                    visible = uiState.listPacksFromVibe.isEmpty() && uiState.currentSelectedVibeChip != null
+                    visible = uiState.listPacksFromVibe.isEmpty() && uiState.currentSelectedVibeChip != null && !uiState.isSelectedVibeLoading
                 ) {
                     Row(
                         modifier = Modifier
@@ -270,8 +253,25 @@ internal fun HomeScreenContent(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
+            }
+        }
+        AnimatedVisibility(
+            modifier = Modifier.fillMaxWidth()
+                .weight(1f),
+            visible = uiState.isTrendingComponentLoading || uiState.isVibeComponentLoading,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ){
+                LottieAnimation(
+                    composition = lottie,
+                    modifier = Modifier.size(100.dp)
+                )
             }
         }
         uiState.sectionPacks.forEach { (section, packs) ->
@@ -341,7 +341,7 @@ fun HomeSearchBar(
         enabled = enableSearch,
         singleLine = true,
         readOnly = !enableSearch,
-        placeholder = { Text("Search games...", color = Color.Gray) },
+        placeholder = { Text(stringResource(R.string.search_game_placeholder), color = Color.Gray) },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,

@@ -1,5 +1,7 @@
 package com.alantech.boardgame.features.pagedetail.components
 
+import android.util.Log
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -44,17 +46,39 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import com.alantech.boardgame.R
+import com.alantech.boardgame.features.pagedetail.components.HeatLevelEnum.BLAZING
+import com.alantech.boardgame.features.pagedetail.components.HeatLevelEnum.HOT
+import com.alantech.boardgame.features.pagedetail.components.HeatLevelEnum.MILD
+import com.alantech.boardgame.features.pagedetail.components.HeatLevelEnum.SPICY
+import com.alantech.boardgame.features.pagedetail.components.HeatLevelEnum.WARM
 
+
+enum class HeatLevelEnum (@StringRes val label: Int) {
+    MILD(R.string.mild),
+    WARM(R.string.warm),
+    HOT(R.string.hot),
+    SPICY(R.string.spicy),
+    BLAZING(R.string.blazing);
+
+}
+private fun getLevelFromFloat(
+    level: Int
+): HeatLevelEnum {
+    Log.i("HeatLevelEnum", "getLevelFromFloat: $level")
+    return when (level) {
+        1 -> HeatLevelEnum.MILD
+        2 -> HeatLevelEnum.WARM
+        3 -> HeatLevelEnum.HOT
+        4 -> HeatLevelEnum.SPICY
+        5 -> HeatLevelEnum.BLAZING
+        else -> MILD
+    }
+}
 @Composable
 fun HeatLevelSection(
-    heatLevel: Float,
+    heatLevel: Int,
     modifier: Modifier = Modifier
 ) {
-    val levelLabel = when {
-        heatLevel <= 0.3f -> "CHILL"
-        heatLevel <= 0.6f -> "SPICY"
-        else -> "EXTREME"
-    }
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = (Color("#231E27".toColorInt())),
@@ -89,7 +113,7 @@ fun HeatLevelSection(
                     )
                 }
                 Text(
-                    text = levelLabel,
+                    text = stringResource(getLevelFromFloat(heatLevel).label),
                     style = MaterialTheme.typography.labelLarge,
                     color = Color(0xFFD0A5FF),
                     fontWeight = FontWeight.Bold
@@ -116,7 +140,7 @@ fun HeatLevelSection(
                             drawContent()
 
                             // 2. Calculate the dynamic width of the progress fill
-                            val progressWidth = size.width * heatLevel
+                            val progressWidth = size.width * (heatLevel/5f)
 
                             // 3. Draw the gradient progress bar up to that specific width
                             drawRect(
@@ -139,21 +163,13 @@ fun HeatLevelSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    stringResource(R.string.chill),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFCFC2D6)
-                )
-                Text(
-                    stringResource(R.string.spicy),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFCFC2D6)
-                )
-                Text(
-                    stringResource(R.string.extreme),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFCFC2D6)
-                )
+                HeatLevelEnum.entries.forEach {
+                    Text(
+                        stringResource(it.label),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFCFC2D6)
+                    )
+                }
             }
         }
     }
@@ -162,5 +178,5 @@ fun HeatLevelSection(
 @Preview
 @Composable
 private fun HeatPreview() {
-    HeatLevelSection(heatLevel = 0.1f)
+    HeatLevelSection(heatLevel = 1)
 }

@@ -31,13 +31,14 @@ data class HomeScreenUIState(
     val isVibeComponentLoading: Boolean = false,
     val listVibePacks: List<VibeChip> = emptyList(),
     val currentSelectedVibeChip: VibeChip? = null,
+    val isSelectedVibeLoading: Boolean = false,
     val listPacksFromVibe: List<PacksPreview> = emptyList(),
-    val sectionPacks: Map<SectionEntity,List<PacksPreview>> = emptyMap(),
+    val sectionPacks: Map<SectionEntity, List<PacksPreview>> = emptyMap(),
     val errorMessage: String? = null,
 )
 
-sealed class HomeScreenUIEffect{
-    data class ShowError(val message: String): HomeScreenUIEffect()
+sealed class HomeScreenUIEffect {
+    data class ShowError(val message: String) : HomeScreenUIEffect()
 }
 
 @HiltViewModel
@@ -60,7 +61,7 @@ class HomeScreenVM @Inject constructor(
         loadVibePacks()
     }
 
-    fun refreshAllData(){
+    fun refreshAllData() {
         _uiState.update {
             HomeScreenUIState()
         }
@@ -98,7 +99,7 @@ class HomeScreenVM @Inject constructor(
         }
     }
 
-    private fun showErrorToast(message: String){
+    private fun showErrorToast(message: String) {
         viewModelScope.launch {
             _uiEffect.emit(HomeScreenUIEffect.ShowError(message))
         }
@@ -119,7 +120,9 @@ class HomeScreenVM @Inject constructor(
                         // Concurrent fetching using async
                         packs.map { section ->
                             async {
-                                val sectionPacks = homeDataRepository.getSectionPacks(section.id!!).getOrNull().orEmpty()
+                                val sectionPacks =
+                                    homeDataRepository.getSectionPacks(section.id!!).getOrNull()
+                                        .orEmpty()
                                 // Synchronize map access because multiple async blocks write to it concurrently
                                 synchronized(mapData) {
                                     mapData[section] = sectionPacks
@@ -139,7 +142,8 @@ class HomeScreenVM @Inject constructor(
                             )
                         }
                     } else if (sectionResult.isFailure) {
-                        val errorMsg = sectionResult.exceptionOrNull()?.message ?: "Failed to load packs"
+                        val errorMsg =
+                            sectionResult.exceptionOrNull()?.message ?: "Failed to load packs"
                         _uiState.update { currentState ->
                             currentState.copy(
                                 isTrendingComponentLoading = false,
@@ -154,8 +158,8 @@ class HomeScreenVM @Inject constructor(
         }
     }
 
-    private suspend fun updateUIState(newState: HomeScreenUIState){
-        withContext(Dispatchers.Main.immediate){
+    private suspend fun updateUIState(newState: HomeScreenUIState) {
+        withContext(Dispatchers.Main.immediate) {
             _uiState.update { newState }
         }
     }
@@ -163,27 +167,31 @@ class HomeScreenVM @Inject constructor(
     fun selectVibeChip(
         chipID: String
     ) {
-        if(_uiState.value.listVibePacks.isEmpty()){
+        if (_uiState.value.listVibePacks.isEmpty()) {
             return
         }
 
         val listVibeChip = _uiState.value.listVibePacks
         val selectedChip = listVibeChip.find { chip -> chip.id == chipID }
 
-        if(selectedChip == _uiState.value.currentSelectedVibeChip){
+        if (selectedChip == _uiState.value.currentSelectedVibeChip) {
             _uiState.update {
                 it.copy(currentSelectedVibeChip = null, listPacksFromVibe = listOf())
             }
             return
         }
         _uiState.update {
-            it.copy(currentSelectedVibeChip = selectedChip, listPacksFromVibe = listOf())
+            it.copy(
+                currentSelectedVibeChip = selectedChip,
+                listPacksFromVibe = listOf(),
+                isSelectedVibeLoading = true
+            )
         }
         viewModelScope.launch {
             selectedChip?.let { vibe ->
                 val packsData = homeDataRepository.getCardsWithVibe(vibe.id).getOrNull() ?: listOf()
                 _uiState.update {
-                    it.copy(listPacksFromVibe = packsData)
+                    it.copy(listPacksFromVibe = packsData, isSelectedVibeLoading = false)
                 }
             }
         }

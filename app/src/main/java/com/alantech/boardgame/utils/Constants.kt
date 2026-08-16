@@ -1,5 +1,9 @@
 package com.alantech.boardgame.utils
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import com.alantech.boardgame.R
 import kotlinx.serialization.Serializable
@@ -29,3 +33,20 @@ val listLanguageSupport = listOf(
     LanguageItem(code = "ru", fullName = "Russian",    flagRes = R.drawable.ic_ru),
     LanguageItem(code = "vi", fullName = "Vietnamese", flagRes = R.drawable.ic_vn),
 )
+
+fun Context.openWebPage(
+    url: String
+){
+    val formattedUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        "https://$url"
+    } else {
+        url
+    }
+
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(formattedUrl))
+
+    try {
+        startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+    }
+}

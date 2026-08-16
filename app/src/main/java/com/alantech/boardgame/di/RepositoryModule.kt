@@ -1,5 +1,7 @@
 package com.alantech.boardgame.di
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.alantech.boardgame.data.local.GameResultRepository
 import com.alantech.boardgame.data.remote.BoardGameEndpoint
 import com.alantech.boardgame.data.remote.HomeDataEndpoint
@@ -26,8 +28,10 @@ abstract class RepositoryModule {
     companion object {
         @Provides
         @Singleton
-        fun provideBoardGameRepository(api: BoardGameEndpoint): BoardGameRepository =
-            BoardGameRepositoryImpl(api)
+        fun provideBoardGameRepository(
+            api: BoardGameEndpoint,
+            dataStore: DataStore<Preferences>
+        ): BoardGameRepository = BoardGameRepositoryImpl(api, dataStore)
 
         @Provides
         @Singleton
@@ -35,4 +39,5 @@ abstract class RepositoryModule {
             HomeDataRepositoryImpl(api)
     }
 }
+
 

@@ -48,4 +48,15 @@
     <string name="onboarding_description_2">From late-night parties to intimate date nights — explore curated question packs for every mood, group, and occasion. New packs added regularly.</string>
     <string name="onboarding_title_3">One Card, Real Conversations</string>
     <string name="onboarding_description_3">Every round, a question card breaks the ice and reveals something new. No awkward silences — just genuine moments you\'ll talk about for years.</string>
+    <string name="search_game_placeholder">Search games...</string>
+    <string name="recent">RECENT</string>
+    <string name="no_recent_search">No recent search</string>
+    <string name="suggested">SUGGESTED</string>
+    <string name="open_network_settings">Network Setting</string>
+    <string name="term_condition"><![CDATA[Terms & Conditions]]></string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="mild">Mild</string>
+    <string name="blazing">Blazing</string>
+    <string name="hot">Hot</string>
+    <string name="warm">Warm</string>
 </resources>
