@@ -13,18 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,11 +37,14 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alantech.boardgame.R
+import com.alantech.boardgame.navigation.LocalNavController
 import com.alantech.boardgame.navigation.NavigationGraph
+import com.alantech.boardgame.navigation.RootRoute
 import com.alantech.boardgame.ui.state.BoardGameAppState
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightDialogBackground
 import com.alantech.boardgame.ui.theme.LightOnPrimary
+import com.alantech.boardgame.ui.theme.LightSecondTextOBG
 import com.alantech.boardgame.utils.BlurBackgroundDialog
 import com.alantech.boardgame.utils.PlusJakartaSans
 
@@ -99,13 +99,12 @@ fun NetworkLoss(){
         spec = LottieCompositionSpec.RawRes(R.raw.no_connection)
     )
     val context = LocalContext.current
+    val navController = LocalNavController.current
     val openNetworkDialog = remember {
         {
             val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Opens a bottom-sheet dialog inside your app (Android 10+)
                 Intent(Settings.Panel.ACTION_WIFI)
             } else {
-                // Opens the full Wi-Fi settings page (Android 9 and lower)
                 Intent(Settings.ACTION_WIFI_SETTINGS)
             }
             context.startActivity(intent)
@@ -151,7 +150,20 @@ fun NetworkLoss(){
                 )
             }
 
-
+            if (navController != null) {
+                OutlinedButton(
+                    onClick = { navController.navigate(RootRoute.MyLibrary) },
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp, LightSecondTextOBG
+                    )
+                ) {
+                    Text(
+                        text = "Browse My Library",
+                        color = LightSecondTextOBG,
+                        fontFamily = PlusJakartaSans
+                    )
+                }
+            }
         }
     }
 }

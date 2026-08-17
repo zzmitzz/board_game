@@ -75,7 +75,7 @@ sealed class UIEffect {
 }
 
 @HiltViewModel
-class InGameVM @Inject constructor(
+open class InGameVM @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: BoardGameRepository,
     private val gameResultRepository: GameResultRepository,

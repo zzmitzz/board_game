@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.ManageHistory
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
@@ -59,6 +60,7 @@ fun SettingScreen(
     onBackClick: () -> Unit = {},
     onLanguageClick: () -> Unit = {},
     onPlayHistoryClick: () -> Unit = {},
+    onMyLibraryClick: () -> Unit = {},
 ) {
     val mContext = LocalContext.current
     val items = listOf(
@@ -80,6 +82,10 @@ fun SettingScreen(
             Icons.Default.History,
             stringResource(R.string.play_history)
         ) { onPlayHistoryClick() },
+        SettingItem(
+            Icons.Default.LibraryBooks,
+            "My Library"
+        ) { onMyLibraryClick() },
     )
 
     Column(

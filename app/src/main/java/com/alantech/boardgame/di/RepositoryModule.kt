@@ -10,6 +10,11 @@ import com.alantech.boardgame.data.repository.BoardGameRepositoryImpl
 import com.alantech.boardgame.data.repository.GameResultRepositoryImpl
 import com.alantech.boardgame.data.repository.HomeDataRepository
 import com.alantech.boardgame.data.repository.HomeDataRepositoryImpl
+import com.alantech.boardgame.data.repository.LocalLibraryRepository
+import com.alantech.boardgame.data.repository.LocalLibraryRepositoryImpl
+import com.alantech.boardgame.data.repository.CustomPackLocallyRepository
+import com.alantech.boardgame.data.local.dao.LocalCardDao
+import com.alantech.boardgame.data.local.dao.LocalPackDao
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -25,6 +30,10 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindGameResultRepository(impl: GameResultRepositoryImpl): GameResultRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindLocalLibraryRepository(impl: LocalLibraryRepositoryImpl): LocalLibraryRepository
+
     companion object {
         @Provides
         @Singleton
@@ -37,6 +46,14 @@ abstract class RepositoryModule {
         @Singleton
         fun provideHomeDataRepository(api: HomeDataEndpoint): HomeDataRepository =
             HomeDataRepositoryImpl(api)
+
+        @Provides
+        @Singleton
+        @CustomPackLocally
+        fun provideCustomPackLocallyRepository(
+            packDao: LocalPackDao,
+            cardDao: LocalCardDao
+        ): BoardGameRepository = CustomPackLocallyRepository(packDao, cardDao)
     }
 }
 

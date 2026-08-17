@@ -7,4 +7,5 @@ sealed class RootRoute {
     @Serializable data object Home : RootRoute()
     @Serializable data object Setting : RootRoute()
     @Serializable data object Language : RootRoute()
-}
+    @Serializable data object MyLibrary : RootRoute()
+}

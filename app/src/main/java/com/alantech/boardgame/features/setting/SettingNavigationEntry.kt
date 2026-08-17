@@ -50,7 +50,8 @@ fun NavGraphBuilder.settingNavigationEntry(
             SettingScreen(
                 onBackClick = { navController.popBackStack() },
                 onLanguageClick = { navController.navigate(RootRoute.Language) },
-                onPlayHistoryClick = { navController.navigate(SettingRoute.PlayHistory) }
+                onPlayHistoryClick = { navController.navigate(SettingRoute.PlayHistory) },
+                onMyLibraryClick = { navController.navigate(RootRoute.MyLibrary) }
             )
         }
         composable<SettingRoute.PlayHistory>(

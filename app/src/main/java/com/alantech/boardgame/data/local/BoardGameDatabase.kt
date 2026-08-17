@@ -6,13 +6,23 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.alantech.boardgame.data.local.dao.GameResultDao
+import com.alantech.boardgame.data.local.dao.LocalCardDao
+import com.alantech.boardgame.data.local.dao.LocalPackDao
 import com.alantech.boardgame.data.local.entity.GameResult
+import com.alantech.boardgame.data.local.entity.LocalCardEntity
+import com.alantech.boardgame.data.local.entity.LocalPackEntity
 
-@Database(entities = [GameResult::class], version = 2, exportSchema = false)
+@Database(
+    entities = [GameResult::class, LocalPackEntity::class, LocalCardEntity::class],
+    version = 3,
+    exportSchema = false
+)
 @TypeConverters(GameResultTypeConverters::class)
 abstract class BoardGameDatabase : RoomDatabase() {
 
     abstract fun gameResultDao(): GameResultDao
+    abstract fun localPackDao(): LocalPackDao
+    abstract fun localCardDao(): LocalCardDao
 
     companion object {
         private const val NAME = "board_game.db"
