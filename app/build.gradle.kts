@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -20,16 +22,27 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    val apiKey = getEnv("API_KEY")
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"http://localhost:8000/\"")
+            buildConfigField("String", "API_KEY", "\"$apiKey\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"http://103.78.3.184:8000/\"")
+            buildConfigField("String", "API_KEY", "$apiKey\"")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -100,4 +113,19 @@ dependencies {
     // Firebase SDK
     implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
     implementation("com.google.firebase:firebase-analytics")
+}
+
+fun getEnv(key: String, default: String = ""): String {
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        val properties = Properties()
+        envFile.inputStream().use { properties.load(it) }
+        val value = properties.getProperty(key)
+        if (!value.isNullOrBlank()) {
+            // Strips surrounding quotes if present in the .env file
+            return value.trim().removeSurrounding("\"").removeSurrounding("'")
+        }
+    }
+    // Fallback for CI/CD pipelines (e.g., GitHub Actions, Bitrise)
+    return System.getenv(key) ?: default
 }

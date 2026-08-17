@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alantech.boardgame.config.PersistenceSetting
+import com.alantech.boardgame.onboarding.Constants
 import com.alantech.boardgame.utils.DataStoreUtils
 import com.alantech.boardgame.utils.LanguageItem
 import com.alantech.boardgame.utils.listLanguageSupport
@@ -17,7 +18,7 @@ class LanguageSelectVM @Inject constructor(
 ) : ViewModel() {
 
     companion object {
-        val PREF_USER_SETTING = stringPreferencesKey("pref_user_setting")
+        val PREF_USER_SETTING = stringPreferencesKey(Constants.APP_INTERNAL_LANGUAGE_PREF)
     }
 
     fun saveLanguage(language: LanguageItem, onComplete: () -> Unit) {

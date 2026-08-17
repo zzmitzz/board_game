@@ -22,6 +22,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -69,7 +70,8 @@ sealed class UIEffect {
         val message: String
     ) : UIEffect()
 
-    data object OnShuffleCards : UIEffect()
+    data object OnShuffleCardsBegin : UIEffect()
+    data object OnShuffleCardsEnd : UIEffect()
 }
 
 @HiltViewModel
@@ -118,7 +120,7 @@ class InGameVM @Inject constructor(
                 if (it.isSoundOn) SoundUtils.play(ListSound.START)
             }
             viewModelScope.launch {
-                _uiEffect.emit(UIEffect.OnShuffleCards)
+                _uiEffect.emit(UIEffect.OnShuffleCardsBegin)
             }
         }
 
@@ -130,6 +132,9 @@ class InGameVM @Inject constructor(
         }
 
         override fun onResetTimer() {
+            viewModelScope.launch {
+                _uiEffect.emit(UIEffect.OnShuffleCardsEnd)
+            }
             resetTimer()
         }
     }
@@ -156,14 +161,16 @@ class InGameVM @Inject constructor(
         Log.d("InGameVM", "packId: $packId")
         viewModelScope.launch {
             try {
-                val mSetting = getSettingAsFlow().first() ?: PersistenceSetting()
-                val cards = repository.getCardsByPackId(packId, mSetting.language)
+                val cards = repository.getCardsByPackId(packId, "en")
                 if (cards.isEmpty()) {
                     throw Exception("No cards found for this pack")
                 }
                 gamePlayerManager = GamePlayerManager.createGamePlayerManager(
                     gamePlayers = gameConfig.getPlayers(),
-                    gamePacks = cards
+                    gamePacks = cards,
+                    boardGameRepository = repository,
+                    dataStoreUtils = dataStoreUtils,
+                    coroutineScope = sessionScope,
                 )
                 gamePlayerManager?.setOnStateChangeListener(mGameStateListener)
                 val pack = repository.getPackById(packId)
@@ -176,16 +183,18 @@ class InGameVM @Inject constructor(
                     triggerGameFlow = combine(
                         settingFow, gameStateFlow
                     ) { setting, gameState ->
-                        _uiState.value = UIState.InGameUIState(
-                            round = gameState.currentRound,
-                            totalRound = gameConfig.getTotalRounds(),
-                            currentCardIndex = gamePlayerManager?.getCurrentCardIndex() ?: -1,
-                            currentPlayer = gameState.activePlayer,
-                            gameTitle = pack?.titleCard ?: context.getString(R.string.board_game),
-                            currentPackCards = gameState.currentCards.toList(),
-                            penalty = gameConfig.penaltyInput,
-                            persistenceSetting = setting ?: PersistenceSetting(),
-                        )
+                        if(gameState != null){
+                            _uiState.value = UIState.InGameUIState(
+                                round = gameState.currentRound,
+                                totalRound = gameConfig.getTotalRounds(),
+                                currentCardIndex = gamePlayerManager?.getCurrentCardIndex() ?: -1,
+                                currentPlayer = gameState.activePlayer,
+                                gameTitle = pack?.titleCard ?: context.getString(R.string.board_game),
+                                currentPackCards = gameState.currentCards.toList(),
+                                penalty = gameConfig.penaltyInput,
+                                persistenceSetting = setting ?: PersistenceSetting(),
+                            )
+                        }
                     }
                         .stateIn(
                             scope = sessionScope,
@@ -221,24 +230,37 @@ class InGameVM @Inject constructor(
     private fun getSettingAsFlow(): Flow<PersistenceSetting?> =
         dataStoreUtils.getFlow(PREF_USER_SETTING, PersistenceSetting::class.java)
 
+
+    private var countingTimerJob: Job? = null
     private fun startTimerCountDown() {
         if (!gameConfig.getIsTimerOn()) {
             return
         }
         sessionScope.launch {
-            while (true) {
-                if (timeLeft.value <= 0f) {
-                    delay(1000.milliseconds)
-                    _uiEffect.emit(UIEffect.OnTimeUp)
+            if(countingTimerJob?.isActive == true){
+                countingTimerJob?.cancel()
+            }
+            countingTimerJob = launch {
+                while (true) {
+                    if (timeLeft.value <= 0f) {
+                        delay(1000.milliseconds)
+                        _uiEffect.emit(UIEffect.OnTimeUp)
+                    }
+                    if (timeLeft.value > 0) {
+                        timeLeft.value -= 0.1f
+                    }
+                    delay(100.milliseconds)
                 }
-                if (timeLeft.value > 0) {
-                    timeLeft.value -= 0.1f
-                }
-                delay(100.milliseconds)
             }
         }
     }
 
+    fun resumeTimer(){
+        startTimerCountDown()
+    }
+    fun pauseTimer(){
+        countingTimerJob?.cancel()
+    }
 
     private fun resetTimer() {
         timeLeft.value = 30f
@@ -303,6 +325,7 @@ class InGameVM @Inject constructor(
         _uiState.value = UIState.DataLoading
         _uiEffect.tryEmit(null)
         sessionScope.cancel()
+        countingTimerJob?.cancel()
         sessionScope = CoroutineScope(viewModelScope.coroutineContext + SupervisorJob())
         gamePlayerManager?.removeOnStateChangeListener()
         gamePlayerManager?.resetSession()

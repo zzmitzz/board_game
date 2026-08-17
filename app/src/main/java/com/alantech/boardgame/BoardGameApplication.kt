@@ -6,6 +6,7 @@ import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy.Builder
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.alantech.boardgame.config.PersistenceSetting
+import com.alantech.boardgame.onboarding.Constants
 import com.alantech.boardgame.utils.DataStoreUtils
 import com.alantech.boardgame.utils.LocaleUtils
 import com.alantech.boardgame.utils.SoundUtils
@@ -35,7 +36,7 @@ class BoardGameApplication : Application() {
     }
 
     fun getLanguageCode(): String {
-        val key = stringPreferencesKey("pref_user_setting")
+        val key = stringPreferencesKey(Constants.APP_INTERNAL_LANGUAGE_PREF)
         return runBlocking {
             dataStoreUtils.getSerializedData(key, PersistenceSetting::class.java)?.language
                 ?: PersistenceSetting().language

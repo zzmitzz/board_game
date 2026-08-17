@@ -1,5 +1,6 @@
 package com.alantech.boardgame.features.ingame.screen
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -11,6 +12,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,6 +26,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -77,10 +82,40 @@ fun ActiveGameScreenStateful(
         spec = LottieCompositionSpec.RawRes(R.raw.lottie_shuffle_card)
     )
     var settingDialog by remember { mutableStateOf(false) }
-    var mTriggerEffect by remember {
-        mutableIntStateOf(-1)
-    }
     mViewModel.triggerGameFlow?.collectAsStateWithLifecycle()
+
+    var isShuffling by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    mViewModel.pauseTimer()
+                }
+
+                Lifecycle.Event.ON_START -> {
+                }
+
+                Lifecycle.Event.ON_RESUME -> {
+                    mViewModel.resumeTimer()
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+
     val onDialogListener = remember {
         object : DialogPlayerListener() {
             override fun onConfirm(numberPlayer: Int) {
@@ -137,6 +172,7 @@ fun ActiveGameScreenStateful(
                 }
 
                 is UIEffect.OnTimeUp -> {
+                    Log.i("DEBUG", "On time up: next")
                     mViewModel.onCardComplete(false)
                 }
 
@@ -147,9 +183,14 @@ fun ActiveGameScreenStateful(
                     )
                 }
 
-                is UIEffect.OnShuffleCards -> {
-                    mTriggerEffect++
+                is UIEffect.OnShuffleCardsBegin -> {
+                    isShuffling = true
                 }
+
+                is UIEffect.OnShuffleCardsEnd -> {
+                    isShuffling = false
+                }
+
 
                 else -> {}
             }
@@ -230,7 +271,7 @@ fun ActiveGameScreenStateful(
                             isCardHintOpen.value = true
                         },
                         state = state,
-                        triggerEffect = mTriggerEffect,
+                        showShuffleCardsAnimation = isShuffling,
                         timeLeft = timeLeft.value
                     )
                 }
@@ -303,11 +344,10 @@ fun ActiveGameScreen(
     onSettingsClick: () -> Unit,
     onCardHintClick: () -> Unit = {},
     state: UIState.InGameUIState,
-    triggerEffect: Int = 0,
+    showShuffleCardsAnimation: Boolean = false,
     timeLeft: Float = 0f
 ) {
 
-    var showShuffleCardsAnimation by remember { mutableStateOf(false) }
     val onCardComplete = {
         if (!showShuffleCardsAnimation) {
             actionContext.onComplete()
@@ -316,16 +356,6 @@ fun ActiveGameScreen(
     val onCardForfeit = {
         if (!showShuffleCardsAnimation) {
             actionContext.onForfeit()
-        }
-    }
-    LaunchedEffect(key1 = triggerEffect) {
-        if (triggerEffect == -1) {
-            return@LaunchedEffect
-        }
-        launch {
-            showShuffleCardsAnimation = true
-            delay(2000L)
-            showShuffleCardsAnimation = false
         }
     }
     val lottieShuffle by rememberLottieComposition(

@@ -28,3 +28,8 @@ val listOnboardingFill: List<OnboardingItem> = listOf(
         image = R.drawable.onboard_screen3_getstarted_1785742139974,
     )
 )
+
+
+object Constants {
+    val APP_INTERNAL_LANGUAGE_PREF = "pref_app_language"
+}

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.alantech.boardgame.data.model.PacksPreview
 import com.alantech.boardgame.data.model.toUIModel
 import com.alantech.boardgame.data.remote.BoardGameEndpoint
+import com.alantech.boardgame.data.remote.request.CardTranslateRequest
 import com.alantech.boardgame.ui.model.CardDetail
 import com.alantech.boardgame.ui.model.PackDetailUIModel
 import kotlinx.coroutines.Dispatchers
@@ -67,4 +68,9 @@ class BoardGameRepositoryImpl(
     override suspend fun getSuggestPacks(): List<PacksPreview> = api.getSuggestPacks()
 
     override suspend fun searchPacksByName(query: String): List<PacksPreview> = api.searchPacksByName(query)
+
+    override suspend fun translateCards(cardIds: List<String>, locale: String): List<CardDetail> = withContext(Dispatchers.IO) {
+        api.translateCards(CardTranslateRequest(card_ids = cardIds, locale = locale))
+            .map { it.toUIModel() }
+    }
 }

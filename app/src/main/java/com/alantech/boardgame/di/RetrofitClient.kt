@@ -1,5 +1,6 @@
 package com.alantech.boardgame.di
 
+import com.alantech.boardgame.BuildConfig
 import com.alantech.boardgame.data.remote.BoardGameEndpoint
 import com.alantech.boardgame.data.remote.HomeDataEndpoint
 import kotlinx.serialization.json.Json
@@ -20,8 +21,8 @@ import okhttp3.ConnectionPool
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://103.78.3.184:8000/"
-    private const val API_KEY = "sb_publishable_li1QqF2ov_VHDuocLiwikg_rNff-vGM"
+    private val BASE_URL = BuildConfig.BASE_URL
+    private val API_KEY = BuildConfig.API_KEY
     private val json = Json {
         ignoreUnknownKeys = true
     }
@@ -38,6 +39,7 @@ object RetrofitClient {
     // 2. Create Auth Interceptor
     private val authInterceptor = Interceptor { chain ->
         val request = chain.request().newBuilder()
+            .addHeader("X-API-Key", API_KEY)
             .addHeader("apikey", API_KEY)
             .addHeader("Authorization", "Bearer $API_KEY")
             .build()

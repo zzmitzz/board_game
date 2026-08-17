@@ -12,5 +12,6 @@ interface BoardGameRepository {
     suspend fun getRecentSearch(): List<String>
     suspend fun saveRecentSearch(search: String)
     suspend fun getSuggestPacks(): List<PacksPreview>
-    suspend fun searchPacksByName(query: String) : List<PacksPreview>
+    suspend fun searchPacksByName(query: String): List<PacksPreview>
+    suspend fun translateCards(cardIds: List<String>, locale: String): List<CardDetail>
 }

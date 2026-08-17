@@ -3,7 +3,10 @@ package com.alantech.boardgame.data.remote
 import com.alantech.boardgame.data.model.PacksPreview
 import com.alantech.boardgame.data.model.RemoteCard
 import com.alantech.boardgame.data.model.RemotePackDetail
+import com.alantech.boardgame.data.remote.request.CardTranslateRequest
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface BoardGameEndpoint {
@@ -36,4 +39,9 @@ interface BoardGameEndpoint {
         @Query("query") query: String,
         @Query("limit") limit: Int = 5
     ): List<PacksPreview>
+
+    @POST("api/v1/cards/translate")
+    suspend fun translateCards(
+        @Body cardsData: CardTranslateRequest
+    ): List<RemoteCard>
 }
