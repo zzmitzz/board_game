@@ -44,11 +44,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.alantech.boardgame.R
 import com.alantech.boardgame.features.mylibrary.ui.LibraryTextField
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightPrimary
@@ -85,11 +87,11 @@ fun EditPackScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = LightTextOnBackground)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = LightTextOnBackground)
             }
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Edit Pack",
+                text = stringResource(R.string.edit_pack),
                 color = LightTextOnBackground,
                 fontFamily = PlusJakartaSans,
                 fontSize = 20.sp,
@@ -127,20 +129,20 @@ fun EditPackScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.AddPhotoAlternate, null, tint = LightSecondTextOBG, modifier = Modifier.size(40.dp))
                         Spacer(Modifier.height(8.dp))
-                        Text("Tap to change cover image", color = LightTextColor.copy(alpha = 0.6f), fontFamily = PlusJakartaSans, fontSize = 13.sp)
+                        Text(stringResource(R.string.tap_change_cover_image), color = LightTextColor.copy(alpha = 0.6f), fontFamily = PlusJakartaSans, fontSize = 13.sp)
                     }
                 }
             }
 
-            LibraryTextField(value = form.title, onValueChange = vm::onTitleChange, label = "Title *", placeholder = "Pack title")
-            LibraryTextField(value = form.description, onValueChange = vm::onDescriptionChange, label = "Description", placeholder = "Short description", singleLine = false)
-            LibraryTextField(value = form.tag, onValueChange = vm::onTagChange, label = "Tag / Keywords", placeholder = "e.g. fun, party")
+            LibraryTextField(value = form.title, onValueChange = vm::onTitleChange, label = stringResource(R.string.pack_title_label), placeholder = stringResource(R.string.pack_title_edit_placeholder))
+            LibraryTextField(value = form.description, onValueChange = vm::onDescriptionChange, label = stringResource(R.string.description_label), placeholder = stringResource(R.string.description_edit_placeholder), singleLine = false)
+            LibraryTextField(value = form.tag, onValueChange = vm::onTagChange, label = stringResource(R.string.tag_label), placeholder = stringResource(R.string.tag_edit_placeholder))
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Whatshot, null, tint = LightSecondTextOBG, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Heat Level: ${form.heatLevel} / 5", color = LightTextColor, fontFamily = PlusJakartaSans, fontSize = 13.sp)
+                    Text(stringResource(R.string.heat_level_format, form.heatLevel), color = LightTextColor, fontFamily = PlusJakartaSans, fontSize = 13.sp)
                 }
                 Slider(
                     value = form.heatLevel.toFloat(),
@@ -155,20 +157,20 @@ fun EditPackScreen(
                 LibraryTextField(
                     value = form.estimateTimePlay.toString(),
                     onValueChange = { vm.onEstimateTimeChange(it.toIntOrNull() ?: form.estimateTimePlay) },
-                    label = "Est. Time (min)", placeholder = "30",
+                    label = stringResource(R.string.est_time_label), placeholder = "30",
                     modifier = Modifier.weight(1f), keyboardType = KeyboardType.Number,
                     leadingIcon = { Icon(Icons.Default.Timer, null, tint = LightSecondTextOBG, modifier = Modifier.size(18.dp)) }
                 )
                 LibraryTextField(
                     value = form.suggestNumberPlayers.toString(),
                     onValueChange = { vm.onSuggestPlayersChange(it.toIntOrNull() ?: form.suggestNumberPlayers) },
-                    label = "Players", placeholder = "2",
+                    label = stringResource(R.string.players), placeholder = "2",
                     modifier = Modifier.weight(1f), keyboardType = KeyboardType.Number,
                     leadingIcon = { Icon(Icons.Default.People, null, tint = LightSecondTextOBG, modifier = Modifier.size(18.dp)) }
                 )
             }
 
-            LibraryTextField(value = form.howToPlay, onValueChange = vm::onHowToPlayChange, label = "How to Play", placeholder = "Explain the rules...", singleLine = false)
+            LibraryTextField(value = form.howToPlay, onValueChange = vm::onHowToPlayChange, label = stringResource(R.string.how_to_play_label), placeholder = stringResource(R.string.how_to_play_placeholder), singleLine = false)
             Spacer(Modifier.height(8.dp))
 
             Button(
@@ -181,7 +183,7 @@ fun EditPackScreen(
                 if (form.isSaving) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
                 } else {
-                    Text("Save Changes", fontFamily = PlusJakartaSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text(stringResource(R.string.save_changes), fontFamily = PlusJakartaSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 }
             }
             Spacer(Modifier.height(24.dp))

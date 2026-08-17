@@ -35,10 +35,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alantech.boardgame.R
 import com.alantech.boardgame.data.local.entity.LocalCardEntity
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightPrimary
@@ -74,14 +76,14 @@ fun PackCardsScreen(
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.back),
                         tint = LightTextOnBackground
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = pack?.title ?: "Cards",
+                        text = pack?.title ?: stringResource(R.string.sample_cards),
                         color = LightTextOnBackground,
                         fontFamily = PlusJakartaSans,
                         fontSize = 20.sp,
@@ -90,7 +92,7 @@ fun PackCardsScreen(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "${cards.size} cards",
+                        text = stringResource(R.string.pack_cards_count, cards.size),
                         color = LightTextColor.copy(alpha = 0.5f),
                         fontFamily = PlusJakartaSans,
                         fontSize = 12.sp
@@ -100,7 +102,7 @@ fun PackCardsScreen(
                     IconButton(onClick = onPlayClick) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Play",
+                            contentDescription = stringResource(R.string.play),
                             tint = LightSecondTextOBG,
                             modifier = Modifier.size(28.dp)
                         )
@@ -126,7 +128,7 @@ fun PackCardsScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "No cards yet",
+                            text = stringResource(R.string.no_cards_yet),
                             color = LightTextOnBackground,
                             fontFamily = PlusJakartaSans,
                             fontSize = 17.sp,
@@ -134,7 +136,7 @@ fun PackCardsScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Tap ＋ to add your first card",
+                            text = stringResource(R.string.add_first_card_hint),
                             color = LightTextColor.copy(alpha = 0.5f),
                             fontFamily = PlusJakartaSans,
                             fontSize = 13.sp
@@ -169,7 +171,7 @@ fun PackCardsScreen(
             contentColor = Color.White,
             shape = CircleShape
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Card")
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_card))
         }
     }
 }
@@ -205,7 +207,7 @@ private fun CardRow(card: LocalCardEntity, onEdit: () -> Unit, onDelete: () -> U
             IconButton(onClick = onEdit) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit",
+                    contentDescription = stringResource(R.string.edit),
                     tint = LightSecondTextOBG.copy(alpha = 0.7f),
                     modifier = Modifier.size(16.dp)
                 )
@@ -213,7 +215,7 @@ private fun CardRow(card: LocalCardEntity, onEdit: () -> Unit, onDelete: () -> U
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.delete),
                     tint = LightTextColor.copy(alpha = 0.4f),
                     modifier = Modifier.size(16.dp)
                 )

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alantech.boardgame.R
@@ -45,7 +46,7 @@ fun ActionButtons(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Complete Challenge",
+                text = stringResource(R.string.complete_challenge),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
@@ -68,7 +69,7 @@ fun ActionButtons(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Forfeit & Penalty",
+                text = stringResource(R.string.forfeit_and_penalty),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,

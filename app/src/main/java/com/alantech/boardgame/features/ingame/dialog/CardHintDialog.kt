@@ -12,8 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.alantech.boardgame.R
 import com.alantech.boardgame.ui.theme.LightDialogBackground
 import com.alantech.boardgame.ui.theme.LightTextColor
 import com.alantech.boardgame.utils.PlusJakartaSans
@@ -29,7 +31,7 @@ fun CardHintDialog(cardHint: String) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Card Hint",
+            text = stringResource(R.string.card_hint),
             style = MaterialTheme.typography.titleLarge,
             color = LightTextColor,
             fontFamily = PlusJakartaSans,

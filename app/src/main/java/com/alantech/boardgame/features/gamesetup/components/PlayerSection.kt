@@ -76,7 +76,7 @@ fun PlayerSection(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Player",
+                        contentDescription = stringResource(R.string.delete_player),
                         tint = Color(0xFFFFFFFF),
                         modifier = Modifier
                             .size(20.dp)
@@ -87,7 +87,7 @@ fun PlayerSection(
                 }
                 Spacer(modifier = Modifier.width(24.dp))
                 Text(
-                    text = "${mPlayers.size} Player(s)",
+                    text = stringResource(R.string.players_count_format, mPlayers.size),
                     color = Color(0xFFD8A5FF),
                     fontSize = 12.sp,
                     modifier = Modifier
@@ -157,7 +157,7 @@ fun AddPlayerItem(
             }
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Change Players",
+                contentDescription = stringResource(R.string.change_players),
                 tint = Color(0xFFA19AA8),
                 modifier = Modifier.size(32.dp)
             )

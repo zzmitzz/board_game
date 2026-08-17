@@ -1,4 +1,4 @@
-﻿package com.alantech.boardgame.features.playhistory
+package com.alantech.boardgame.features.playhistory
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -236,7 +236,7 @@ private fun EmptyHistoryPlaceholder() {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "No games played yet",
+                text = stringResource(R.string.no_games_played_yet),
                 color = LightTextColor.copy(alpha = 0.3f),
                 fontSize = 14.sp
             )

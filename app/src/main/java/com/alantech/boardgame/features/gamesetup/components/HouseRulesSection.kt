@@ -65,7 +65,7 @@ fun HouseRulesSection(
         bottom = 16.dp
     )) {
         Text(
-            text = "House Rules",
+            text = stringResource(R.string.house_rules),
             color = Color.White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -74,8 +74,8 @@ fun HouseRulesSection(
         Spacer(modifier = Modifier.height(16.dp))
 
         RuleItem(
-            title = "Record Dares",
-            description = "Capture the best moments",
+            title = stringResource(R.string.record_dares),
+            description = stringResource(R.string.capture_best_moments),
             iconColor = Color(0xFFB975FF),
             icon = {
                 Icon(
@@ -100,8 +100,8 @@ fun HouseRulesSection(
         Spacer(modifier = Modifier.height(16.dp))
 
         RuleItem(
-            title = "NSFW Content",
-            description = "Include NSFW cards",
+            title = stringResource(R.string.nsfw_content),
+            description = stringResource(R.string.include_nsfw_cards),
             iconColor = Color(0xFFB975FF),
             icon = {
                 Text(
@@ -118,8 +118,8 @@ fun HouseRulesSection(
         Spacer(modifier = Modifier.height(16.dp))
 
         RuleItem(
-            title = "Speed Mode",
-            description = "30s timer per turn",
+            title = stringResource(R.string.speed_mode),
+            description = stringResource(R.string.speed_mode_desc),
             iconColor = Color(0xFFB975FF),
             icon = {
                 Icon(
@@ -135,7 +135,7 @@ fun HouseRulesSection(
 
         RuleEditableItem(
             title = "Penalty",
-            description = if(penalty) "Skipping a turn, do the penalty" else "No penalty",
+            description = if (penalty) stringResource(R.string.penalty_on_skip) else stringResource(R.string.no_penalty),
             iconColor = Color(0xFFB975FF),
             icon = {
                 Icon(
@@ -158,8 +158,8 @@ fun HouseRulesSection(
         Spacer(modifier = Modifier.height(16.dp))
 
         RuleProgressItem(
-            title = "Round",
-            description = "Number of play rounds",
+            title = stringResource(R.string.round),
+            description = stringResource(R.string.number_of_rounds),
             iconColor = Color(0xFFB975FF),
             icon = {
                 Icon(

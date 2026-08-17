@@ -27,11 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alantech.boardgame.R
 import com.alantech.boardgame.config.PersistenceSetting
 import com.alantech.boardgame.features.gamesetup.components.AddPlayerDialog
 import com.alantech.boardgame.features.gamesetup.components.GameSetupTopBar
@@ -240,7 +242,7 @@ fun GameSetupScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Start Game",
+                text = stringResource(R.string.start_game),
                 color = Color(0xFF4C1D95),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold

@@ -158,7 +158,7 @@ fun NetworkLoss(){
                     )
                 ) {
                     Text(
-                        text = "Browse My Library",
+                        text = stringResource(R.string.browse_my_library),
                         color = LightSecondTextOBG,
                         fontFamily = PlusJakartaSans
                     )

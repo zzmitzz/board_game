@@ -37,11 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.alantech.boardgame.R
 import com.alantech.boardgame.data.local.entity.LocalPackEntity
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightPrimary
@@ -101,7 +103,7 @@ fun MyLibraryScreen(
             contentColor = Color.White,
             shape = CircleShape
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Pack")
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_pack))
         }
     }
 }
@@ -117,13 +119,13 @@ private fun MyLibraryTopBar(onBackClick: () -> Unit) {
         IconButton(onClick = onBackClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.back),
                 tint = LightTextOnBackground
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "My Library",
+            text = stringResource(R.string.my_library),
             color = LightTextOnBackground,
             fontFamily = PlusJakartaSans,
             fontSize = 20.sp,
@@ -147,7 +149,7 @@ private fun EmptyLibraryState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No packs yet",
+            text = stringResource(R.string.no_packs_yet),
             color = LightTextOnBackground,
             fontFamily = PlusJakartaSans,
             fontSize = 18.sp,
@@ -155,7 +157,7 @@ private fun EmptyLibraryState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Tap ＋ to create your first custom pack",
+            text = stringResource(R.string.create_first_pack_hint),
             color = LightTextColor.copy(alpha = 0.5f),
             fontFamily = PlusJakartaSans,
             fontSize = 14.sp
@@ -216,7 +218,7 @@ private fun PackLibraryCard(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = pack.tag.ifBlank { "Custom Pack" },
+                text = pack.tag.ifBlank { stringResource(R.string.custom_pack_default_tag) },
                 color = LightSecondTextOBG,
                 fontFamily = PlusJakartaSans,
                 fontSize = 12.sp,
@@ -229,7 +231,7 @@ private fun PackLibraryCard(
             IconButton(onClick = onEdit) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit",
+                    contentDescription = stringResource(R.string.edit),
                     tint = LightSecondTextOBG.copy(alpha = 0.7f),
                     modifier = Modifier.size(18.dp)
                 )
@@ -237,7 +239,7 @@ private fun PackLibraryCard(
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.delete),
                     tint = LightTextColor.copy(alpha = 0.4f),
                     modifier = Modifier.size(18.dp)
                 )

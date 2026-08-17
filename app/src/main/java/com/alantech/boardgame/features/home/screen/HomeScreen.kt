@@ -376,7 +376,7 @@ private fun BrowseByVibeSection(
 ) {
     Column {
         Text(
-            text = "Browse by Vibe",
+            text = stringResource(R.string.browse_by_vibe),
             color = LightTextOnBackground,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
@@ -486,7 +486,7 @@ private fun CommunityHighlightsSection() {
         modifier = Modifier.padding(horizontal = 24.dp)
     ) {
         Text(
-            text = "Community Highlights",
+            text = stringResource(R.string.community_highlights),
             color = LightTextOnBackground,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold

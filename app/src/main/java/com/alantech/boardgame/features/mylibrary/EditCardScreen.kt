@@ -38,10 +38,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.alantech.boardgame.R
 import com.alantech.boardgame.features.mylibrary.ui.LibraryTextField
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightPrimary
@@ -79,10 +81,10 @@ fun EditCardScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = LightTextOnBackground)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = LightTextOnBackground)
             }
             Spacer(Modifier.width(8.dp))
-            Text("Edit Card", color = LightTextOnBackground, fontFamily = PlusJakartaSans, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.edit_card), color = LightTextOnBackground, fontFamily = PlusJakartaSans, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
         Column(
@@ -94,9 +96,9 @@ fun EditCardScreen(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            LibraryTextField(value = form.category, onValueChange = vm::onCategoryChange, label = "Category", placeholder = "e.g. Dare, Question, Truth")
-            LibraryTextField(value = form.description, onValueChange = vm::onDescriptionChange, label = "Card Content *", placeholder = "What does this card say?", singleLine = false)
-            LibraryTextField(value = form.hint, onValueChange = vm::onHintChange, label = "Hint", placeholder = "Optional hint for players", singleLine = false)
+            LibraryTextField(value = form.category, onValueChange = vm::onCategoryChange, label = stringResource(R.string.card_category_label), placeholder = stringResource(R.string.card_category_placeholder))
+            LibraryTextField(value = form.description, onValueChange = vm::onDescriptionChange, label = stringResource(R.string.card_content_label), placeholder = stringResource(R.string.card_content_placeholder), singleLine = false)
+            LibraryTextField(value = form.hint, onValueChange = vm::onHintChange, label = stringResource(R.string.card_hint_label), placeholder = stringResource(R.string.card_hint_placeholder), singleLine = false)
 
             Box(
                 modifier = Modifier
@@ -114,7 +116,7 @@ fun EditCardScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.AddPhotoAlternate, null, tint = LightSecondTextOBG, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.height(6.dp))
-                        Text("Tap to change image", color = LightTextColor.copy(alpha = 0.5f), fontFamily = PlusJakartaSans, fontSize = 12.sp)
+                        Text(stringResource(R.string.tap_change_card_image), color = LightTextColor.copy(alpha = 0.5f), fontFamily = PlusJakartaSans, fontSize = 12.sp)
                     }
                 }
             }
@@ -131,7 +133,7 @@ fun EditCardScreen(
                 if (form.isSaving) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
                 } else {
-                    Text("Save Changes", fontFamily = PlusJakartaSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text(stringResource(R.string.save_changes), fontFamily = PlusJakartaSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 }
             }
             Spacer(Modifier.height(24.dp))

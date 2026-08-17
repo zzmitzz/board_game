@@ -84,7 +84,7 @@ fun SettingScreen(
         ) { onPlayHistoryClick() },
         SettingItem(
             Icons.Default.LibraryBooks,
-            "My Library"
+            stringResource(R.string.my_library)
         ) { onMyLibraryClick() },
     )
 

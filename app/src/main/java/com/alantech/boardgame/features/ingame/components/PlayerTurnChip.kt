@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +40,7 @@ fun PlayerTurnChip(playerName: String) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "${playerName}’s Turn",
+            text = stringResource(R.string.player_turn_format, playerName),
             color = Color.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,

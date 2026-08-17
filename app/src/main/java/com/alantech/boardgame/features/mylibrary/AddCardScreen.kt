@@ -37,10 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.alantech.boardgame.R
 import com.alantech.boardgame.features.mylibrary.ui.LibraryTextField
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightPrimary
@@ -77,13 +79,13 @@ fun AddCardScreen(
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.back),
                     tint = LightTextOnBackground
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Add Card",
+                text = stringResource(R.string.add_card),
                 color = LightTextOnBackground,
                 fontFamily = PlusJakartaSans,
                 fontSize = 20.sp,
@@ -103,23 +105,23 @@ fun AddCardScreen(
             LibraryTextField(
                 value = form.category,
                 onValueChange = vm::onCategoryChange,
-                label = "Category",
-                placeholder = "e.g. Dare, Question, Truth"
+                label = stringResource(R.string.card_category_label),
+                placeholder = stringResource(R.string.card_category_placeholder)
             )
 
             LibraryTextField(
                 value = form.description,
                 onValueChange = vm::onDescriptionChange,
-                label = "Card Content *",
-                placeholder = "What does this card say?",
+                label = stringResource(R.string.card_content_label),
+                placeholder = stringResource(R.string.card_content_placeholder),
                 singleLine = false
             )
 
             LibraryTextField(
                 value = form.hint,
                 onValueChange = vm::onHintChange,
-                label = "Hint",
-                placeholder = "Optional hint for players",
+                label = stringResource(R.string.card_hint_label),
+                placeholder = stringResource(R.string.card_hint_placeholder),
                 singleLine = false
             )
 
@@ -143,7 +145,7 @@ fun AddCardScreen(
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
                 } else {
                     Text(
-                        text = "Save Card",
+                        text = stringResource(R.string.save_card),
                         fontFamily = PlusJakartaSans,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp
@@ -184,7 +186,7 @@ private fun CardImagePicker(uri: String?, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Add optional image",
+                    text = stringResource(R.string.tap_add_card_image),
                     color = LightTextColor.copy(alpha = 0.5f),
                     fontFamily = PlusJakartaSans,
                     fontSize = 12.sp

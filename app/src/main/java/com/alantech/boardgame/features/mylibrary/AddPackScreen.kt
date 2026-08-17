@@ -43,11 +43,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.alantech.boardgame.R
 import com.alantech.boardgame.ui.theme.LightBackground
 import com.alantech.boardgame.ui.theme.LightPrimary
 import com.alantech.boardgame.ui.theme.LightSecondTextOBG
@@ -83,13 +86,13 @@ fun AddPackScreen(
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.back),
                     tint = LightTextOnBackground
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Create Pack",
+                text = stringResource(R.string.create_pack),
                 color = LightTextOnBackground,
                 fontFamily = PlusJakartaSans,
                 fontSize = 20.sp,
@@ -114,23 +117,23 @@ fun AddPackScreen(
             LibraryTextField(
                 value = form.title,
                 onValueChange = vm::onTitleChange,
-                label = "Title *",
-                placeholder = "e.g. Party Questions"
+                label = stringResource(R.string.pack_title_label),
+                placeholder = stringResource(R.string.pack_title_placeholder)
             )
 
             LibraryTextField(
                 value = form.description,
                 onValueChange = vm::onDescriptionChange,
-                label = "Description",
-                placeholder = "Short description of this pack",
+                label = stringResource(R.string.description_label),
+                placeholder = stringResource(R.string.description_placeholder),
                 singleLine = false
             )
 
             LibraryTextField(
                 value = form.tag,
                 onValueChange = vm::onTagChange,
-                label = "Tag / Keywords",
-                placeholder = "e.g. fun, party, friends"
+                label = stringResource(R.string.tag_label),
+                placeholder = stringResource(R.string.tag_placeholder)
             )
 
             HeatLevelSlider(
@@ -142,7 +145,7 @@ fun AddPackScreen(
                 LibraryTextField(
                     value = form.estimateTimePlay.toString(),
                     onValueChange = { vm.onEstimateTimeChange(it.toIntOrNull() ?: form.estimateTimePlay) },
-                    label = "Est. Time (min)",
+                    label = stringResource(R.string.est_time_label),
                     placeholder = "30",
                     modifier = Modifier.weight(1f),
                     keyboardType = KeyboardType.Number,
@@ -151,7 +154,7 @@ fun AddPackScreen(
                 LibraryTextField(
                     value = form.suggestNumberPlayers.toString(),
                     onValueChange = { vm.onSuggestPlayersChange(it.toIntOrNull() ?: form.suggestNumberPlayers) },
-                    label = "Players",
+                    label = stringResource(R.string.players),
                     placeholder = "2",
                     modifier = Modifier.weight(1f),
                     keyboardType = KeyboardType.Number,
@@ -162,8 +165,8 @@ fun AddPackScreen(
             LibraryTextField(
                 value = form.howToPlay,
                 onValueChange = vm::onHowToPlayChange,
-                label = "How to Play",
-                placeholder = "Explain the rules...",
+                label = stringResource(R.string.how_to_play_label),
+                placeholder = stringResource(R.string.how_to_play_placeholder),
                 singleLine = false
             )
 
@@ -182,7 +185,7 @@ fun AddPackScreen(
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
                 } else {
                     Text(
-                        text = "Save Pack",
+                        text = stringResource(R.string.save_pack),
                         fontFamily = PlusJakartaSans,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp
@@ -223,7 +226,7 @@ private fun CoverImagePicker(uri: String?, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Tap to add cover image",
+                    text = stringResource(R.string.tap_add_cover_image),
                     color = LightTextColor.copy(alpha = 0.6f),
                     fontFamily = PlusJakartaSans,
                     fontSize = 13.sp
@@ -240,7 +243,7 @@ private fun HeatLevelSlider(value: Int, onValueChange: (Int) -> Unit) {
             Icon(Icons.Default.Whatshot, null, tint = LightSecondTextOBG, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Heat Level: $value / 5",
+                text = stringResource(R.string.heat_level_format, value),
                 color = LightTextColor,
                 fontFamily = PlusJakartaSans,
                 fontSize = 13.sp

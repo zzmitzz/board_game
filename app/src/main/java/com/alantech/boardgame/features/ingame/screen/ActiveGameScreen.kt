@@ -199,14 +199,18 @@ fun ActiveGameScreenStateful(
 
     var mTextLoading by remember { mutableStateOf("") }
 
+    val loadingText = stringResource(R.string.loading)
+    val translatingText = stringResource(R.string.translating_cards)
+    val shufflingText = stringResource(R.string.shuffling_cards)
+
     LaunchedEffect(uiState.value) {
         if (uiState.value == UIState.DataLoading) {
             delay(500)
-            mTextLoading = "Loading..."
+            mTextLoading = loadingText
             delay(3000)
-            mTextLoading = "Translating Cards..."
+            mTextLoading = translatingText
             delay(3000)
-            mTextLoading = "Shuffling Cards..."
+            mTextLoading = shufflingText
         }
     }
 
