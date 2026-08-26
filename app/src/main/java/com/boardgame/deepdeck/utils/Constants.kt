@@ -1,0 +1,52 @@
+package com.boardgame.deepdeck.utils
+
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.annotation.DrawableRes
+import com.boardgame.deepdeck.R
+import kotlinx.serialization.Serializable
+
+
+@Serializable
+data class LanguageItem(
+    val code: String,
+    val fullName: String,
+    @DrawableRes val flagRes: Int,
+) {
+    override fun toString(): String = fullName
+}
+
+val listLanguageSupport = listOf(
+    LanguageItem(code = "en", fullName = "English",    flagRes = R.drawable.ic_usa),
+    LanguageItem(code = "hi", fullName = "Hindi",      flagRes = R.drawable.ic_hindi),
+    LanguageItem(code = "es", fullName = "Spanish",    flagRes = R.drawable.ic_es),
+    LanguageItem(code = "fr", fullName = "French",     flagRes = R.drawable.ic_fr),
+    LanguageItem(code = "id", fullName = "Indonesian", flagRes = R.drawable.ic_id),
+    LanguageItem(code = "tr", fullName = "Turkish",    flagRes = R.drawable.ic_tr),
+    LanguageItem(code = "de", fullName = "German",     flagRes = R.drawable.ic_de),
+    LanguageItem(code = "it", fullName = "Italian",    flagRes = R.drawable.ic_it),
+    LanguageItem(code = "ja", fullName = "Japanese",   flagRes = R.drawable.ic_ja),
+    LanguageItem(code = "ko", fullName = "Korean",     flagRes = R.drawable.ic_korean),
+    LanguageItem(code = "pt", fullName = "Portuguese", flagRes = R.drawable.ic_pt),
+    LanguageItem(code = "ru", fullName = "Russian",    flagRes = R.drawable.ic_ru),
+    LanguageItem(code = "vi", fullName = "Vietnamese", flagRes = R.drawable.ic_vn),
+)
+
+fun Context.openWebPage(
+    url: String
+){
+    val formattedUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        "https://$url"
+    } else {
+        url
+    }
+
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(formattedUrl))
+
+    try {
+        startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+    }
+}

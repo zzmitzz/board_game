@@ -1,4 +1,4 @@
-package com.alantech.boardgame
+package com.boardgame.deepdeck
 
 import org.junit.Test
 

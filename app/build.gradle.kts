@@ -10,11 +10,11 @@ plugins {
 }
 
 android {
-    namespace = "com.alantech.boardgame"
+    namespace = "com.boardgame.deepdeck"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.alantech.boardgame"
+        applicationId = "com.boardgame.deepdeck"
         minSdk = 25
         targetSdk = 37
         versionCode = 1
@@ -36,7 +36,7 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "BASE_URL", "\"http://103.78.3.184:8000/\"")
-            buildConfigField("String", "API_KEY", "$apiKey\"")
+            buildConfigField("String", "API_KEY", "\"$apiKey\"")
             signingConfig = signingConfigs.getByName("debug")
         }
     }
