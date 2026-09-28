@@ -5,6 +5,7 @@ import com.boardgame.deepdeck.data.local.dao.LocalPackDao
 import com.boardgame.deepdeck.data.local.entity.LocalCardEntity
 import com.boardgame.deepdeck.data.local.entity.LocalPackEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class LocalLibraryRepositoryImpl @Inject constructor(
@@ -16,6 +17,9 @@ class LocalLibraryRepositoryImpl @Inject constructor(
 
     override fun getCardsForPack(packId: String): Flow<List<LocalCardEntity>> =
         cardDao.getCardsForPack(packId)
+
+    override fun observeCardCounts(): Flow<Map<String, Int>> =
+        cardDao.observeCardCounts().map { rows -> rows.associate { it.packId to it.count } }
 
     override suspend fun createPack(pack: LocalPackEntity) = packDao.insert(pack)
 

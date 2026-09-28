@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -39,11 +38,9 @@ class NetworkUtils(
             }
         }
 
-        val networkRequest = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
-
-        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+        // Track the default network only: per-network callbacks (e.g. cellular lost while Wi-Fi is up)
+        // would otherwise flip the app to "offline" while it is still connected.
+        connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
         // Send initial state
         trySend(isNetworkConnected())

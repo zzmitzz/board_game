@@ -1,557 +1,247 @@
 package com.boardgame.deepdeck.features.home.screen
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.rounded.Celebration
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.LocalBar
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.boardgame.deepdeck.R
-import com.boardgame.deepdeck.features.home.components.SectionRow
-import com.boardgame.deepdeck.features.home.components.TrendingCard
-import com.boardgame.deepdeck.ui.model.PackDetailUIModel
-import com.boardgame.deepdeck.ui.model.dataCardThumb
-import com.boardgame.deepdeck.ui.theme.LightBackground
-import com.boardgame.deepdeck.ui.theme.LightPrimary
-import com.boardgame.deepdeck.ui.theme.LightSecondTextOBG
-import com.boardgame.deepdeck.ui.theme.LightTextOnBackground
-
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.rememberLottieComposition
-import com.boardgame.deepdeck.features.home.components.VibePacksSection
-import com.boardgame.deepdeck.features.home.model.VibeChip
-import com.boardgame.deepdeck.ui.model.mockVibeChip
-import com.boardgame.deepdeck.utils.getListGradientColorPacks
-import kotlinx.coroutines.android.awaitFrame
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.boardgame.deepdeck.R
+import com.boardgame.deepdeck.data.model.PacksPreview
+import com.boardgame.deepdeck.features.home.components.HomeHeader
+import com.boardgame.deepdeck.features.home.components.MakeDeckCard
+import com.boardgame.deepdeck.features.home.components.QuickPlayStrip
+import com.boardgame.deepdeck.features.home.components.SectionBlock
+import com.boardgame.deepdeck.features.home.components.SectionSkeleton
+import com.boardgame.deepdeck.features.home.components.TonightCard
+import com.boardgame.deepdeck.features.home.components.TonightCardSkeleton
+import com.boardgame.deepdeck.features.home.components.VibeGrid
+import com.boardgame.deepdeck.features.home.components.VibeGridSkeleton
+import com.boardgame.deepdeck.features.home.model.VibeUi
+import com.boardgame.deepdeck.ui.app.LocalBottomBarPadding
+import com.boardgame.deepdeck.ui.app.LocalSnackbarHostState
+import com.boardgame.deepdeck.ui.components.ErrorState
+import com.boardgame.deepdeck.ui.components.GlowBackground
+import com.boardgame.deepdeck.ui.components.LocalDeepTalkHaptics
+import com.boardgame.deepdeck.ui.components.rememberEntranceTracker
+import com.boardgame.deepdeck.ui.components.staggeredEntrance
+import com.boardgame.deepdeck.ui.theme.DeepTalkTheme
+import com.boardgame.deepdeck.ui.theme.Spacing
+import com.boardgame.deepdeck.utils.shareImage
 
+/**
+ * Play tab. One primary decision: "Who are you with?" (plan §3.2).
+ */
 @Composable
 fun HomeScreen(
-    goToSetting: () -> Unit,
-    goToCardDetails: (String) -> Unit,
-    goToSearch: () -> Unit,
-    onSeeAllClick: (String) -> Unit = {},
-    viewModel: HomeScreenVM
+    viewModel: HomeScreenVM,
+    onPackClick: (pack: PacksPreview, coverKey: String?) -> Unit,
+    onSearchClick: () -> Unit,
+    onSeeAllClick: (sectionId: String, title: String?) -> Unit,
+    onVibeClick: (VibeUi) -> Unit,
+    onStreakClick: () -> Unit,
+    onPlayPack: (packId: String) -> Unit,
+    onQuickPlay: (packId: String, isCustomPack: Boolean) -> Unit,
+    onMakeDeckClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var isRefreshing by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = {
-            scope.launch {
-                isRefreshing = true
-                delay(2000)
-                viewModel.refreshAllData()
-                isRefreshing = false
+    val context = LocalContext.current
+    val snackbar = LocalSnackbarHostState.current
+    val haptics = LocalDeepTalkHaptics.current
+    val shareTitle = stringResource(R.string.share)
+    val shareFooter = stringResource(R.string.share_daily_footer)
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.onResume()
+        onPauseOrDispose { }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is HomeScreenUIEffect.ShowMessage -> snackbar.showSnackbar(context.getString(effect.message))
+                is HomeScreenUIEffect.DailyRevealed -> haptics.confirm()
+                is HomeScreenUIEffect.ShareDaily ->
+                    context.shareImage(effect.uri, chooserTitle = shareTitle, fallbackText = effect.text)
             }
         }
-    ) {
-        HomeScreenContent(
-            modifier = Modifier.statusBarsPadding(),
-            uiState = uiState,
-            onSettingClick = goToSetting,
-            onSearchClick = goToSearch,
-            onCardClick = goToCardDetails,
-            onVibeClick = {
-                viewModel.selectVibeChip(it)
-            },
-            onSeeAllClick = {
-                onSeeAllClick(it)
+    }
+
+    HomeScreenContent(
+        uiState = uiState,
+        onRefresh = viewModel::refresh,
+        onPackClick = onPackClick,
+        onSearchClick = onSearchClick,
+        onSeeAllClick = onSeeAllClick,
+        onVibeClick = onVibeClick,
+        onStreakClick = onStreakClick,
+        onRevealDaily = {
+            haptics.medium()
+            viewModel.revealDaily()
+        },
+        onToggleSaveDaily = viewModel::toggleSaveDaily,
+        onShareDaily = {
+            uiState.dailyCard?.let { card ->
+                viewModel.shareDaily(
+                    overline = context.getString(R.string.tonight_card_title),
+                    fallbackText = "“${card.text}”\n\n$shareFooter"
+                )
             }
-        )
-    }
-
-}
-
-@Composable
-internal fun HomeScreenContent(
-    modifier: Modifier = Modifier,
-    uiState: HomeScreenUIState,
-    onSettingClick: () -> Unit = {},
-    onSearchClick: () -> Unit = {},
-    onCardClick: (String) -> Unit = {},
-    onVibeClick: (String) -> Unit = {},
-    onSeeAllClick: (String) -> Unit = {}
-) {
-    val scrollState = rememberScrollState()
-    val packColor = remember {
-        getListGradientColorPacks().random()
-    }
-
-    val lottie by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(R.raw.loading)
+        },
+        onPlayPack = onPlayPack,
+        onQuickPlay = {
+            viewModel.prepareQuickPlay { onQuickPlay(it.packId, it.isCustomPack) }
+        },
+        onMakeDeckClick = onMakeDeckClick
     )
-
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(LightBackground)
-            .verticalScroll(scrollState)
-            .drawWithContent {
-                val patchHeight = 280.dp.toPx()
-
-                drawIntoCanvas { canvas ->
-                    val paint = Paint().apply {
-                        asFrameworkPaint().apply {
-                            isAntiAlias = true
-                            shader = android.graphics.RadialGradient(
-                                size.width / 2f,
-                                0f,
-                                patchHeight,
-                                packColor.map { it.copy(alpha = 0.1f).toArgb() }.toIntArray(),
-                                null,
-                                android.graphics.Shader.TileMode.MIRROR
-                            )
-                            maskFilter = android.graphics.BlurMaskFilter(
-                                160.dp.toPx(),
-                                android.graphics.BlurMaskFilter.Blur.NORMAL
-                            )
-                        }
-                    }
-                    canvas.drawRect(0f, 0f, size.width, patchHeight, paint)
-                }
-                drawContent()
-            }
-            .padding(top = 8.dp, bottom = 24.dp)
-    ) {
-        HomeHeader(onSettingClick = onSettingClick)
-        Spacer(modifier = Modifier.height(24.dp))
-        Box(
-            modifier = Modifier
-                .padding(
-                    horizontal = 24.dp
-                )
-                .background(
-                    color = Color.White.copy(
-                        alpha = 0.05f
-                    ),
-                    shape = RoundedCornerShape(28.dp)
-                )
-        ) {
-            HomeSearchBar(
-                onSearchClick = onSearchClick,
-                onSearchTextChange = { },
-                enableSearch = false
-            )
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-
-
-        AnimatedVisibility(
-            visible = uiState.listVibePacks.isNotEmpty()
-        ) {
-            Column(
-                modifier = Modifier.wrapContentHeight()
-            ) {
-                BrowseByVibeSection(
-                    vibeChips = uiState.listVibePacks,
-                    onVibeClick = {
-                        onVibeClick(it)
-                    },
-                    currentVibe = uiState.currentSelectedVibeChip
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-                AnimatedVisibility(
-                    visible = uiState.listPacksFromVibe.isNotEmpty()
-                ) {
-                    Column(
-                        modifier = Modifier.wrapContentHeight()
-                    ) {
-                        VibePacksSection(
-                            packsData = uiState.listPacksFromVibe,
-                            onClick = {pack -> onCardClick(pack.id!!)}
-                        )
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
-                }
-                AnimatedVisibility(
-                    visible = uiState.listPacksFromVibe.isEmpty() && uiState.currentSelectedVibeChip != null && !uiState.isSelectedVibeLoading
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_packs_found),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-            }
-        }
-        AnimatedVisibility(
-            modifier = Modifier.fillMaxWidth()
-                .weight(1f),
-            visible = uiState.isTrendingComponentLoading || uiState.isVibeComponentLoading,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                LottieAnimation(
-                    composition = lottie,
-                    modifier = Modifier.size(100.dp)
-                )
-            }
-        }
-        uiState.sectionPacks.forEach { (section, packs) ->
-            SectionRow(
-                section = section,
-                packs = packs.subList(0, packs.size.coerceAtMost(5)),
-                onCardClick = onCardClick,
-                onSeeAllClick = onSeeAllClick
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-    }
-}
-
-@Composable
-private fun HomeHeader(onSettingClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(R.drawable.ic_header),
-            modifier = Modifier.height(48.dp),
-            contentDescription = null
-        )
-        IconButton(
-            onClick = onSettingClick,
-            modifier = Modifier
-                .background(LightPrimary, shape = CircleShape)
-                .size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
-                tint = LightTextOnBackground
-            )
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeSearchBar(
+internal fun HomeScreenContent(
+    uiState: HomeScreenUIState,
+    onRefresh: () -> Unit = {},
+    onPackClick: (PacksPreview, String?) -> Unit = { _, _ -> },
     onSearchClick: () -> Unit = {},
-    searchQuery: String = "",
-    onSearchTextChange: (String) -> Unit = {},
-    enableSearch: Boolean = true
+    onSeeAllClick: (String, String?) -> Unit = { _, _ -> },
+    onVibeClick: (VibeUi) -> Unit = {},
+    onStreakClick: () -> Unit = {},
+    onRevealDaily: () -> Unit = {},
+    onToggleSaveDaily: () -> Unit = {},
+    onShareDaily: () -> Unit = {},
+    onPlayPack: (String) -> Unit = {},
+    onQuickPlay: () -> Unit = {},
+    onMakeDeckClick: () -> Unit = {},
 ) {
+    val colors = DeepTalkTheme.colors
+    val bottomPadding = LocalBottomBarPadding.current
+    val tracker = rememberEntranceTracker()
+    val listState = rememberLazyListState()
+    val pullState = rememberPullToRefreshState()
 
-    val focusRequester = remember { FocusRequester() }
-
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    LaunchedEffect(Unit) {
-        awaitFrame()
-        focusRequester.requestFocus()
-        keyboardController?.show()
-    }
-    OutlinedTextField(
-        value = searchQuery,
-        onValueChange = {
-            onSearchTextChange(it)
-        },
-        enabled = enableSearch,
-        singleLine = true,
-        readOnly = !enableSearch,
-        placeholder = { Text(stringResource(R.string.search_game_placeholder), color = Color.Gray) },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = Color.Gray
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .clickable(onClick = onSearchClick)
-            .focusRequester(focusRequester)
-            .height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = LightPrimary,
-            focusedContainerColor = LightPrimary,
-            unfocusedBorderColor = Color.Transparent,
-            focusedBorderColor = Color.Transparent,
-            cursorColor = LightTextOnBackground,
-            focusedTextColor = LightTextOnBackground,
-            unfocusedTextColor = LightTextOnBackground,
-        )
-    )
-}
-
-@Composable
-private fun BrowseByVibeSection(
-    vibeChips: List<VibeChip>,
-    onVibeClick: (String) -> Unit = {},
-    currentVibe: VibeChip? = null
-) {
-    Column {
-        Text(
-            text = stringResource(R.string.browse_by_vibe),
-            color = LightTextOnBackground,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+    GlowBackground {
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = onRefresh,
+            state = pullState,
+            modifier = Modifier.fillMaxSize(),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = uiState.isRefreshing,
+                    containerColor = colors.surfaceHigh,
+                    color = colors.brand,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                )
+            }
         ) {
-            itemsIndexed(vibeChips) { index, item ->
-                Box(
-                    modifier = Modifier.clickable{
-                        onVibeClick(item.id)
-                    }
-                ){
-                    VibeChip(
-                        text = item.name,
-                        icon = item.icon,
-                        isSelected = (currentVibe?.id ?: -1) == item.id
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = bottomPadding + Spacing.xxl),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xxl)
+            ) {
+                item(key = "header") {
+                    HomeHeader(
+                        streak = uiState.streak.current,
+                        onStreakClick = onStreakClick,
+                        onSearchClick = onSearchClick,
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .padding(top = Spacing.md)
+                            .staggeredEntrance(0, tracker, "header")
                     )
                 }
-            }
-        }
 
-    }
-}
+                when {
+                    uiState.isLoading -> {
+                        item(key = "skeleton-daily") {
+                            TonightCardSkeleton(Modifier.padding(horizontal = Spacing.gutter))
+                        }
+                        item(key = "skeleton-vibes") { VibeGridSkeleton() }
+                        item(key = "skeleton-section") { SectionSkeleton() }
+                    }
 
-@Composable
-private fun VibeChip(text: String, icon: Int?, isSelected: Boolean) {
-    val backgroundColor = if (isSelected) LightSecondTextOBG else Color.Transparent
-    val contentColor = LightTextOnBackground
-    val borderModifier =
-        if (!isSelected) Modifier.border(1.dp, Color.Gray, RoundedCornerShape(24.dp)) else Modifier
+                    uiState.errorMessage != null && !uiState.hasContent -> {
+                        item(key = "error") {
+                            ErrorState(
+                                modifier = Modifier.padding(top = Spacing.xxl),
+                                message = stringResource(R.string.home_error_message),
+                                onRetry = onRefresh
+                            )
+                        }
+                    }
 
-    Row(
-        modifier = borderModifier
-            .background(backgroundColor, RoundedCornerShape(24.dp))
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        icon?.let {
-            Image(
-                painter = painterResource(it),
-                contentDescription = text,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        Text(
-            text = text,
-            color = contentColor,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-private fun TrendingNowSection(
-    data: List<PackDetailUIModel>,
-    onCardClick: (String) -> Unit = {}
-) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.trending_now),
-                color = LightTextOnBackground,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = stringResource(R.string.see_all),
-                color = LightSecondTextOBG,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable { }
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(data.size) { card ->
-                TrendingCard(data[card]) {
-                    onCardClick(data[card].id)
+                    else -> {
+                        uiState.dailyCard?.let { card ->
+                            item(key = "daily") {
+                                TonightCard(
+                                    card = card,
+                                    revealed = uiState.dailyRevealed,
+                                    saved = uiState.dailySaved,
+                                    onReveal = onRevealDaily,
+                                    onToggleSave = onToggleSaveDaily,
+                                    onShare = onShareDaily,
+                                    onPlayPack = card.packId?.let { id -> { onPlayPack(id) } },
+                                    modifier = Modifier
+                                        .padding(horizontal = Spacing.gutter)
+                                        .staggeredEntrance(1, tracker, "daily")
+                                )
+                            }
+                        }
+                        if (uiState.vibes.isNotEmpty()) {
+                            item(key = "vibes") {
+                                VibeGrid(
+                                    vibes = uiState.vibes,
+                                    onVibeClick = onVibeClick,
+                                    modifier = Modifier.staggeredEntrance(2, tracker, "vibes")
+                                )
+                            }
+                        }
+                        uiState.quickPlay?.let { quickPlay ->
+                            item(key = "quickplay") {
+                                QuickPlayStrip(
+                                    quickPlay = quickPlay,
+                                    onClick = onQuickPlay,
+                                    modifier = Modifier.staggeredEntrance(3, tracker, "quickplay")
+                                )
+                            }
+                        }
+                        items(uiState.sections, key = { "section-${it.id}" }) { section ->
+                            SectionBlock(
+                                section = section,
+                                onPackClick = onPackClick,
+                                onSeeAllClick = onSeeAllClick,
+                                modifier = Modifier.staggeredEntrance(4, tracker, "section-${section.id}")
+                            )
+                        }
+                        item(key = "make-deck") {
+                            MakeDeckCard(onClick = onMakeDeckClick)
+                        }
+                    }
                 }
             }
         }
     }
-}
-
-
-@Composable
-private fun CommunityHighlightsSection() {
-    Column(
-        modifier = Modifier.padding(horizontal = 24.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.community_highlights),
-            color = LightTextOnBackground,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(LightPrimary, RoundedCornerShape(16.dp))
-                .clickable { }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color.Gray, CircleShape)
-                    .clip(CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Play",
-                    tint = LightTextOnBackground,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "Best 'Do or Drink' Dares",
-                    color = LightTextOnBackground,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "Recorded by Sarah J.",
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(LightBackground, CircleShape)
-                    .clip(CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = "Go",
-                    tint = LightTextOnBackground,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun HomeScreenPV() {
-    HomeScreenContent(
-        uiState = HomeScreenUIState()
-    )
 }

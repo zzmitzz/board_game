@@ -28,7 +28,9 @@ class SplashScreenActivity : AppCompatActivity() {
     private fun navigate() {
         lifecycleScope.launch {
             delay(SPLASH_DURATION_MS)
-            val intent = Intent(this@SplashScreenActivity, OnBoardingActivity::class.java)
+            // Onboarding is shown once; returning users go straight to the app.
+            val target = if (hasSeenOnboarding()) MainActivity::class.java else OnBoardingActivity::class.java
+            val intent = Intent(this@SplashScreenActivity, target)
             startActivity(intent)
             finish()
         }
@@ -40,7 +42,7 @@ class SplashScreenActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val SPLASH_DURATION_MS = 2000L
+        private const val SPLASH_DURATION_MS = 1200L
         private const val PREFS_NAME = "boardgame_prefs"
         const val KEY_ONBOARDING_DONE = "key_onboarding_done"
     }

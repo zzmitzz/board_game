@@ -15,6 +15,7 @@ import com.boardgame.deepdeck.data.repository.LocalLibraryRepositoryImpl
 import com.boardgame.deepdeck.data.repository.CustomPackLocallyRepository
 import com.boardgame.deepdeck.data.local.dao.LocalCardDao
 import com.boardgame.deepdeck.data.local.dao.LocalPackDao
+import kotlinx.serialization.json.Json
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -44,8 +45,11 @@ abstract class RepositoryModule {
 
         @Provides
         @Singleton
-        fun provideHomeDataRepository(api: HomeDataEndpoint): HomeDataRepository =
-            HomeDataRepositoryImpl(api)
+        fun provideHomeDataRepository(
+            api: HomeDataEndpoint,
+            dataStore: DataStore<Preferences>,
+            json: Json,
+        ): HomeDataRepository = HomeDataRepositoryImpl(api, dataStore, json)
 
         @Provides
         @Singleton

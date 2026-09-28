@@ -47,6 +47,12 @@ class DataStoreUtils @Inject constructor(
         }
     }
 
+    suspend fun <PrimitiveData> setPrimitiveData(key: Preferences.Key<PrimitiveData>, value: PrimitiveData) {
+        mDataStore.edit { preferences ->
+            preferences[key] = value
+        }
+    }
+
     suspend fun setSerializedData(key: Preferences.Key<String>, value: Any) {
         mDataStore.edit { preferences ->
             preferences[key] = gson.toJson(value)

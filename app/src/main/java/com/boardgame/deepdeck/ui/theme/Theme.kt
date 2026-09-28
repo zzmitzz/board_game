@@ -1,61 +1,97 @@
 package com.boardgame.deepdeck.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+val LocalDeepTalkColors = staticCompositionLocalOf { DeepTalkColors() }
+val LocalDeepTalkTypography = staticCompositionLocalOf { DeepTalkTypography() }
+
+/** True when system animations are off; flips/swipes should become crossfades. */
+val LocalReducedMotion = staticCompositionLocalOf { false }
+
+/** Accessors for DeepTalk tokens that Material's scheme doesn't cover. */
+object DeepTalkTheme {
+    val colors: DeepTalkColors
+        @Composable @ReadOnlyComposable get() = LocalDeepTalkColors.current
+
+    val type: DeepTalkTypography
+        @Composable @ReadOnlyComposable get() = LocalDeepTalkTypography.current
+
+    val reducedMotion: Boolean
+        @Composable @ReadOnlyComposable get() = LocalReducedMotion.current
+}
+
+private fun midnightVelvetScheme(c: DeepTalkColors) = darkColorScheme(
+    primary = c.brand,
+    onPrimary = c.brandOn,
+    primaryContainer = c.brandStrong,
+    onPrimaryContainer = c.textPrimary,
+    inversePrimary = c.brandStrong,
+    secondary = c.textSecondary,
+    onSecondary = c.bgBase,
+    secondaryContainer = c.surfaceHigh,
+    onSecondaryContainer = c.textPrimary,
+    tertiary = c.gold,
+    onTertiary = c.brandOn,
+    tertiaryContainer = c.surfaceHigh,
+    onTertiaryContainer = c.gold,
+    background = c.bgBase,
+    onBackground = c.textPrimary,
+    surface = c.bgElevated,
+    onSurface = c.textPrimary,
+    surfaceVariant = c.surface,
+    onSurfaceVariant = c.textSecondary,
+    surfaceTint = c.brand,
+    inverseSurface = c.textPrimary,
+    inverseOnSurface = c.bgBase,
+    error = c.rose,
+    onError = c.brandOn,
+    errorContainer = c.rose.copy(alpha = 0.2f),
+    onErrorContainer = c.rose,
+    outline = Color(0x29FFFFFF),
+    outlineVariant = c.outline,
+    scrim = Color(0xCC05020A),
+    surfaceBright = c.surfaceHigh,
+    surfaceDim = c.bgBase,
+    surfaceContainerLowest = c.bgBase,
+    surfaceContainerLow = c.bgElevated,
+    surfaceContainer = c.bgElevated,
+    surfaceContainerHigh = c.surface,
+    surfaceContainerHighest = c.surfaceHigh,
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
-
+/**
+ * DeepTalk "Midnight Velvet" theme. Dark only by design.
+ * Provides Material3 color/type/shape plus [LocalDeepTalkColors],
+ * [LocalDeepTalkTypography] and [LocalReducedMotion].
+ */
 @Composable
-fun BoardGameTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
-) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+fun BoardGameTheme(content: @Composable () -> Unit) {
+    val colors = remember { DeepTalkColors() }
+    val type = remember { DeepTalkTypography() }
+    val context = LocalContext.current
+    val reducedMotion = remember(context) { context.isReducedMotionEnabled() }
+    CompositionLocalProvider(
+        LocalDeepTalkColors provides colors,
+        LocalDeepTalkTypography provides type,
+        LocalReducedMotion provides reducedMotion,
+    ) {
+        MaterialTheme(
+            colorScheme = remember(colors) { midnightVelvetScheme(colors) },
+            typography = Typography,
+            shapes = MaterialShapes,
+        ) {
+            CompositionLocalProvider(LocalContentColor provides colors.textPrimary) {
+                content()
+            }
         }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
     }
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        content = {
-            content()
-        }
-    )
 }

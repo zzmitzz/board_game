@@ -1,5 +1,12 @@
 package com.boardgame.deepdeck.features.mylibrary
 
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.boardgame.deepdeck.ui.theme.DeepTalkTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,6 +66,26 @@ fun PackCardsScreen(
 ) {
     val cards by vm.cards.collectAsState()
     val pack by vm.pack.collectAsState()
+    var cardToDelete by remember { mutableStateOf<LocalCardEntity?>(null) }
+
+    cardToDelete?.let { card ->
+        val colors = DeepTalkTheme.colors
+        AlertDialog(
+            onDismissRequest = { cardToDelete = null },
+            containerColor = colors.surfaceHigh,
+            title = { Text(stringResource(R.string.delete_card_title), style = DeepTalkTheme.type.headline, color = colors.textPrimary) },
+            text = { Text(card.description, style = DeepTalkTheme.type.body, color = colors.textSecondary, maxLines = 4) },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.deleteCard(card)
+                    cardToDelete = null
+                }) { Text(stringResource(R.string.delete), color = colors.rose) }
+            },
+            dismissButton = {
+                TextButton(onClick = { cardToDelete = null }) { Text(stringResource(R.string.cancel_text), color = colors.brand) }
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -154,7 +181,7 @@ fun PackCardsScreen(
                         CardRow(
                             card = card,
                             onEdit = { onEditCardClick(card.id) },
-                            onDelete = { vm.deleteCard(card) }
+                            onDelete = { cardToDelete = card }
                         )
                     }
                     item { Spacer(modifier = Modifier.height(88.dp)) }

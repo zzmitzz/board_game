@@ -1,5 +1,9 @@
 package com.boardgame.deepdeck.data.remote
 
+import com.boardgame.deepdeck.data.model.CardFeedbackRequest
+import com.boardgame.deepdeck.data.model.GameSessionCreate
+import com.boardgame.deepdeck.data.model.IdResponse
+import com.boardgame.deepdeck.data.model.OkResponse
 import com.boardgame.deepdeck.data.model.PacksPreview
 import com.boardgame.deepdeck.data.model.RemoteCard
 import com.boardgame.deepdeck.data.model.RemotePackDetail
@@ -11,7 +15,7 @@ import retrofit2.http.Query
 
 interface BoardGameEndpoint {
 
-    @GET("api/v1/packs")
+    @GET("api/v1/packs/")
     suspend fun getPacks(): List<RemotePackDetail>
 
     @GET("api/v1/packs/detail")
@@ -44,4 +48,16 @@ interface BoardGameEndpoint {
     suspend fun translateCards(
         @Body cardsData: CardTranslateRequest
     ): List<RemoteCard>
+
+    /** Fire-and-forget reaction (LOVE | SKIP | REPORT); idempotent per device/card/reaction. */
+    @POST("api/v1/cards/feedback")
+    suspend fun sendCardFeedback(
+        @Body body: CardFeedbackRequest
+    ): OkResponse
+
+    /** Analytics: one row per finished game; also bumps packs.play_count. */
+    @POST("api/v1/events/sessions")
+    suspend fun sendGameSession(
+        @Body body: GameSessionCreate
+    ): IdResponse
 }

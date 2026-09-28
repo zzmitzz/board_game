@@ -1,57 +1,63 @@
 package com.boardgame.deepdeck.features.home
 
-import android.util.Log
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.toArgb
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
-import coil.util.Logger
-import com.boardgame.deepdeck.features.gameend.GameEndScreen
-import com.boardgame.deepdeck.features.gamesetup.GameSetupScreen
-import com.boardgame.deepdeck.features.gamesetup.GameSetupScreenStateful
-import com.boardgame.deepdeck.features.gamesetup.GameSetupVM
+import com.boardgame.deepdeck.data.model.PacksPreview
+import com.boardgame.deepdeck.data.model.tileImage
 import com.boardgame.deepdeck.features.home.screen.HomeScreen
 import com.boardgame.deepdeck.features.home.screen.HomeScreenVM
 import com.boardgame.deepdeck.features.home.section_detail.SectionDetailScreens
-import com.boardgame.deepdeck.features.home.shareviewmodel.shareViewModel
-import com.boardgame.deepdeck.features.ingame.InGameVM
-import com.boardgame.deepdeck.features.ingame.screen.ActiveGameScreenStateful
+import com.boardgame.deepdeck.features.home.vibe.VibeScreen
+import com.boardgame.deepdeck.features.ingame.startGame
+import com.boardgame.deepdeck.features.mylibrary.MyLibraryRoute
 import com.boardgame.deepdeck.features.pagedetail.PageDetailScreen
 import com.boardgame.deepdeck.features.search.GameSearchStateful
 import com.boardgame.deepdeck.navigation.RootRoute
+import com.boardgame.deepdeck.navigation.TopLevelTab
+import com.boardgame.deepdeck.navigation.navigateToTab
+import com.boardgame.deepdeck.ui.components.ProvideNavAnimatedScope
 import kotlinx.serialization.Serializable
 
 
 sealed class HomeRoute {
     @Serializable
     data object Main : HomeRoute()
-    @Serializable
-    data class PackDetail(val id: String) : HomeRoute()
-    @Serializable
-    data class GameSetupLobby(val id: String) : HomeRoute()
 
+    /**
+     * [coverKey]: shared-element key of the tapped tile's cover (null = no shared transition).
+     * [coverUrl]/[title]/[accent] let the hero render instantly while details load.
+     */
     @Serializable
-    data class InGame(val id: String)
-
-    @Serializable
-    data object EndGame
+    data class PackDetail(
+        val id: String,
+        val coverKey: String? = null,
+        val coverUrl: String? = null,
+        val title: String? = null,
+        val accent: String? = null,
+    ) : HomeRoute()
 
     @Serializable
     data object GameSearch
 
     @Serializable
-    data object Setting : HomeRoute()
+    data class SectionDetail(val sectionID: String, val title: String? = null) : HomeRoute()
 
+    /** Vibe screen; display data is passed along so the hero renders instantly. */
     @Serializable
-    data class SectionDetail(val sectionID: String) : HomeRoute()
+    data class Vibe(
+        val vibeId: String,
+        val name: String,
+        val iconKey: String,
+        val colorStart: Int,
+        val colorEnd: Int,
+        val description: String? = null,
+    ) : HomeRoute()
 }
 
 fun NavGraphBuilder.homeNavigationEntry(
@@ -60,197 +66,88 @@ fun NavGraphBuilder.homeNavigationEntry(
     navigation<RootRoute.Home>(
         startDestination = HomeRoute.Main
     ) {
-        composable<HomeRoute.Main>(
-            enterTransition = {
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1.08f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            },
-            popEnterTransition = {
-                scaleIn(initialScale = 1.08f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            popExitTransition = {
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
+        composable<HomeRoute.Main> {
+            ProvideNavAnimatedScope(this) {
+                val mViewModel = hiltViewModel<HomeScreenVM>()
+                HomeScreen(
+                    viewModel = mViewModel,
+                    onPackClick = { pack, coverKey -> navController.openPack(pack, coverKey) },
+                    onSearchClick = { navController.navigate(HomeRoute.GameSearch) },
+                    onSeeAllClick = { id, title -> navController.navigate(HomeRoute.SectionDetail(id, title)) },
+                    onVibeClick = { vibe ->
+                        navController.navigate(
+                            HomeRoute.Vibe(
+                                vibeId = vibe.id,
+                                name = vibe.name,
+                                iconKey = vibe.iconKey,
+                                colorStart = vibe.colorStart.toArgb(),
+                                colorEnd = vibe.colorEnd.toArgb(),
+                                description = vibe.description
+                            )
+                        )
+                    },
+                    onStreakClick = { navController.navigateToTab(TopLevelTab.YOU) },
+                    onPlayPack = { packId -> navController.startGame(packId) },
+                    onQuickPlay = { packId, isCustom ->
+                        navController.startGame(packId, isCustom = isCustom, quickPlay = true)
+                    },
+                    onMakeDeckClick = { navController.navigate(MyLibraryRoute.AddPack) },
+                )
             }
-        ) {
-            val mViewModel = hiltViewModel<HomeScreenVM>()
-            HomeScreen(
-                {
-                    navController.navigate(RootRoute.Setting)
-                }, { packID ->
-                    navController.navigate(HomeRoute.PackDetail(packID))
-                }, {
-                    navController.navigate(HomeRoute.GameSearch)
-                },
-                onSeeAllClick = {
-                    navController.navigate(HomeRoute.SectionDetail(it))
-                },
-                viewModel = mViewModel
-            )
         }
 
-        composable<HomeRoute.GameSearch>(
-            enterTransition = {
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1.08f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            },
-            popEnterTransition = {
-                scaleIn(initialScale = 1.08f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            popExitTransition = {
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            }
-        ) {
+        composable<HomeRoute.GameSearch> {
             GameSearchStateful(
                 onBackClick = { navController.popBackStack() },
                 onPackClick = { packId -> navController.navigate(HomeRoute.PackDetail(packId)) }
             )
         }
-        composable<HomeRoute.PackDetail>(
-            enterTransition = {
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1.08f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            },
-            popEnterTransition = {
-                scaleIn(initialScale = 1.08f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            popExitTransition = {
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
+
+        composable<HomeRoute.Vibe> { backStackEntry ->
+            ProvideNavAnimatedScope(this) {
+                val route = backStackEntry.toRoute<HomeRoute.Vibe>()
+                VibeScreen(
+                    route = route,
+                    onBackClick = { navController.popBackStack() },
+                    onPackClick = { pack, coverKey -> navController.openPack(pack, coverKey) }
+                )
             }
-        ) { backStackEntry ->
-            val route = backStackEntry.toRoute<HomeRoute.PackDetail>()
-            PageDetailScreen(
-                { navController.popBackStack() }, {}, {
-                    navController.navigate(HomeRoute.GameSetupLobby(route.id))
-                }
-            )
-        }
-        composable<HomeRoute.GameSetupLobby>(
-            enterTransition = {
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1.08f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            },
-            popEnterTransition = {
-                scaleIn(initialScale = 1.08f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            popExitTransition = {
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            }
-        ) { backStackEntry ->
-            val route = backStackEntry.toRoute<HomeRoute.GameSetupLobby>()
-            val viewModel = hiltViewModel<GameSetupVM>()
-            GameSetupScreenStateful(
-                onBackClick = { navController.popBackStack() },
-                onStartGameClick = { navController.navigate(HomeRoute.InGame(route.id)) },
-                vm = viewModel
-            )
         }
 
-        composable<HomeRoute.InGame>(
-            enterTransition = { fadeIn(animationSpec = tween(300)) },
-            exitTransition = { fadeOut(animationSpec = tween(300)) },
-            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-            popExitTransition = { fadeOut(animationSpec = tween(300)) }
-        ) { backStackEntry ->
-            val viewModel = navController.shareViewModel<InGameVM>(backStackEntry)
-            LaunchedEffect(Unit) {
-                Log.d("HomeNavigationEntry", "InGame: ${viewModel.hashCode()}")
+        composable<HomeRoute.PackDetail> { backStackEntry ->
+            ProvideNavAnimatedScope(this) {
+                val route = backStackEntry.toRoute<HomeRoute.PackDetail>()
+                PageDetailScreen(
+                    route = route,
+                    onBackClick = { navController.popBackStack() },
+                    onPlayClick = { navController.startGame(route.id) }
+                )
             }
-            val id = backStackEntry.toRoute<HomeRoute.InGame>().id
-            viewModel.currentGameID = id
-            ActiveGameScreenStateful(
-                onBackClick = { navController.popBackStack() },
-                onExitGame = { navController.navigate(HomeRoute.EndGame) },
-                packId = id,
-                mViewModel = viewModel
-            )
         }
 
-        composable<HomeRoute.EndGame>(
-            enterTransition = {
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1.08f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            },
-            popEnterTransition = {
-                scaleIn(initialScale = 1.08f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            popExitTransition = {
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
+        composable<HomeRoute.SectionDetail> { backStackEntry ->
+            ProvideNavAnimatedScope(this) {
+                val route = backStackEntry.toRoute<HomeRoute.SectionDetail>()
+                SectionDetailScreens(
+                    initialTitle = route.title,
+                    onBackClick = { navController.popBackStack() },
+                    onCardClick = { pack, coverKey -> navController.openPack(pack, coverKey) }
+                )
             }
-        ) { backStackEntry ->
-            val viewModel = navController.shareViewModel<InGameVM>(backStackEntry)
-            LaunchedEffect(Unit) {
-                Log.d("HomeNavigationEntry", "EndGame: ${viewModel.hashCode()}")
-            }
-            GameEndScreen(
-                onBackClick = {
-                    navController.navigate(
-                        RootRoute.Home
-                    ){
-                        popUpTo(RootRoute.Home)
-                        launchSingleTop = true
-                    }
-                },
-                onPlayAgainClick = {
-                    viewModel.resetAllData()
-                    navController.popBackStack<HomeRoute.GameSetupLobby>(inclusive = false)
-                },
-                vm = viewModel
-            )
         }
-
-        composable<HomeRoute.SectionDetail>(
-            enterTransition = {
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            exitTransition = {
-                scaleOut(targetScale = 1.08f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            },
-            popEnterTransition = {
-                scaleIn(initialScale = 1.08f, animationSpec = tween(300)) +
-                    fadeIn(animationSpec = tween(300))
-            },
-            popExitTransition = {
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300)) +
-                    fadeOut(animationSpec = tween(300))
-            }
-        ) { backStackEntry ->
-            SectionDetailScreens(
-                onBackClick = { navController.popBackStack() },
-                onCardClick = { navController.navigate(HomeRoute.PackDetail(it)) }
-            )
-        }
-
     }
+}
+
+/** Opens Pack detail with the data needed for an instant shared-element hero. */
+fun NavController.openPack(pack: PacksPreview, coverKey: String? = null) {
+    val id = pack.id ?: return
+    navigate(
+        HomeRoute.PackDetail(
+            id = id,
+            coverKey = coverKey,
+            coverUrl = pack.tileImage,
+            title = pack.title,
+            accent = pack.accentColor
+        )
+    )
 }

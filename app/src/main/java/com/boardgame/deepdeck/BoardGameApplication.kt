@@ -10,7 +10,13 @@ import com.boardgame.deepdeck.onboarding.Constants
 import com.boardgame.deepdeck.utils.DataStoreUtils
 import com.boardgame.deepdeck.utils.LocaleUtils
 import com.boardgame.deepdeck.utils.SoundUtils
+import com.boardgame.deepdeck.data.prefs.AppSettingsRepository
+import com.boardgame.deepdeck.work.EveningReminder
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -21,6 +27,11 @@ class BoardGameApplication : Application() {
 
     @Inject
     lateinit var dataStoreUtils: DataStoreUtils
+
+    @Inject
+    lateinit var appSettingsRepository: AppSettingsRepository
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private fun isDebuggable(): Boolean {
         return 0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE
@@ -52,6 +63,13 @@ class BoardGameApplication : Application() {
         setStrictModePolicy()
         SoundUtils.init(this)
         applyStoredLocale()
+        EveningReminder.createChannel(this)
+        // Re-arm the evening reminder (KEEP: leaves an already queued run alone).
+        appScope.launch {
+            if (appSettingsRepository.current().notificationsEnabled) {
+                EveningReminder.schedule(this@BoardGameApplication, replace = false)
+            }
+        }
     }
 
     override fun onTerminate() {

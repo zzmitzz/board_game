@@ -9,7 +9,9 @@ data class CardDetail(
     val category: String,
     val description: String,
     val media: CardDetailMedia,
-    val hint: String
+    val hint: String,
+    /** Optional reverse side for double-sided cards (API `back_side`). */
+    val backSide: String? = null
 )
 
 

@@ -14,5 +14,8 @@ data class PackDetailUIModel(
     val tag: String? = null,
     val heatLevel: Int? = null,
     val totalCards: Int? = null,
-    val howToPlay: String? = null
+    val howToPlay: String? = null,
+    val isPremium: Boolean = false,
+    val accentColor: String? = null,
+    val badge: String? = null
 )

@@ -1,424 +1,316 @@
 package com.boardgame.deepdeck.features.pagedetail
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Diamond
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.rememberLottieComposition
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.boardgame.deepdeck.R
-import com.boardgame.deepdeck.features.pagedetail.components.CardBadge
-import com.boardgame.deepdeck.features.pagedetail.components.HeatLevelSection
-import com.boardgame.deepdeck.features.pagedetail.components.HowToPlaySection
-import com.boardgame.deepdeck.features.pagedetail.components.SampleCardItem
-import com.boardgame.deepdeck.features.pagedetail.components.StatCircle
-import com.boardgame.deepdeck.features.pagedetail.components.ThumbnailSection
-import com.boardgame.deepdeck.ui.model.CardDetail
-import com.boardgame.deepdeck.ui.model.exampleText
-import com.boardgame.deepdeck.ui.theme.BoardGameTheme
-import com.boardgame.deepdeck.ui.theme.LightBackground
+import com.boardgame.deepdeck.features.home.HomeRoute
+import com.boardgame.deepdeck.features.pagedetail.components.HowToPlayCard
+import com.boardgame.deepdeck.features.pagedetail.components.PackStatTiles
+import com.boardgame.deepdeck.features.pagedetail.components.SampleCardFan
+import com.boardgame.deepdeck.ui.components.ErrorState
+import com.boardgame.deepdeck.ui.components.GlassIconButton
+import com.boardgame.deepdeck.ui.components.GlassSurface
+import com.boardgame.deepdeck.ui.components.GlowBackground
+import com.boardgame.deepdeck.ui.components.HeatMeter
+import com.boardgame.deepdeck.ui.components.OverlinePill
+import com.boardgame.deepdeck.ui.components.PackBadge
+import com.boardgame.deepdeck.ui.components.PackBadgeChip
+import com.boardgame.deepdeck.ui.components.PackCover
+import com.boardgame.deepdeck.ui.components.PrimaryButton
+import com.boardgame.deepdeck.ui.components.SkeletonLine
+import com.boardgame.deepdeck.ui.components.glow
+import com.boardgame.deepdeck.ui.theme.DeepTalkShapes
+import com.boardgame.deepdeck.ui.theme.DeepTalkTheme
+import com.boardgame.deepdeck.ui.theme.Spacing
+import com.boardgame.deepdeck.ui.theme.toComposeColorOrNull
+
+private const val CTA_DEBOUNCE_MS = 1_000L
 
 @Composable
 fun PageDetailScreen(
+    route: HomeRoute.PackDetail,
     onBackClick: () -> Unit,
-    onRestoreClick: () -> Unit,
-    onUnlockClick: () -> Unit,
+    onPlayClick: () -> Unit,
     viewModel: PageDetailVM = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var lastClick = remember { 0L }
-
-    PageDetailTemplate(
-        bottomBar = {
-            PageDetailBottomBar(
-                onUnlockClick = {
-                    if(System.currentTimeMillis() - lastClick >= 5_000L){
-                        lastClick = System.currentTimeMillis()
-                        onUnlockClick.invoke()
-                    }
-                }
-            )
-        },
-        modifier = Modifier,
-        onBackClick = onBackClick
-    ) {
-        PageDetailContent(uiState = uiState)
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var lastClick by remember { mutableLongStateOf(0L) }
+    PageDetailContent(
+        route = route,
+        uiState = uiState,
+        onBackClick = onBackClick,
+        onRetry = viewModel::retry,
+        onPlayClick = {
+            val now = System.currentTimeMillis()
+            if (now - lastClick >= CTA_DEBOUNCE_MS) {
+                lastClick = now
+                onPlayClick()
+            }
+        }
+    )
 }
-
-/**
- * Template level: Defines screen layout via slot composition
- */
-@Composable
-fun PageDetailTemplate(
-    bottomBar: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    onBackClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Scaffold(
-        bottomBar = bottomBar,
-        modifier = modifier
-    ) { _ ->
-        Box(
-            Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            content()
-            PageDetailTopBar(
-                onBackClick = onBackClick,
-            )
-        }
-    }
-}
-
-/**
- * Organism level: Composes molecules into the main scrollable content
- */
-@Composable
-fun PageDetailContent(
-    uiState: PageDetailUIState,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(color = LightBackground),
-        contentPadding = PaddingValues(bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp)
-    ) {
-
-        item {
-            HeroSection(
-                badgeText = uiState.pack?.creator?.uppercase() ?: "PACK",
-                title = uiState.pack?.titleCard ?: "",
-                thumbnailUrl = uiState.pack?.thumbnail,
-                description = uiState.pack?.description ?: "",
-                modifier = Modifier
-            )
-        }
-        item {
-            StatsRow(
-                totalCards = uiState.pack?.totalCards,
-                estimateTimePlay = uiState.pack?.estimateTimePlay,
-                suggestNumberPlayers = uiState.pack?.suggestNumberPlayers,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
-        item {
-            HeatLevelSection(
-                heatLevel = ((uiState.pack?.heatLevel ?: 0)),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
-        item {
-            SampleCardsSection(
-                isLoadingSampleCard = uiState.isLoadingSampleCard,
-                packSampleCard = uiState.packSampleCard ?: emptyList(),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
-        item {
-            HowToPlaySection(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                instruction = uiState.pack?.howToPlay ?: exampleText
-            )
-        }
-    }
-}
-
-// --- Organisms / Molecules ---
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PageDetailTopBar(
+fun PageDetailContent(
+    route: HomeRoute.PackDetail,
+    uiState: PageDetailUIState,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onRetry: () -> Unit,
+    onPlayClick: () -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
+    val colors = DeepTalkTheme.colors
+    val pack = uiState.pack
+    val accent = (pack?.accentColor ?: route.accent).toComposeColorOrNull() ?: colors.brand
+    val title = pack?.titleCard?.takeIf { it.isNotBlank() } ?: route.title.orEmpty()
+    val cover = route.coverUrl ?: pack?.coverImageUrl ?: pack?.thumb
+    val isPremium = pack?.isPremium == true
+    var showPremiumSheet by remember { mutableStateOf(false) }
+
+    GlowBackground(accent = accent) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 132.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xl)
+        ) {
+            item(key = "hero") {
+                Box(Modifier.fillMaxWidth()) {
+                    PackCover(
+                        imageUrl = cover,
+                        title = title,
+                        accent = accent,
+                        sharedKey = route.coverKey,
+                        shape = DeepTalkShapes.xl.copy(
+                            topStart = androidx.compose.foundation.shape.CornerSize(0.dp),
+                            topEnd = androidx.compose.foundation.shape.CornerSize(0.dp)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(380.dp)
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        0f to colors.bgBase.copy(alpha = 0.35f),
+                                        0.35f to Color.Transparent,
+                                        1f to colors.bgBase
+                                    )
+                                )
+                        )
+                    }
+                    Column(
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(horizontal = Spacing.gutter)
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PackBadge.from(pack?.badge)?.let { PackBadgeChip(it, solid = true) }
+                            pack?.tag?.takeIf { it.isNotBlank() }?.let { OverlinePill(it, accent) }
+                        }
+                        Spacer(Modifier.height(Spacing.sm))
+                        Text(title, style = DeepTalkTheme.type.hero, color = colors.textPrimary)
+                    }
+                }
+            }
+
+            item(key = "description") {
+                Column(Modifier.padding(horizontal = Spacing.gutter)) {
+                    when {
+                        uiState.isLoading && pack == null -> {
+                            SkeletonLine(width = 280.dp)
+                            Spacer(Modifier.height(8.dp))
+                            SkeletonLine(width = 220.dp)
+                        }
+                        !pack?.description.isNullOrBlank() -> Text(
+                            text = pack.description,
+                            style = DeepTalkTheme.type.body,
+                            color = colors.textSecondary
+                        )
+                    }
+                }
+            }
+
+            if (uiState.errorMessage != null && pack == null) {
+                item(key = "error") {
+                    ErrorState(
+                        message = stringResource(R.string.pack_error_message),
+                        onRetry = onRetry
+                    )
+                }
+            }
+
+            if (pack != null) {
+                item(key = "stats") {
+                    PackStatTiles(
+                        totalCards = pack.totalCards,
+                        minutes = pack.estimateTimePlay,
+                        players = pack.suggestNumberPlayers,
+                        modifier = Modifier.padding(horizontal = Spacing.gutter)
+                    )
+                }
+                item(key = "heat") {
+                    GlassSurface(Modifier.padding(horizontal = Spacing.gutter)) {
+                        HeatMeter(heat = pack.heatLevel, modifier = Modifier.padding(18.dp))
+                    }
+                }
+            }
+
+            item(key = "samples") {
+                SampleCardFan(
+                    cards = uiState.packSampleCard,
+                    isLoading = uiState.isLoadingSampleCard,
+                    accent = accent,
+                    modifier = Modifier.padding(horizontal = Spacing.gutter)
+                )
+            }
+
+            pack?.howToPlay?.takeIf { it.isNotBlank() }?.let { instruction ->
+                item(key = "howto") {
+                    HowToPlayCard(instruction, Modifier.padding(horizontal = Spacing.gutter))
+                }
+            }
+        }
+
+        // Top bar
+        GlassIconButton(
+            icon = Icons.AutoMirrored.Rounded.ArrowBack,
+            contentDescription = stringResource(R.string.back),
             onClick = onBackClick,
             modifier = Modifier
                 .statusBarsPadding()
-                .background(
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
-                    CircleShape
-                )
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                tint = Color.White,
-                contentDescription = "Back",
-            )
-        }
-    }
-}
-
-@Composable
-private fun PageDetailBottomBar(
-    onUnlockClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        color = LightBackground,
-        tonalElevation = 8.dp,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-//                Text(
-//                    text = "$4.99",
-//                    style = MaterialTheme.typography.labelMedium.copy(
-//                        textDecoration = TextDecoration.LineThrough
-//                    ),
-//                    color = Color.White.copy(alpha = 0.5f)
-//                )
-                Text(
-                    text = stringResource(R.string.free),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-
-            Button(
-                onClick = onUnlockClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 24.dp)
-                    .height(56.dp),
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFD0A5FF), // Brand Purple Light
-                    contentColor = Color(0xFF3B0086) // Brand Dark Purple
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.play_game),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun HeroSection(
-    badgeText: String,
-    title: String,
-    thumbnailUrl: String?,
-    description: String,
-    modifier: Modifier = Modifier
-) {
-    val configuration = LocalConfiguration.current
-    val screenWidth = remember { configuration.screenWidthDp.dp }
-    Box {
-        ThumbnailSection(
-            Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f),
-            screenWidth,
-            imageUrl = thumbnailUrl
+                .padding(start = Spacing.md, top = Spacing.xs)
         )
 
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Spacer(
-                modifier.height(screenWidth / 2)
-            )
-            CardBadge(badgeText = badgeText)
-            Text(
-                text = title,
-                style = MaterialTheme.typography.displayMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Black
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatsRow(
-    totalCards: Int?,
-    estimateTimePlay: Int?,
-    suggestNumberPlayers: Int?,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        StatCircle(
-            value = totalCards?.toString() ?: "-",
-            label = "CARDS",
-            drawable = R.drawable.card_size,
-            modifier = Modifier.weight(1f)
-        )
-        StatCircle(
-            value = estimateTimePlay?.let { "${it}m" } ?: "-",
-            label = "PLAY TIME",
-            drawable = R.drawable.timer,
-            modifier = Modifier.weight(1f)
-        )
-        StatCircle(
-            value = suggestNumberPlayers?.let { "${it}+" } ?: "-",
-            label = "PLAYERS",
-            drawable = R.drawable.player,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-
-
-
-@Composable
-private fun SampleCardsSection(
-    isLoadingSampleCard: Boolean,
-    packSampleCard: List<CardDetail>,
-    modifier: Modifier = Modifier
-) {
-
-    val lottie by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(R.raw.loading)
-    )
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.sample_cards),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-
+        // Sticky CTA
         AnimatedVisibility(
-            isLoadingSampleCard
+            visible = pack != null,
+            enter = fadeIn(),
+            modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ){
-                LottieAnimation(
-                    composition = lottie,
-                    modifier = Modifier.size(100.dp)
-                )
-            }
-        }
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(packSampleCard.size){ index ->
-                SampleCardItem(
-                    tag = packSampleCard[index].category,
-                    content = packSampleCard[index].description
-                )
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, colors.bgBase, colors.bgBase)))
+                    .navigationBarsPadding()
+                    .padding(horizontal = Spacing.gutter)
+                    .padding(top = Spacing.xxl, bottom = Spacing.md)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text(
+                            text = stringResource(if (isPremium) R.string.premium else R.string.free),
+                            style = DeepTalkTheme.type.headline,
+                            color = if (isPremium) colors.gold else colors.textPrimary
+                        )
+                        Text(
+                            text = stringResource(if (isPremium) R.string.premium_subtitle else R.string.free_subtitle),
+                            style = DeepTalkTheme.type.label,
+                            color = colors.textMuted
+                        )
+                    }
+                    Spacer(Modifier.width(Spacing.md))
+                    PrimaryButton(
+                        text = stringResource(if (isPremium) R.string.unlock_pack else R.string.play_game),
+                        leadingIcon = if (isPremium) Icons.Rounded.Lock else Icons.Rounded.PlayArrow,
+                        onClick = { if (isPremium) showPremiumSheet = true else onPlayClick() },
+                        glowColor = accent,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
-}
 
-
-
-
-
-@Preview(
-    heightDp = 2000
-)
-@Composable
-private fun PreviewPageDetail() {
-    PageDetailScreen(
-        {}, {}, {}
-    )
-}
-
-@Preview
-@Composable
-private fun PreviewPageDetailBottomBar() {
-    BoardGameTheme {
-        PageDetailBottomBar(onUnlockClick = {})
+    if (showPremiumSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showPremiumSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = colors.bgElevated,
+            contentColor = colors.textPrimary,
+        ) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.xl)
+                    .padding(bottom = Spacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    Modifier
+                        .size(72.dp)
+                        .glow(colors.gold, radius = 28.dp, alpha = 0.35f, offsetY = 0.dp)
+                        .background(colors.gold.copy(alpha = 0.16f), CircleShape)
+                        .border(1.dp, colors.gold.copy(alpha = 0.4f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Rounded.Diamond, contentDescription = null, tint = colors.gold, modifier = Modifier.size(34.dp))
+                }
+                Spacer(Modifier.height(Spacing.md))
+                Text(
+                    stringResource(R.string.premium_coming_soon_title),
+                    style = DeepTalkTheme.type.display,
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(Spacing.xs))
+                Text(
+                    stringResource(R.string.premium_coming_soon_message),
+                    style = DeepTalkTheme.type.body,
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(Spacing.xl))
+                PrimaryButton(
+                    text = stringResource(R.string.got_it),
+                    onClick = { showPremiumSheet = false },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 }

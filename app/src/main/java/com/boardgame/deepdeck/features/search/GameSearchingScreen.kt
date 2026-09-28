@@ -1,52 +1,62 @@
 package com.boardgame.deepdeck.features.search
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.boardgame.deepdeck.R
 import com.boardgame.deepdeck.data.model.PacksPreview
-import com.boardgame.deepdeck.features.home.screen.HomeSearchBar
-import com.boardgame.deepdeck.ui.theme.BoardGameTheme
-import com.boardgame.deepdeck.ui.theme.LightBackground
-import com.boardgame.deepdeck.ui.theme.LightPrimary
-import com.boardgame.deepdeck.ui.theme.LightSecondTextOBG
-import com.boardgame.deepdeck.ui.theme.LightTextOnBackground
+import com.boardgame.deepdeck.ui.components.EmptyState
+import com.boardgame.deepdeck.ui.components.GlassIconButton
+import com.boardgame.deepdeck.ui.components.GlowBackground
+import com.boardgame.deepdeck.ui.components.PackTile
+import com.boardgame.deepdeck.ui.components.PackTileStyle
+import com.boardgame.deepdeck.ui.components.SkeletonBox
+import com.boardgame.deepdeck.ui.components.pressable
+import com.boardgame.deepdeck.ui.components.staggeredEntrance
+import com.boardgame.deepdeck.ui.theme.DeepTalkShapes
+import com.boardgame.deepdeck.ui.theme.DeepTalkTheme
+import com.boardgame.deepdeck.ui.theme.Spacing
 
 @Composable
 fun GameSearchStateful(
@@ -70,9 +80,8 @@ fun GameSearchStateful(
     GameSearchingScreen(
         uiState = uiState,
         isSearching = isSearching,
-        onLeadingIconClick = {
-            if (isSearching) viewModel.clearQuery() else onBackClick()
-        },
+        onBackClick = onBackClick,
+        onClearClick = viewModel::clearQuery,
         onQueryChange = viewModel::onQueryChange,
         query = query,
         onPackClick = viewModel::onPackClick,
@@ -80,61 +89,109 @@ fun GameSearchStateful(
     )
 }
 
+/** Search: real text field (focused here, never on Home), recent chips, suggestions, results. */
 @Composable
 fun GameSearchingScreen(
     uiState: SealedGameSearchUIState,
     isSearching: Boolean,
-    onLeadingIconClick: () -> Unit,
+    onBackClick: () -> Unit,
+    onClearClick: () -> Unit,
     onQueryChange: (String) -> Unit,
     query: String = "",
     onPackClick: (packId: String, packTitle: String) -> Unit = { _, _ -> },
     onRecentSearchClick: (String) -> Unit = {}
 ) {
-    Scaffold { contentPadding ->
+    GlowBackground {
         Column(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
-                .background(LightBackground)
-                .padding(top = contentPadding.calculateTopPadding())
+                .statusBarsPadding()
+                .imePadding()
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = Spacing.gutter, vertical = Spacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .clickable(onClick = onLeadingIconClick)
-                        .padding(start = 12.dp, end = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isSearching) Icons.Filled.Close else Icons.Filled.ArrowBackIosNew,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.8f)
-                    )
-                }
-                HomeSearchBar(
-                    searchQuery = query,
-                    onSearchTextChange = onQueryChange,
-                    enableSearch = true
+                GlassIconButton(
+                    icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = stringResource(R.string.back),
+                    onClick = onBackClick
+                )
+                Spacer(Modifier.width(10.dp))
+                SearchField(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    showClear = isSearching || query.isNotEmpty(),
+                    onClear = onClearClick,
+                    modifier = Modifier.weight(1f)
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
+            Spacer(Modifier.height(Spacing.md))
             when (uiState) {
                 is SealedGameSearchUIState.Loading -> LoadingSection()
-                is SealedGameSearchUIState.InitUIState -> InitSection(
-                    state = uiState,
-                    onPackClick = onPackClick,
-                    onRecentSearchClick = onRecentSearchClick
-                )
-                is SealedGameSearchUIState.GameSearchUIState -> SearchResultsSection(
-                    results = uiState.results,
+                is SealedGameSearchUIState.InitUIState -> InitSection(uiState, onPackClick, onRecentSearchClick)
+                is SealedGameSearchUIState.GameSearchUIState -> ResultsSection(
+                    title = stringResource(R.string.search_results),
+                    packs = uiState.results,
                     onPackClick = onPackClick
                 )
-                is SealedGameSearchUIState.Error -> ErrorSection(message = uiState.message)
+                is SealedGameSearchUIState.Error -> EmptyState(
+                    title = stringResource(R.string.no_packs_found),
+                    message = uiState.message,
+                    icon = Icons.Rounded.SearchOff
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    showClear: Boolean,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = DeepTalkTheme.colors
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    Row(
+        modifier = modifier
+            .height(48.dp)
+            .background(colors.glass, DeepTalkShapes.pill)
+            .border(1.dp, colors.outline, DeepTalkShapes.pill)
+            .padding(start = 16.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Rounded.Search, null, tint = colors.textMuted, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(10.dp))
+        Box(Modifier.weight(1f)) {
+            if (query.isEmpty()) {
+                Text(stringResource(R.string.search_game_placeholder), style = DeepTalkTheme.type.body, color = colors.textMuted)
+            }
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                textStyle = DeepTalkTheme.type.body.copy(color = colors.textPrimary),
+                cursorBrush = SolidColor(colors.brand),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+            )
+        }
+        if (showClear) {
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .pressable(onClick = onClear),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Rounded.Close, stringResource(R.string.cancel_text), tint = colors.textSecondary, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -142,165 +199,103 @@ fun GameSearchingScreen(
 
 @Composable
 private fun LoadingSection() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = LightSecondTextOBG)
+    Column(
+        Modifier.padding(horizontal = Spacing.gutter),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        repeat(5) { SkeletonBox(Modifier.fillMaxWidth().height(84.dp), DeepTalkShapes.md) }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InitSection(
     state: SealedGameSearchUIState.InitUIState,
     onPackClick: (packId: String, packTitle: String) -> Unit,
     onRecentSearchClick: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = stringResource(R.string.recent),
-            color = Color.White.copy(alpha = 0.5f),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.5.sp,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        if (state.recentSearch.isNotEmpty()) {
-            LazyColumn {
-                items(state.recentSearch) { query ->
-                    Text(
-                        text = query,
-                        color = LightSecondTextOBG,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onRecentSearchClick(query) }
-                            .padding(horizontal = 24.dp, vertical = 12.dp)
-                    )
-                }
-            }
-        } else {
-            Text(
-                text = stringResource(R.string.no_recent_search),
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.5.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                textAlign = TextAlign.Center
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (state.suggestPacks.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.suggested),
-                color = Color.White.copy(alpha = 0.5f),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.5.sp,
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            LazyColumn {
-                items(state.suggestPacks, key = { it.id.orEmpty() }) { pack ->
-                    SearchResultItem(pack = pack, onPackClick = onPackClick)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SearchResultsSection(
-    results: List<PacksPreview>,
-    onPackClick: (packId: String, packTitle: String) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "SEARCH RESULTS",
-            color = Color.White.copy(alpha = 0.5f),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.5.sp,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        LazyColumn {
-            items(results, key = { it.id.orEmpty() }) { pack ->
-                SearchResultItem(pack = pack, onPackClick = onPackClick)
-            }
-        }
-    }
-}
-
-@Composable
-private fun ErrorSection(message: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = message, color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
-    }
-}
-
-@Composable
-private fun SearchResultItem(
-    pack: PacksPreview,
-    onPackClick: (packId: String, packTitle: String) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onPackClick(pack.id.orEmpty(), pack.title.orEmpty()) }
-            .padding(horizontal = 24.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+    val colors = DeepTalkTheme.colors
+    LazyColumn(
+        contentPadding = PaddingValues(start = Spacing.gutter, end = Spacing.gutter, bottom = Spacing.xxl),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        AsyncImage(
-            model = pack.thumb,
-            contentDescription = pack.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(LightPrimary)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = pack.title.orEmpty(),
-                color = LightSecondTextOBG,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            if (!pack.keywordsSummarise.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
+        item(key = "recent-title") {
+            Text(stringResource(R.string.recent), style = DeepTalkTheme.type.overline, color = colors.textMuted)
+        }
+        item(key = "recent") {
+            if (state.recentSearch.isEmpty()) {
+                Text(stringResource(R.string.no_recent_search), style = DeepTalkTheme.type.body, color = colors.textSecondary)
+            } else {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    state.recentSearch.forEach { recent ->
+                        Row(
+                            Modifier
+                                .background(colors.glass, DeepTalkShapes.pill)
+                                .border(1.dp, colors.outline, DeepTalkShapes.pill)
+                                .pressable { onRecentSearchClick(recent) }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Rounded.History, null, tint = colors.textMuted, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(recent, style = DeepTalkTheme.type.label, color = colors.textPrimary)
+                        }
+                    }
+                }
+            }
+        }
+        if (state.suggestPacks.isNotEmpty()) {
+            item(key = "suggested-title") {
                 Text(
-                    text = pack.keywordsSummarise ?: "",
-                    color = LightTextOnBackground.copy(alpha = 0.5f),
-                    fontSize = 13.sp,
+                    stringResource(R.string.suggested),
+                    style = DeepTalkTheme.type.overline,
+                    color = colors.textMuted,
+                    modifier = Modifier.padding(top = Spacing.md)
+                )
+            }
+            itemsIndexed(state.suggestPacks, key = { _, p -> "s-${p.id}" }) { index, pack ->
+                PackTile(
+                    pack = pack,
+                    style = PackTileStyle.Row,
+                    onClick = { onPackClick(pack.id.orEmpty(), pack.title.orEmpty()) },
+                    modifier = Modifier.staggeredEntrance(index)
                 )
             }
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun GameSearchingScreenPreview() {
-    BoardGameTheme {
-        GameSearchingScreen(
-            uiState = SealedGameSearchUIState.InitUIState(
-                recentSearch = listOf("Card Game", "Dice"),
-                suggestPacks = listOf(
-                    PacksPreview(
-                        id = "1",
-                        title = "Card Game",
-                        keywordsSummarise = "Fun • 2-4 players",
-                        thumb = null
-                    )
-                )
-            ),
-            isSearching = false,
-            onLeadingIconClick = {},
-            onQueryChange = {}
+private fun ResultsSection(
+    title: String,
+    packs: List<PacksPreview>,
+    onPackClick: (packId: String, packTitle: String) -> Unit
+) {
+    if (packs.isEmpty()) {
+        EmptyState(
+            title = stringResource(R.string.no_packs_found),
+            message = stringResource(R.string.search_no_results),
+            icon = Icons.Rounded.SearchOff
         )
+        return
+    }
+    LazyColumn(
+        contentPadding = PaddingValues(start = Spacing.gutter, end = Spacing.gutter, bottom = Spacing.xxl),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        item(key = "title") {
+            Text(title, style = DeepTalkTheme.type.overline, color = DeepTalkTheme.colors.textMuted)
+        }
+        itemsIndexed(packs, key = { _, p -> "r-${p.id}" }) { index, pack ->
+            PackTile(
+                pack = pack,
+                style = PackTileStyle.Row,
+                onClick = { onPackClick(pack.id.orEmpty(), pack.title.orEmpty()) },
+                modifier = Modifier.staggeredEntrance(index)
+            )
+        }
     }
 }

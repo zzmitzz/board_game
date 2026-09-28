@@ -1,7 +1,6 @@
 package com.boardgame.deepdeck.features.mylibrary
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import com.boardgame.deepdeck.utils.rememberPersistentImagePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -67,9 +66,7 @@ fun AddPackScreen(
 ) {
     val form by vm.form.collectAsState()
 
-    val imagePicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri -> vm.onCoverImageSelected(uri) }
+    val imagePicker = rememberPersistentImagePicker { uri -> vm.onCoverImageSelected(uri) }
 
     Column(
         modifier = Modifier
@@ -111,7 +108,7 @@ fun AddPackScreen(
 
             CoverImagePicker(
                 uri = form.coverImageUri?.toString(),
-                onClick = { imagePicker.launch("image/*") }
+                onClick = { imagePicker() }
             )
 
             LibraryTextField(

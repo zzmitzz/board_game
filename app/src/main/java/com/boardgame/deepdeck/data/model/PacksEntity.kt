@@ -19,7 +19,11 @@ data class RemotePackDetail(
     @SerialName("total_cards") val totalCards: Int? = null,
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
-    @SerialName("how_to_play") val howToPlay: String? = null
+    @SerialName("how_to_play") val howToPlay: String? = null,
+    @SerialName("is_premium") val isPremium: Boolean? = null,
+    @SerialName("accent_color") val accentColor: String? = null,
+    @SerialName("play_count") val playCount: Int? = null,
+    @SerialName("badge") val badge: String? = null
 )
 
 @Serializable
@@ -27,8 +31,18 @@ data class PacksPreview(
     @SerialName("id"                 ) var id                : String? = null,
     @SerialName("title"              ) var title             : String? = null,
     @SerialName("keywords_summarise" ) var keywordsSummarise : String? = null,
-    @SerialName("thumb"              ) var thumb             : String? = null
+    @SerialName("thumb"              ) var thumb             : String? = null,
+    @SerialName("cover_image_url"    ) var coverImageUrl     : String? = null,
+    @SerialName("heat_level"         ) var heatLevel         : Int? = null,
+    @SerialName("total_cards"        ) var totalCards        : Int? = null,
+    @SerialName("is_premium"         ) var isPremium         : Boolean? = null,
+    @SerialName("accent_color"       ) var accentColor       : String? = null,
+    @SerialName("badge"              ) var badge             : String? = null
 )
+
+/** Best image for a tile: thumb first, then cover. */
+val PacksPreview.tileImage: String?
+    get() = thumb?.takeIf { it.isNotBlank() } ?: coverImageUrl?.takeIf { it.isNotBlank() }
 
 
 fun RemotePackDetail.toUIModel(): PackDetailUIModel {
@@ -45,6 +59,9 @@ fun RemotePackDetail.toUIModel(): PackDetailUIModel {
         tag = tag,
         heatLevel = heatLevel,
         totalCards = totalCards,
-        howToPlay = howToPlay
+        howToPlay = howToPlay?.takeIf { it.isNotBlank() },
+        isPremium = isPremium == true,
+        accentColor = accentColor,
+        badge = badge
     )
 }

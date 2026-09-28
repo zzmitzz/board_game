@@ -23,12 +23,13 @@ data class RemoteCard(
 fun RemoteCard.toUIModel(): CardDetail {
     return CardDetail(
         id = id.orEmpty(),
-        category = level ?: type.orEmpty(),
+        category = normalizeLevel(level) ?: type.orEmpty(),
         description = frontSide.orEmpty(),
         media = CardDetailMedia(
             image = null,
             video = null
         ),
-        hint = hint.orEmpty()
+        hint = hint.orEmpty(),
+        backSide = backSide?.takeIf { it.isNotBlank() }
     )
 }

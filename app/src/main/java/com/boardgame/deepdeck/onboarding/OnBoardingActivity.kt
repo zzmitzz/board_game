@@ -35,7 +35,7 @@ class OnBoardingActivity : AppCompatActivity(), OnboardingFragment.OnboardingCom
             insets
         }
         setupViewPager()
-
+        mBinding.btnSkip.setOnClickListener { onOnboardingComplete() }
     }
 
     private fun setupViewPager() {
@@ -45,6 +45,10 @@ class OnBoardingActivity : AppCompatActivity(), OnboardingFragment.OnboardingCom
         mBinding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 updateDots(position)
+                val last = position == listOnboardingFill.lastIndex
+                mBinding.btnSkip.visibility = if (last) android.view.View.INVISIBLE else android.view.View.VISIBLE
+                // The final (Compose) page has its own CTA where the dots sit.
+                mBinding.dotsContainer.visibility = if (last) android.view.View.INVISIBLE else android.view.View.VISIBLE
             }
         })
     }
@@ -77,6 +81,7 @@ class OnBoardingActivity : AppCompatActivity(), OnboardingFragment.OnboardingCom
     }
 
     override fun onOnboardingComplete() {
+        if (isFinishing) return
         startActivity(Intent(this, MainActivity::class.java))
         getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit {

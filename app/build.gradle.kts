@@ -66,6 +66,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
@@ -106,6 +107,8 @@ dependencies {
 
     implementation("com.airbnb.android:lottie-compose:6.7.1")
     implementation("androidx.datastore:datastore-preferences:1.1.2")
+    // Evening reminder + queued session events
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.2")
     implementation("androidx.viewpager2:viewpager2:1.1.0")

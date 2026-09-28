@@ -1,47 +1,21 @@
 package com.boardgame.deepdeck
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.boardgame.deepdeck.navigation.NavigationGraph
 import com.boardgame.deepdeck.ui.app.BoardGameApp
-import com.boardgame.deepdeck.ui.state.BoardGameAppState
 import com.boardgame.deepdeck.ui.state.rememberBoardGameState
 import com.boardgame.deepdeck.ui.theme.BoardGameTheme
+import com.boardgame.deepdeck.utils.LocaleUtils
 import com.boardgame.deepdeck.utils.NetworkUtils
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
-
-
-import com.boardgame.deepdeck.utils.LocaleUtils
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -53,13 +27,17 @@ class MainActivity : ComponentActivity() {
         app.applyStoredLocale()
         LocaleUtils.setLocale(this, app.getLanguageCode())
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Dark-only design: light system-bar icons on transparent bars.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         setContent {
-            val uiState = rememberBoardGameState(
-                networkMonitor = NetworkUtils(this)
-            )
+            val networkMonitor = remember { NetworkUtils(applicationContext) }
+            val uiState = rememberBoardGameState(networkMonitor = networkMonitor)
+            val hapticsEnabled by mViewModel.hapticsEnabled.collectAsStateWithLifecycle()
             BoardGameTheme {
-                BoardGameApp(uiState)
+                BoardGameApp(uiState, hapticsEnabled)
             }
         }
     }

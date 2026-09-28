@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PersistenceSetting(
     val isAutoTranslate: Boolean = false,
-    val isHapticOn: Boolean = false,
-    val isSoundOn: Boolean = false,
+    val isHapticOn: Boolean = true,
+    val isSoundOn: Boolean = true,
     val language: String = "en"
 )

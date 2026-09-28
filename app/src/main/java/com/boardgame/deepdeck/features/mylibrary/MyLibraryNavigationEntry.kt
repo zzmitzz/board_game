@@ -1,23 +1,13 @@
 package com.boardgame.deepdeck.features.mylibrary
 
-import android.util.Log
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.runtime.LaunchedEffect
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
-import com.boardgame.deepdeck.features.gameend.GameEndScreen
-import com.boardgame.deepdeck.features.gamesetup.GameSetupScreenStateful
-import com.boardgame.deepdeck.features.gamesetup.GameSetupVM
-import com.boardgame.deepdeck.features.home.shareviewmodel.shareViewModel
-import com.boardgame.deepdeck.features.ingame.screen.ActiveGameScreenStateful
+import com.boardgame.deepdeck.features.ingame.startGame
+import com.boardgame.deepdeck.features.library.LibraryTabScreen
 import com.boardgame.deepdeck.navigation.RootRoute
 import kotlinx.serialization.Serializable
 
@@ -28,37 +18,24 @@ sealed class MyLibraryRoute {
     @Serializable data class AddCard(val packId: String) : MyLibraryRoute()
     @Serializable data class EditPack(val packId: String) : MyLibraryRoute()
     @Serializable data class EditCard(val packId: String, val cardId: String) : MyLibraryRoute()
-    @Serializable data class GameSetup(val packId: String) : MyLibraryRoute()
-    @Serializable data class InGame(val packId: String) : MyLibraryRoute()
-    @Serializable data object EndGame : MyLibraryRoute()
 }
 
-private fun enter() = scaleIn(initialScale = 0.92f, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
-private fun exit() = scaleOut(targetScale = 1.08f, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
-private fun popEnter() = scaleIn(initialScale = 1.08f, animationSpec = tween(300)) + fadeIn(animationSpec = tween(300))
-private fun popExit() = scaleOut(targetScale = 0.92f, animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
 
 fun NavGraphBuilder.myLibraryNavigationEntry(navController: NavController) {
     navigation<RootRoute.MyLibrary>(startDestination = MyLibraryRoute.Library) {
 
-        composable<MyLibraryRoute.Library>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) {
-            val vm: MyLibraryVM = hiltViewModel()
-            MyLibraryScreen(
-                vm = vm,
-                onBackClick = { navController.popBackStack() },
+        // Legacy entry point of this graph: the Library tab UI, opened on "My packs".
+        composable<MyLibraryRoute.Library> {
+            LibraryTabScreen(
                 onAddPackClick = { navController.navigate(MyLibraryRoute.AddPack) },
-                onPackClick = { packId -> navController.navigate(MyLibraryRoute.PackCards(packId)) },
-                onEditPackClick = { packId -> navController.navigate(MyLibraryRoute.EditPack(packId)) }
+                onOpenPack = { packId -> navController.navigate(MyLibraryRoute.PackCards(packId)) },
+                onEditPack = { packId -> navController.navigate(MyLibraryRoute.EditPack(packId)) },
+                onPlayPack = { packId, isCustom -> navController.startGame(packId, isCustom = isCustom, quickPlay = true) },
+                initialSegment = 1,
             )
         }
 
-        composable<MyLibraryRoute.AddPack>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) {
+        composable<MyLibraryRoute.AddPack> {
             val vm: AddPackVM = hiltViewModel()
             AddPackScreen(
                 vm = vm,
@@ -67,10 +44,7 @@ fun NavGraphBuilder.myLibraryNavigationEntry(navController: NavController) {
             )
         }
 
-        composable<MyLibraryRoute.PackCards>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) { backStackEntry ->
+        composable<MyLibraryRoute.PackCards> { backStackEntry ->
             val route = backStackEntry.toRoute<MyLibraryRoute.PackCards>()
             val vm: PackCardsVM = hiltViewModel()
             PackCardsScreen(
@@ -78,14 +52,11 @@ fun NavGraphBuilder.myLibraryNavigationEntry(navController: NavController) {
                 onBackClick = { navController.popBackStack() },
                 onAddCardClick = { navController.navigate(MyLibraryRoute.AddCard(route.packId)) },
                 onEditCardClick = { cardId -> navController.navigate(MyLibraryRoute.EditCard(route.packId, cardId)) },
-                onPlayClick = { navController.navigate(MyLibraryRoute.GameSetup(route.packId)) }
+                onPlayClick = { navController.startGame(route.packId, isCustom = true) }
             )
         }
 
-        composable<MyLibraryRoute.AddCard>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) { backStackEntry ->
+        composable<MyLibraryRoute.AddCard> { backStackEntry ->
             val route = backStackEntry.toRoute<MyLibraryRoute.AddCard>()
             val vm: AddCardVM = hiltViewModel()
             AddCardScreen(
@@ -96,10 +67,7 @@ fun NavGraphBuilder.myLibraryNavigationEntry(navController: NavController) {
             )
         }
 
-        composable<MyLibraryRoute.EditPack>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) { backStackEntry ->
+        composable<MyLibraryRoute.EditPack> { backStackEntry ->
             val route = backStackEntry.toRoute<MyLibraryRoute.EditPack>()
             val vm: EditPackVM = hiltViewModel()
             EditPackScreen(
@@ -110,10 +78,7 @@ fun NavGraphBuilder.myLibraryNavigationEntry(navController: NavController) {
             )
         }
 
-        composable<MyLibraryRoute.EditCard>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) { backStackEntry ->
+        composable<MyLibraryRoute.EditCard> { backStackEntry ->
             val route = backStackEntry.toRoute<MyLibraryRoute.EditCard>()
             val vm: EditCardVM = hiltViewModel()
             EditCardScreen(
@@ -122,62 +87,6 @@ fun NavGraphBuilder.myLibraryNavigationEntry(navController: NavController) {
                 cardId = route.cardId,
                 onBackClick = { navController.popBackStack() },
                 onSaved = { navController.popBackStack() }
-            )
-        }
-
-        composable<MyLibraryRoute.GameSetup>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) { backStackEntry ->
-            val route = backStackEntry.toRoute<MyLibraryRoute.GameSetup>()
-            val vm: GameSetupVM = hiltViewModel()
-            GameSetupScreenStateful(
-                onBackClick = { navController.popBackStack() },
-                onStartGameClick = { navController.navigate(MyLibraryRoute.InGame(route.packId)) },
-                vm = vm
-            )
-        }
-
-        composable<MyLibraryRoute.InGame>(
-            enterTransition = { fadeIn(animationSpec = tween(300)) },
-            exitTransition = { fadeOut(animationSpec = tween(300)) },
-            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-            popExitTransition = { fadeOut(animationSpec = tween(300)) }
-        ) { backStackEntry ->
-            val vm = navController.shareViewModel<CustomInGameVM>(backStackEntry)
-            LaunchedEffect(Unit) {
-                Log.d("MyLibraryNav", "CustomInGame: ${vm.hashCode()}")
-            }
-            val route = backStackEntry.toRoute<MyLibraryRoute.InGame>()
-            vm.currentGameID = route.packId
-            ActiveGameScreenStateful(
-                onBackClick = { navController.popBackStack() },
-                onExitGame = { navController.navigate(MyLibraryRoute.EndGame) },
-                packId = route.packId,
-                mViewModel = vm
-            )
-        }
-
-        composable<MyLibraryRoute.EndGame>(
-            enterTransition = { enter() }, exitTransition = { exit() },
-            popEnterTransition = { popEnter() }, popExitTransition = { popExit() }
-        ) { backStackEntry ->
-            val vm = navController.shareViewModel<CustomInGameVM>(backStackEntry)
-            LaunchedEffect(Unit) {
-                Log.d("MyLibraryNav", "CustomEndGame: ${vm.hashCode()}")
-            }
-            GameEndScreen(
-                onBackClick = {
-                    navController.navigate(RootRoute.MyLibrary) {
-                        popUpTo(RootRoute.MyLibrary)
-                        launchSingleTop = true
-                    }
-                },
-                onPlayAgainClick = {
-                    vm.resetAllData()
-                    navController.popBackStack<MyLibraryRoute.GameSetup>(inclusive = false)
-                },
-                vm = vm
             )
         }
     }

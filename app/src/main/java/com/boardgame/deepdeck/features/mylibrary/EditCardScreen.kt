@@ -1,7 +1,6 @@
 package com.boardgame.deepdeck.features.mylibrary
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import com.boardgame.deepdeck.utils.rememberPersistentImagePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -64,7 +63,7 @@ fun EditCardScreen(
 
     LaunchedEffect(cardId) { vm.loadCard(packId, cardId) }
 
-    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+    val imagePicker = rememberPersistentImagePicker {
         vm.onImageSelected(it)
     }
 
@@ -107,7 +106,7 @@ fun EditCardScreen(
                     .background(LightPrimary, RoundedCornerShape(16.dp))
                     .border(1.dp, LightSecondTextOBG.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                     .clip(RoundedCornerShape(16.dp))
-                    .clickable { imagePicker.launch("image/*") },
+                    .clickable { imagePicker() },
                 contentAlignment = Alignment.Center
             ) {
                 if (form.mediaImageUri != null) {

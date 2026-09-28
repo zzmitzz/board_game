@@ -1,166 +1,205 @@
 package com.boardgame.deepdeck.features.gamesetup
 
-import androidx.compose.ui.graphics.Color
-import androidx.datastore.preferences.core.stringPreferencesKey
+import android.content.Context
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.boardgame.deepdeck.config.GameSettingConfigCurrentSession
-import com.boardgame.deepdeck.config.PersistenceSetting
+import com.boardgame.deepdeck.R
+import com.boardgame.deepdeck.data.prefs.RememberedSetup
+import com.boardgame.deepdeck.data.prefs.RosterRepository
+import com.boardgame.deepdeck.data.repository.BoardGameRepository
+import com.boardgame.deepdeck.di.CustomPackLocally
+import com.boardgame.deepdeck.features.ingame.model.GameConfig
 import com.boardgame.deepdeck.ui.model.GamePlayer
-import com.boardgame.deepdeck.utils.DataStoreUtils
-import com.boardgame.deepdeck.utils.random
+import com.boardgame.deepdeck.ui.model.PlayerPalette
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
-data class GameSetupUIState(
-    val players: Set<GamePlayer> = emptySet(),
-    val isRecordDares: Boolean = false,
-    val nsfwEnable: Boolean = false,
-    val speedRun: Boolean = false,
-    val penalty: Boolean = false,
-    val roundAmount: Int = 5,
-    val setting: PersistenceSetting = PersistenceSetting()
-)
-
-sealed class GameSetupUIEffect() {
-    data class onToast(val message: String) : GameSetupUIEffect()
-    object onGameStart : GameSetupUIEffect()
+data class GameSetupUiState(
+    val isLoading: Boolean = true,
+    val packTitle: String? = null,
+    val isCustomPack: Boolean = false,
+    val quickPlay: Boolean = false,
+    val players: List<GamePlayer> = emptyList(),
+    val rounds: Int = GameConfig.DEFAULT_ROUNDS,
+    val speedMode: Boolean = false,
+    val penaltyEnabled: Boolean = false,
+    val penaltyText: String = "",
+    val passThePhone: Boolean = false,
+) {
+    val canAddPlayer: Boolean get() = players.size < GameConfig.MAX_PLAYERS
+    val canStart: Boolean get() = players.size >= GameConfig.MIN_PLAYERS
 }
 
+sealed interface GameSetupUiEffect {
+    data class ShowMessage(@StringRes val message: Int, val arg: Int? = null) : GameSetupUiEffect
+    data class StartGame(val config: GameConfig) : GameSetupUiEffect
+}
 
+/**
+ * Setup lobby, scoped to the game-flow graph so "Play again" returns to the same roster.
+ * Roster + house rules are remembered across sessions ([RosterRepository]).
+ */
 @HiltViewModel
 class GameSetupVM @Inject constructor(
-    private val dataStoreUtils: DataStoreUtils
+    @ApplicationContext private val context: Context,
+    private val rosterRepository: RosterRepository,
+    private val remoteRepository: BoardGameRepository,
+    @CustomPackLocally private val localRepository: BoardGameRepository,
 ) : ViewModel() {
 
-    companion object {
-        val PREF_USER_SETTING = stringPreferencesKey("pref_user_setting")
-    }
+    private val _uiState = MutableStateFlow(GameSetupUiState())
+    val uiState: StateFlow<GameSetupUiState> = _uiState.asStateFlow()
 
-    private val gameSession by lazy {
-        GameSettingConfigCurrentSession
-    }
+    private val _uiEffect = MutableSharedFlow<GameSetupUiEffect>(extraBufferCapacity = 4)
+    val uiEffect: SharedFlow<GameSetupUiEffect> = _uiEffect.asSharedFlow()
 
-    private var _uiState: MutableStateFlow<GameSetupUIState> = MutableStateFlow(
-        GameSetupUIState()
-    )
-    val uiState: StateFlow<GameSetupUIState> = _uiState.asStateFlow()
+    private var boundPackId: String? = null
+    private var nextPlayerId = 1
+    /** The user touched the pass-the-phone switch → stop following the 3+ players default. */
+    private var passPhoneTouched = false
 
-    private var _uiEffect: MutableSharedFlow<GameSetupUIEffect> =
-        MutableSharedFlow<GameSetupUIEffect>()
-    val uiEffect: SharedFlow<GameSetupUIEffect> = _uiEffect
-
-    init {
-        loadSetting()
-    }
-
-    private fun loadSetting() {
+    /** Idempotent: loads the remembered roster/rules and the pack title once per graph. */
+    fun bind(packId: String, isCustomPack: Boolean, quickPlay: Boolean) {
+        if (boundPackId == packId) return
+        boundPackId = packId
+        _uiState.update { it.copy(isCustomPack = isCustomPack, quickPlay = quickPlay) }
         viewModelScope.launch {
-            val setting = dataStoreUtils.getSerializedData(PREF_USER_SETTING, PersistenceSetting::class.java)
-                ?: PersistenceSetting()
-            _uiState.update { it.copy(setting = setting) }
-        }
-    }
-
-    fun onSaveSetting(setting: PersistenceSetting) {
-        viewModelScope.launch {
-            dataStoreUtils.setSerializedData(PREF_USER_SETTING, setting)
-            _uiState.update { it.copy(setting = setting) }
-        }
-    }
-
-    fun setGamePlayer(players: List<GamePlayer>) {
-        val newPlayers = players.toSet()
-        _uiState.update { it.copy(players = newPlayers) }
-    }
-
-    fun addPlayer(players: Int) {
-        val currentPlayer = _uiState.value.players.toMutableSet()
-        if(currentPlayer.size + players >= 20){
-            viewModelScope.launch {
-                _uiEffect.emit(GameSetupUIEffect.onToast("Cannot add more than 20 players"))
+            val remembered = rosterRepository.load()
+            nextPlayerId = maxOf(remembered.nextPlayerId, (remembered.players.maxOfOrNull { it.id } ?: 0) + 1)
+            passPhoneTouched = remembered.passThePhone != null
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    players = remembered.players.take(GameConfig.MAX_PLAYERS),
+                    rounds = remembered.rounds.coerceIn(GameConfig.MIN_ROUNDS, GameConfig.MAX_ROUNDS),
+                    speedMode = remembered.speedMode,
+                    penaltyEnabled = remembered.penaltyEnabled,
+                    penaltyText = remembered.penaltyText.ifBlank { context.getString(R.string.penalty_default) },
+                    passThePhone = remembered.passThePhone
+                        ?: GameConfig.defaultPassThePhone(remembered.players.size),
+                )
             }
+        }
+        viewModelScope.launch {
+            val repo = if (isCustomPack) localRepository else remoteRepository
+            val title = runCatching { repo.getPackById(packId)?.titleCard }.getOrNull()
+            if (!title.isNullOrBlank()) _uiState.update { it.copy(packTitle = title) }
+        }
+    }
+
+    // --- Players -------------------------------------------------------------
+
+    fun addPlayer(name: String = "") {
+        val state = _uiState.value
+        if (!state.canAddPlayer) {
+            _uiEffect.tryEmit(GameSetupUiEffect.ShowMessage(R.string.setup_max_players, GameConfig.MAX_PLAYERS))
             return
         }
-        repeat(players) {
-            currentPlayer.add(
-                GamePlayer(
-                    id = currentPlayer.size + 1,
-                    name = "Player ${currentPlayer.size + 1}",
-                    color = Color.random
+        val id = nextPlayerId++
+        val index = state.players.size
+        val usedEmojis = state.players.map { it.emoji }.toSet()
+        val emoji = PlayerPalette.emojis.firstOrNull { it !in usedEmojis } ?: PlayerPalette.emojiFor(id)
+        val player = GamePlayer(
+            id = id,
+            color = PlayerPalette.colorFor(index),
+            name = name.trim().take(MAX_NAME).ifBlank { context.getString(R.string.player_default_name, index + 1) },
+            emoji = emoji,
+        )
+        setPlayers(state.players + player)
+    }
+
+    fun removePlayer(id: Int) = setPlayers(_uiState.value.players.filterNot { it.id == id })
+
+    fun renamePlayer(id: Int, name: String) {
+        val trimmed = name.take(MAX_NAME)
+        setPlayers(_uiState.value.players.map { if (it.id == id) it.copy(name = trimmed) else it })
+    }
+
+    /** Tap on an avatar cycles its emoji. */
+    fun cycleAvatar(id: Int) {
+        setPlayers(_uiState.value.players.map { p ->
+            if (p.id != id) return@map p
+            val i = PlayerPalette.emojis.indexOf(p.emoji)
+            p.copy(emoji = PlayerPalette.emojiFor(i + 1))
+        })
+    }
+
+    fun clearPlayers() = setPlayers(emptyList())
+
+    private fun setPlayers(players: List<GamePlayer>) {
+        _uiState.update {
+            it.copy(
+                players = players,
+                passThePhone = if (passPhoneTouched) it.passThePhone else GameConfig.defaultPassThePhone(players.size),
+            )
+        }
+    }
+
+    // --- House rules ---------------------------------------------------------
+
+    fun setRounds(rounds: Int) =
+        _uiState.update { it.copy(rounds = rounds.coerceIn(GameConfig.MIN_ROUNDS, GameConfig.MAX_ROUNDS)) }
+
+    fun setSpeedMode(enabled: Boolean) = _uiState.update { it.copy(speedMode = enabled) }
+
+    fun setPenaltyEnabled(enabled: Boolean) = _uiState.update { it.copy(penaltyEnabled = enabled) }
+
+    fun setPenaltyText(text: String) = _uiState.update { it.copy(penaltyText = text.take(MAX_PENALTY)) }
+
+    fun setPassThePhone(enabled: Boolean) {
+        passPhoneTouched = true
+        _uiState.update { it.copy(passThePhone = enabled) }
+    }
+
+    // --- Start ---------------------------------------------------------------
+
+    fun onStartClick() {
+        val state = _uiState.value
+        if (!state.canStart) {
+            _uiEffect.tryEmit(GameSetupUiEffect.ShowMessage(R.string.setup_min_players))
+            return
+        }
+        val players = state.players.mapIndexed { i, p ->
+            if (p.name.isBlank()) p.copy(name = context.getString(R.string.player_default_name, i + 1)) else p.copy(name = p.name.trim())
+        }
+        val penaltyOn = state.penaltyEnabled && state.penaltyText.isNotBlank()
+        val config = GameConfig(
+            players = players,
+            rounds = state.rounds,
+            speedMode = state.speedMode,
+            penaltyEnabled = penaltyOn,
+            penaltyText = state.penaltyText.trim(),
+            passThePhone = state.passThePhone,
+        )
+        _uiState.update { it.copy(players = players) }
+        viewModelScope.launch {
+            rosterRepository.save(
+                RememberedSetup(
+                    players = players,
+                    rounds = state.rounds,
+                    speedMode = state.speedMode,
+                    penaltyEnabled = state.penaltyEnabled,
+                    penaltyText = state.penaltyText,
+                    passThePhone = if (passPhoneTouched) state.passThePhone else null,
+                    nextPlayerId = nextPlayerId,
                 )
             )
         }
-
-        _uiState.update { it.copy(players = currentPlayer) }
+        _uiEffect.tryEmit(GameSetupUiEffect.StartGame(config))
     }
 
-    fun removePlayer(id: Int) {
-        val updated = _uiState.value.players.filter { it.id != id }.toSet()
-        _uiState.update { it.copy(players = updated) }
-    }
-
-    fun removeAllPlayers() {
-        _uiState.update { it.copy(players = emptySet()) }
-    }
-
-    fun updatePlayerName(id: Int, name: String) {
-        val updated = _uiState.value.players.map { player ->
-            if (player.id == id) player.copy(name = name) else player
-        }.toSet()
-        _uiState.update { it.copy(players = updated) }
-    }
-
-    fun setRecordDares(b: Boolean) {
-        _uiState.update { it.copy(isRecordDares = b) }
-    }
-
-    fun setNsfwEnable(b: Boolean) {
-        _uiState.update { it.copy(nsfwEnable = b) }
-    }
-
-    fun setSpeedRun(b: Boolean) {
-        _uiState.update { it.copy(speedRun = b) }
-    }
-
-    fun setPenalty(b: Boolean) {
-        _uiState.update { it.copy(penalty = b) }
-    }
-
-    fun setRoundAmount(amount: Int) {
-        if (amount !in 5..20) {
-            return;
-        }
-        _uiState.update { it.copy(roundAmount = amount) }
-    }
-
-    fun saveGameConfigSession() {
-        if (_uiState.value.players.size < 2) {
-            viewModelScope.launch {
-                _uiEffect.emit(GameSetupUIEffect.onToast("Please add at least 2 players"))
-            }
-            return
-        }
-        gameSession.setupGameConfig(
-            isTimerOn = _uiState.value.speedRun,
-            isRecordMomentOn = _uiState.value.isRecordDares,
-            isNSFWOn = _uiState.value.nsfwEnable,
-            penalty = _uiState.value.penalty,
-            totalRounds = _uiState.value.roundAmount
-        )
-        gameSession.setPlayers(
-            _uiState.value.players
-        )
-        viewModelScope.launch {
-            _uiEffect.emit(GameSetupUIEffect.onGameStart)
-        }
+    private companion object {
+        const val MAX_NAME = 24
+        const val MAX_PENALTY = 80
     }
 }

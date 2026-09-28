@@ -1,7 +1,6 @@
 package com.boardgame.deepdeck.features.mylibrary
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import com.boardgame.deepdeck.utils.rememberPersistentImagePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,9 +59,7 @@ fun AddCardScreen(
 ) {
     val form by vm.form.collectAsState()
 
-    val imagePicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri -> vm.onImageSelected(uri) }
+    val imagePicker = rememberPersistentImagePicker { uri -> vm.onImageSelected(uri) }
 
     Column(
         modifier = Modifier
@@ -127,7 +124,7 @@ fun AddCardScreen(
 
             CardImagePicker(
                 uri = form.mediaImageUri?.toString(),
-                onClick = { imagePicker.launch("image/*") }
+                onClick = { imagePicker() }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
