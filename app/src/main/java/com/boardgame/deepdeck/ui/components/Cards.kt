@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.boardgame.deepdeck.R
 import com.boardgame.deepdeck.data.model.CardLevel
+import com.boardgame.deepdeck.ui.model.CardFaceMedia
 import com.boardgame.deepdeck.ui.theme.DeepTalkPalette
 import com.boardgame.deepdeck.ui.theme.DeepTalkShapes
 import com.boardgame.deepdeck.ui.theme.DeepTalkTheme
@@ -149,6 +150,8 @@ fun Modifier.cardFace(
 
 /**
  * Question side of a card: level pill, Fraunces question, optional footer.
+ * [media] adds the side's assets: a full-bleed background, the first inline image / video
+ * above the text, and chips for audio / links / extra media.
  * Reusable by gameplay (agent B) for the swipe stack.
  */
 @Composable
@@ -160,24 +163,50 @@ fun QuestionCardFace(
     overline: String? = null,
     footer: (@Composable () -> Unit)? = null,
     shape: Shape = DeepTalkShapes.xl,
+    media: CardFaceMedia? = null,
 ) {
     val colors = DeepTalkTheme.colors
-    Column(
-        modifier = modifier
-            .cardFace(level.color, shape)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        OverlinePill(text = overline ?: level.label(), color = level.color, icon = level.icon)
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-            Text(
-                text = text,
-                style = textStyle,
-                color = colors.textPrimary,
-                overflow = TextOverflow.Ellipsis
-            )
+    val visual = media?.inline?.leadVisual()
+    val chips = media?.inline.orEmpty().filter { it !== visual }
+    Box(modifier.cardFace(level.color, shape)) {
+        media?.background?.let { CardMediaBackground(it) }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            OverlinePill(text = overline ?: level.label(), color = level.color, icon = level.icon)
+            if (visual != null) {
+                Spacer(Modifier.height(12.dp))
+                CardInlineVisual(visual, Modifier.weight(1f).fillMaxWidth())
+                if (text.isNotBlank()) {
+                    Spacer(Modifier.height(12.dp))
+                    // Text shares the face with the media, so keep it compact.
+                    Text(
+                        text = text,
+                        style = if (textStyle.fontSize.isSp && textStyle.fontSize > DeepTalkTheme.type.displaySmall.fontSize) DeepTalkTheme.type.displaySmall else textStyle,
+                        color = colors.textPrimary,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            } else {
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                    Text(
+                        text = text,
+                        style = textStyle,
+                        color = colors.textPrimary,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            if (chips.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                CardMediaChips(chips, Modifier.fillMaxWidth())
+            }
+            footer?.invoke()
         }
-        footer?.invoke()
     }
 }
 

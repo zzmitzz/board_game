@@ -166,7 +166,7 @@ fun LanguageSelectScreen(
 }
 
 @Composable
-private fun LanguageRow(item: LanguageItem, isSelected: Boolean, onClick: () -> Unit) {
+internal fun LanguageRow(item: LanguageItem, isSelected: Boolean, onClick: () -> Unit) {
     val colors = DeepTalkTheme.colors
     Row(
         modifier = Modifier

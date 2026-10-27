@@ -243,6 +243,8 @@
     <string name="vibe_drinking">Nhậu</string>
     <string name="vibe_love">Tình yêu</string>
     <!-- Existing keys that had no Vietnamese yet (used by the reworked game screens) -->
+    <string name="setup_card_language">Ngôn ngữ thẻ</string>
+    <string name="setup_card_language_desc">Câu hỏi sẽ được hiển thị bằng ngôn ngữ này</string>
     <string name="house_rules">Luật chơi</string>
     <string name="start_game">Bắt đầu</string>
     <string name="speed_mode">Chế độ tốc độ</string>
@@ -336,4 +338,45 @@
     <string name="search_results">KẾT QUẢ TÌM KIẾM</string>
     <string name="play_time_label">THỜI GIAN CHƠI</string>
     <string name="game_pack_premium">Gói này giờ đã là Premium. Premium sắp ra mắt, hãy chọn một gói miễn phí cho tối nay nhé.</string>
+    <!-- Khoảnh khắc (ảnh / video / ghi âm, chỉ lưu trên thiết bị) -->
+    <string name="capture_moments">Ghi lại khoảnh khắc</string>
+    <string name="capture_moments_desc">Ảnh, video &amp; ghi âm — chỉ lưu trên điện thoại này</string>
+    <string name="rule_capture_short">Khoảnh khắc</string>
+    <string name="capture_moment">Ghi lại khoảnh khắc</string>
+    <string name="capture_moment_sheet_desc">Chỉ lưu trên điện thoại này, gắn với lá bài hiện tại.</string>
+    <string name="moment_photo">Ảnh</string>
+    <string name="moment_photo_desc">Chụp lại biểu cảm</string>
+    <string name="moment_video">Video</string>
+    <string name="moment_video_desc">Quay lại thử thách</string>
+    <string name="moment_voice">Ghi âm</string>
+    <string name="moment_voice_desc">Tối đa 2 phút</string>
+    <string name="moment_saved">Đã lưu khoảnh khắc</string>
+    <string name="moment_capture_failed">Không lưu được khoảnh khắc này</string>
+    <string name="no_camera_app">Không tìm thấy ứng dụng máy ảnh trên điện thoại</string>
+    <string name="voice_clip_title">Đoạn ghi âm</string>
+    <string name="voice_ready">Nhấn ghi âm khi bạn sẵn sàng</string>
+    <string name="voice_recording">Đang ghi âm…</string>
+    <string name="voice_max_length">Tối đa %1$s</string>
+    <string name="voice_record">Ghi âm</string>
+    <string name="voice_stop_save">Dừng &amp; lưu</string>
+    <string name="voice_recorder_error">Không thể bắt đầu ghi âm</string>
+    <string name="mic_permission_needed">Cần quyền truy cập micro để ghi âm.</string>
+    <string name="mic_permission_blocked">DeepTalk đang bị chặn quyền micro. Hãy cho phép trong Cài đặt.</string>
+    <string name="you_memories">Kỷ niệm</string>
+    <plurals name="moments_count">
+        <item quantity="other">%1$d khoảnh khắc</item>
+    </plurals>
+    <string name="moments_gallery_subtitle">Ảnh, video &amp; ghi âm từ các ván chơi. Chỉ lưu trên điện thoại này.</string>
+    <string name="moments_empty_title">Chưa có khoảnh khắc nào</string>
+    <string name="moments_empty_message">Bật “Ghi lại khoảnh khắc” trong Luật chơi, rồi nhấn biểu tượng máy ảnh khi đang chơi.</string>
+    <string name="moment_delete_title">Xóa khoảnh khắc này?</string>
+    <string name="moment_delete_message">Tệp sẽ bị xóa khỏi điện thoại này. Không thể hoàn tác.</string>
+    <string name="moment_missing_title">Không tìm thấy khoảnh khắc</string>
+    <string name="moment_missing_message">Tệp này không còn trên điện thoại.</string>
+    <string name="moment_playback_error">Không thể phát tệp này.</string>
+    <string name="moment_play">Phát</string>
+    <string name="moment_pause">Tạm dừng</string>
+    <string name="share_moment">Chia sẻ khoảnh khắc</string>
+    <string name="delete_moment">Xóa khoảnh khắc</string>
+    <string name="moment_tile_desc">%1$s, %2$s</string>
 </resources>

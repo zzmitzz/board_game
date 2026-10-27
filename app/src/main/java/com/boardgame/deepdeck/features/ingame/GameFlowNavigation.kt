@@ -16,6 +16,7 @@ import com.boardgame.deepdeck.features.gamesetup.GameSetupScreenStateful
 import com.boardgame.deepdeck.features.gamesetup.GameSetupVM
 import com.boardgame.deepdeck.features.home.HomeRoute
 import com.boardgame.deepdeck.features.ingame.screen.ActiveGameScreenStateful
+import com.boardgame.deepdeck.features.moments.openMoment
 import com.boardgame.deepdeck.navigation.RootRoute
 import com.boardgame.deepdeck.navigation.TopLevelTab
 import com.boardgame.deepdeck.navigation.navigateToTab
@@ -101,7 +102,8 @@ fun NavGraphBuilder.gameFlowNavigationEntry(navController: NavController) {
                     if (!navController.popBackStack<GameFlowRoute.Setup>(inclusive = false)) {
                         navController.navigate(GameFlowRoute.Setup)
                     }
-                }
+                },
+                onOpenMoment = { navController.openMoment(it) }
             )
         }
     }

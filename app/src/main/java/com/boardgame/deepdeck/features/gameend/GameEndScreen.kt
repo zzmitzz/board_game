@@ -59,12 +59,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.boardgame.deepdeck.R
+import com.boardgame.deepdeck.data.local.entity.MomentEntity
 import com.boardgame.deepdeck.data.model.CardLevel
 import com.boardgame.deepdeck.features.ingame.InGameUiEffect
 import com.boardgame.deepdeck.features.ingame.InGameVM
 import com.boardgame.deepdeck.features.ingame.engine.GameSummary
 import com.boardgame.deepdeck.features.ingame.engine.LeaderboardEntry
 import com.boardgame.deepdeck.features.ingame.engine.PlayerAward
+import com.boardgame.deepdeck.features.moments.MomentThumbnail
 import com.boardgame.deepdeck.ui.app.LocalSnackbarHostState
 import com.boardgame.deepdeck.ui.components.EmptyState
 import com.boardgame.deepdeck.ui.components.GhostButton
@@ -96,8 +98,10 @@ fun GameEndScreen(
     vm: InGameVM,
     onHomeClick: () -> Unit,
     onPlayAgainClick: () -> Unit,
+    onOpenMoment: (String) -> Unit = {},
 ) {
     val summary by vm.summary.collectAsStateWithLifecycle()
+    val moments by vm.sessionMoments.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbar = LocalSnackbarHostState.current
 
@@ -146,6 +150,8 @@ fun GameEndScreen(
     GameEndContent(
         summary = current,
         cardOfTheNightSaved = cardSaved,
+        moments = moments,
+        onOpenMoment = onOpenMoment,
         onHome = onHomeClick,
         onPlayAgain = onPlayAgainClick,
         onShareRecap = vm::shareRecap,
@@ -158,6 +164,8 @@ fun GameEndScreen(
 private fun GameEndContent(
     summary: GameSummary,
     cardOfTheNightSaved: Boolean,
+    moments: List<MomentEntity>,
+    onOpenMoment: (String) -> Unit,
     onHome: () -> Unit,
     onPlayAgain: () -> Unit,
     onShareRecap: () -> Unit,
@@ -290,6 +298,32 @@ private fun GameEndContent(
                                     }
                                 }
                             )
+                        }
+                    }
+                }
+                // Photos / videos / voice clips captured during this game.
+                if (moments.isNotEmpty()) {
+                    item(key = "moments-header") {
+                        SectionHeader(
+                            title = stringResource(R.string.captured_moments),
+                            subtitle = pluralStringResource(R.plurals.moments_count, moments.size, moments.size),
+                            modifier = Modifier.padding(start = Spacing.gutter, end = Spacing.gutter, top = Spacing.xl, bottom = Spacing.sm)
+                        )
+                    }
+                    item(key = "moments") {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = Spacing.gutter),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(moments, key = { it.id }) { moment ->
+                                MomentThumbnail(
+                                    moment = moment,
+                                    onClick = { onOpenMoment(moment.id) },
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                        .height(150.dp)
+                                )
+                            }
                         }
                     }
                 }

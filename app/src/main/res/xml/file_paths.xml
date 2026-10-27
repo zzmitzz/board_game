@@ -2,4 +2,6 @@
 <paths>
     <!-- Rendered share images (cards, recaps). -->
     <cache-path name="shared" path="shared/" />
+    <!-- Captured moments: camera app output + sharing. -->
+    <files-path name="moments" path="moments/" />
 </paths>

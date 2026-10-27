@@ -98,6 +98,7 @@ fun TonightCard(
                         ),
                         overline = stringResource(R.string.tonight_card_title),
                         modifier = Modifier.fillMaxSize(),
+                        media = card.media,
                         footer = card.packTitle?.let { title ->
                             {
                                 Text(

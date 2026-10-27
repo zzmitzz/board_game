@@ -5,6 +5,7 @@ import com.boardgame.deepdeck.data.local.BoardGameDatabase
 import com.boardgame.deepdeck.data.local.dao.GameResultDao
 import com.boardgame.deepdeck.data.local.dao.LocalCardDao
 import com.boardgame.deepdeck.data.local.dao.LocalPackDao
+import com.boardgame.deepdeck.data.local.dao.MomentDao
 import com.boardgame.deepdeck.data.local.dao.SavedCardDao
 import dagger.Module
 import dagger.Provides
@@ -37,4 +38,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideSavedCardDao(db: BoardGameDatabase): SavedCardDao = db.savedCardDao()
+
+    @Provides
+    @Singleton
+    fun provideMomentDao(db: BoardGameDatabase): MomentDao = db.momentDao()
 }

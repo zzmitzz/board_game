@@ -99,6 +99,8 @@
     <string name="pack_cards_count">%1$d cards</string>
     <string name="heat_level_format">Heat Level: %1$d / 5</string>
     <string name="start_game">Start Game</string>
+    <string name="setup_card_language">Card language</string>
+    <string name="setup_card_language_desc">Questions are dealt in this language</string>
     <string name="house_rules">House Rules</string>
     <string name="record_dares">Record Dares</string>
     <string name="capture_best_moments">Capture the best moments</string>
@@ -340,4 +342,46 @@
     <string name="vibe_drinking">Drinking</string>
     <string name="vibe_love">Love</string>
     <string name="game_pack_premium">This pack is now Premium. Premium is coming soon, pick a free pack for tonight.</string>
+    <!-- Captured moments (photo / video / voice, stored on this device only) -->
+    <string name="capture_moments">Capture moments</string>
+    <string name="capture_moments_desc">Photos, videos &amp; voice clips — saved only on this phone</string>
+    <string name="rule_capture_short">Moments</string>
+    <string name="capture_moment">Capture a moment</string>
+    <string name="capture_moment_sheet_desc">Saved only on this phone, linked to this card.</string>
+    <string name="moment_photo">Photo</string>
+    <string name="moment_photo_desc">Snap the reaction</string>
+    <string name="moment_video">Video</string>
+    <string name="moment_video_desc">Film the dare</string>
+    <string name="moment_voice">Voice</string>
+    <string name="moment_voice_desc">Up to 2 minutes</string>
+    <string name="moment_saved">Moment saved</string>
+    <string name="moment_capture_failed">Couldn\'t save that moment</string>
+    <string name="no_camera_app">No camera app found on this phone</string>
+    <string name="voice_clip_title">Voice clip</string>
+    <string name="voice_ready">Tap record when you\'re ready</string>
+    <string name="voice_recording">Recording…</string>
+    <string name="voice_max_length">Max %1$s</string>
+    <string name="voice_record">Record</string>
+    <string name="voice_stop_save">Stop &amp; save</string>
+    <string name="voice_recorder_error">Couldn\'t start recording</string>
+    <string name="mic_permission_needed">Microphone access is needed to record voice clips.</string>
+    <string name="mic_permission_blocked">The microphone is blocked for DeepTalk. Allow it in Settings.</string>
+    <string name="you_memories">Memories</string>
+    <plurals name="moments_count">
+        <item quantity="one">%1$d moment</item>
+        <item quantity="other">%1$d moments</item>
+    </plurals>
+    <string name="moments_gallery_subtitle">Photos, videos &amp; voice clips from your games. Saved only on this phone.</string>
+    <string name="moments_empty_title">No moments yet</string>
+    <string name="moments_empty_message">Turn on Capture moments in House Rules, then tap the camera while you play.</string>
+    <string name="moment_delete_title">Delete this moment?</string>
+    <string name="moment_delete_message">The file will be removed from this phone. This can\'t be undone.</string>
+    <string name="moment_missing_title">Moment not found</string>
+    <string name="moment_missing_message">Its file is no longer on this phone.</string>
+    <string name="moment_playback_error">This file can\'t be played.</string>
+    <string name="moment_play">Play</string>
+    <string name="moment_pause">Pause</string>
+    <string name="share_moment">Share moment</string>
+    <string name="delete_moment">Delete moment</string>
+    <string name="moment_tile_desc">%1$s, %2$s</string>
 </resources>

@@ -15,5 +15,7 @@ data class GameResult(
     val packID: String,
     val packName: String,
     val timeStamp: Long,
-    val gameScore: Map<GamePlayer, GamePlayerScore>
+    val gameScore: Map<GamePlayer, GamePlayerScore>,
+    /** Links the result to the moments captured during that game (`moment.sessionId`). */
+    val sessionId: String? = null,
 )

@@ -17,8 +17,8 @@ android {
         applicationId = "com.boardgame.deepdeck"
         minSdk = 25
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -84,6 +84,10 @@ dependencies {
 
 
     implementation("io.coil-kt:coil-compose:2.7.0")
+    // Captured-moment video thumbnails
+    implementation("io.coil-kt:coil-video:2.7.0")
+    // Card video / audio assets
+    implementation("androidx.media3:media3-exoplayer:1.11.1")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")

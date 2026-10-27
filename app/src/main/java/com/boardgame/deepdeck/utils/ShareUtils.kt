@@ -42,6 +42,23 @@ fun Context.shareImage(uri: Uri?, text: String? = null, chooserTitle: String? = 
     }
 }
 
+/** Shares a local file (content:// from the app FileProvider, e.g. a captured moment). */
+fun Context.shareFile(uri: Uri, mimeType: String, chooserTitle: String? = null) {
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = mimeType
+        putExtra(Intent.EXTRA_STREAM, uri)
+        clipData = android.content.ClipData.newRawUri(null, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    try {
+        startActivity(
+            Intent.createChooser(send, chooserTitle)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        )
+    } catch (_: ActivityNotFoundException) {
+    }
+}
+
 /** Opens the Play Store listing (market:// first, web fallback). */
 fun Context.openPlayStoreListing() {
     val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))

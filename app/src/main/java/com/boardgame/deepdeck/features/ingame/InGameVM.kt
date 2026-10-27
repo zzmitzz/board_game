@@ -2,6 +2,7 @@ package com.boardgame.deepdeck.features.ingame
 
 import android.content.Context
 import android.net.Uri
+import android.os.SystemClock
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
@@ -10,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.boardgame.deepdeck.R
 import com.boardgame.deepdeck.data.local.GameResultRepository
 import com.boardgame.deepdeck.data.local.entity.GameResult
+import com.boardgame.deepdeck.data.local.entity.MomentEntity
+import com.boardgame.deepdeck.data.local.entity.MomentType
 import com.boardgame.deepdeck.data.local.entity.SavedCardEntity
 import com.boardgame.deepdeck.data.model.CardLevel
 import com.boardgame.deepdeck.data.model.GameSessionCreate
@@ -17,6 +20,7 @@ import com.boardgame.deepdeck.data.prefs.AppSettingsRepository
 import com.boardgame.deepdeck.data.prefs.DeviceIdRepository
 import com.boardgame.deepdeck.data.repository.BoardGameRepository
 import com.boardgame.deepdeck.data.repository.CardReaction
+import com.boardgame.deepdeck.data.repository.MomentRepository
 import com.boardgame.deepdeck.data.repository.SavedCardRepository
 import com.boardgame.deepdeck.di.CustomPackLocally
 import com.boardgame.deepdeck.features.ingame.engine.Advance
@@ -26,6 +30,8 @@ import com.boardgame.deepdeck.features.ingame.engine.GameEngine
 import com.boardgame.deepdeck.features.ingame.engine.GameSummary
 import com.boardgame.deepdeck.features.ingame.model.GameConfig
 import com.boardgame.deepdeck.features.ingame.model.GamePlayerScore
+import com.boardgame.deepdeck.features.moments.MAX_VOICE_MS
+import com.boardgame.deepdeck.features.moments.VoiceRecorder
 import com.boardgame.deepdeck.ui.model.CardDetail
 import com.boardgame.deepdeck.ui.model.GamePlayer
 import com.boardgame.deepdeck.utils.ListSound
@@ -38,12 +44,16 @@ import com.boardgame.deepdeck.work.SessionUploadWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -54,9 +64,17 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import retrofit2.HttpException
 
@@ -84,6 +102,8 @@ sealed interface InGameUiState {
         val soundOn: Boolean = true,
         val hapticsOn: Boolean = true,
         val isCustomPack: Boolean,
+        /** "Capture moments" house rule: shows the in-game camera button. */
+        val captureMoments: Boolean = false,
     ) : InGameUiState {
         val player: GamePlayer get() = players[playerIndex]
         val level: CardLevel get() = CardLevel.from(card.category)
@@ -102,6 +122,18 @@ sealed interface InGameUiEffect {
     data class Share(val uri: Uri?, val fallbackText: String) : InGameUiEffect
 }
 
+/** A capture in flight (camera app / recorder open), kept in [SavedStateHandle] across process death. */
+@Serializable
+private data class PendingMoment(
+    val id: String,
+    val type: String,
+    val path: String,
+    val sessionId: String,
+    val cardText: String?,
+    val playerName: String?,
+    val packTitle: String?,
+)
+
 /**
  * One game session, scoped to the game-flow nav graph (Setup → Play → End share it).
  * Replaces the old global `GameSettingConfigCurrentSession` + `GamePlayerManager` pair; the
@@ -118,6 +150,7 @@ class InGameVM @Inject constructor(
     private val savedCardRepository: SavedCardRepository,
     private val deviceIdRepository: DeviceIdRepository,
     private val shareImageRenderer: ShareImageRenderer,
+    private val momentRepository: MomentRepository,
     private val json: Json,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -149,7 +182,26 @@ class InGameVM @Inject constructor(
     private var timeUpSent = false
     private var foreground = true
 
+    /** Current game session (links moments to the saved result); new on every [start]. */
+    private val sessionId = MutableStateFlow(savedStateHandle.get<String>(KEY_SESSION))
+
+    /** Moments captured during this session, newest first (End screen). */
+    val sessionMoments: StateFlow<List<MomentEntity>> = sessionId
+        .flatMapLatest { id -> if (id == null) flowOf(emptyList()) else momentRepository.observeSession(id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val voiceRecorder = VoiceRecorder(context)
+    private var voiceJob: Job? = null
+    private val voiceLock = Mutex()
+
+    /** `elapsedRealtime` when the current voice clip started; null = not recording. */
+    private val _recordingSince = MutableStateFlow<Long?>(null)
+    val recordingSince: StateFlow<Long?> = _recordingSince.asStateFlow()
+
     init {
+        // A voice clip can't outlive its process: drop one that was cut off by process death.
+        if (pendingMoment()?.type == MomentType.AUDIO.name) finishCapture(success = false)
+
         settingsRepository.settings
             .onEach { s -> updatePlaying { it.copy(soundOn = s.soundEnabled, hapticsOn = s.hapticsEnabled) } }
             .launchIn(viewModelScope)
@@ -171,6 +223,7 @@ class InGameVM @Inject constructor(
         savedStateHandle[KEY_PACK] = packId
         savedStateHandle[KEY_CUSTOM] = isCustomPack
         savedStateHandle[KEY_CONFIG] = json.encodeToString(GameConfig.serializer(), config)
+        newSession()
         load(packId, isCustomPack, config)
     }
 
@@ -185,7 +238,16 @@ class InGameVM @Inject constructor(
             _uiState.value = InGameUiState.Error(R.string.game_session_lost)
             return
         }
+        if (sessionId.value == null) newSession()
         load(savedStateHandle[KEY_PACK] ?: "", savedStateHandle[KEY_CUSTOM] ?: false, restored)
+    }
+
+    private fun newSession() {
+        val id = UUID.randomUUID().toString()
+        savedStateHandle[KEY_SESSION] = id
+        sessionId.value = id
+        // No capture can be in flight between games: sweep files a killed capture left behind.
+        if (pendingMoment() == null) viewModelScope.launch { momentRepository.deleteOrphanFiles() }
     }
 
     fun retry() {
@@ -205,8 +267,8 @@ class InGameVM @Inject constructor(
         loadJob = viewModelScope.launch {
             try {
                 val repository = if (isCustomPack) localRepository else remoteRepository
-                // One request for the whole deck, already in the card language (no per-card translate).
-                cardLanguage = if (isCustomPack) "" else settingsRepository.cardLanguage()
+                // One request for the whole deck, in the language picked on Setup (no per-card translate).
+                cardLanguage = if (isCustomPack) "" else config.cardLanguage
                 val titleAsync = async { runCatching { repository.getPackById(packId)?.titleCard }.getOrNull() }
                 val cards = repository.getCardsByPackId(packId, cardLanguage.ifBlank { "en" })
                     .filter { it.id.isNotBlank() && it.description.isNotBlank() }
@@ -236,6 +298,7 @@ class InGameVM @Inject constructor(
                     soundOn = settings.soundEnabled,
                     hapticsOn = settings.hapticsEnabled,
                     isCustomPack = isCustomPack,
+                    captureMoments = config.captureMoments,
                 )
                 resetTurnTimer()
                 startTicker()
@@ -471,7 +534,8 @@ class InGameVM @Inject constructor(
                         packID = packId,
                         packName = title,
                         timeStamp = System.currentTimeMillis(),
-                        gameScore = scores
+                        gameScore = scores,
+                        sessionId = sessionId.value,
                     )
                 )
             }.onFailure { Log.w(TAG, "save result failed: ${it.message}") }
@@ -555,6 +619,129 @@ class InGameVM @Inject constructor(
     fun isCardSaved(cardId: String) = savedCardRepository.observeIsSaved(cardId)
 
     // -----------------------------------------------------------------------
+    // Captured moments (photo / video via the camera app, voice via VoiceRecorder)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Reserves a file for a photo/video of the current turn and returns its content:// for the
+     * camera app (null when no game is running). File work runs on IO; the outcome goes to
+     * [finishCapture].
+     */
+    suspend fun beginCapture(type: MomentType): Uri? {
+        val pending = newPending(type) ?: return null
+        return withContext(Dispatchers.IO) { runCatching { momentRepository.uriOf(pending.path) } }
+            .onFailure {
+                Log.w(TAG, "no uri for moment: ${it.message}")
+                finishCapture(success = false)
+            }
+            .getOrNull()
+    }
+
+    /** Camera / recorder outcome: keeps the file as a moment when [success], otherwise deletes it. */
+    fun finishCapture(success: Boolean, durationMs: Long? = null) {
+        val pending = pendingMoment() ?: return
+        savedStateHandle.remove<String>(KEY_PENDING_MOMENT)
+        viewModelScope.launch {
+            if (!success) {
+                momentRepository.discard(pending.path)
+                return@launch
+            }
+            val saved = momentRepository.save(
+                MomentEntity(
+                    id = pending.id,
+                    sessionId = pending.sessionId,
+                    type = pending.type,
+                    filePath = pending.path,
+                    durationMs = durationMs,
+                    cardText = pending.cardText,
+                    playerName = pending.playerName,
+                    packTitle = pending.packTitle,
+                )
+            )
+            _uiEffect.tryEmit(InGameUiEffect.ShowMessage(if (saved) R.string.moment_saved else R.string.moment_capture_failed))
+        }
+    }
+
+    /**
+     * Starts a voice clip for the current turn (RECORD_AUDIO must be granted). Recorder calls
+     * (prepare / stop / metadata) run on IO; [voiceLock] keeps start/stop in call order so a
+     * quick Cancel can't overtake a start that is still preparing.
+     */
+    fun startVoice() {
+        viewModelScope.launch {
+            voiceLock.withLock {
+                if (voiceRecorder.isRecording) return@withLock
+                val pending = newPending(MomentType.AUDIO) ?: return@withLock
+                val started = withContext(NonCancellable + Dispatchers.IO) {
+                    voiceRecorder.start(momentRepository.fileOf(pending.path))
+                }
+                if (!currentCoroutineContext().isActive) {
+                    // The VM was cleared while the mic was opening.
+                    withContext(NonCancellable + Dispatchers.IO) { voiceRecorder.release() }
+                    finishCapture(success = false)
+                    return@withLock
+                }
+                if (!started) {
+                    finishCapture(success = false)
+                    _uiEffect.tryEmit(InGameUiEffect.ShowMessage(R.string.voice_recorder_error))
+                    return@withLock
+                }
+                _recordingSince.value = SystemClock.elapsedRealtime()
+                voiceJob = viewModelScope.launch {
+                    delay(MAX_VOICE_MS)
+                    voiceJob = null
+                    stopVoice(save = true)
+                }
+            }
+        }
+    }
+
+    /** Stops the clip: [save] keeps it as a moment, otherwise it is deleted. */
+    fun stopVoice(save: Boolean) {
+        voiceJob?.cancel()
+        voiceJob = null
+        viewModelScope.launch {
+            voiceLock.withLock {
+                val wasRecording = voiceRecorder.isRecording
+                val duration = withContext(NonCancellable + Dispatchers.IO) {
+                    if (save) voiceRecorder.stop() else {
+                        voiceRecorder.release()
+                        null
+                    }
+                }
+                if (wasRecording) _recordingSince.value = null
+                if (pendingMoment()?.type == MomentType.AUDIO.name) {
+                    finishCapture(success = duration != null, durationMs = duration)
+                }
+            }
+        }
+    }
+
+    /** Snapshots the turn's context (main), reserves the file (IO) and stores the pending capture. */
+    private suspend fun newPending(type: MomentType): PendingMoment? {
+        val state = _uiState.value as? InGameUiState.Playing ?: return null
+        val session = sessionId.value ?: return null
+        val (id, path) = withContext(Dispatchers.IO) { momentRepository.newTarget(type) }
+        // A previous capture whose result never came back (e.g. camera app killed) is dropped.
+        finishCapture(success = false)
+        val pending = PendingMoment(
+            id = id,
+            type = type.name,
+            path = path,
+            sessionId = session,
+            cardText = state.card.description.takeIf { it.isNotBlank() },
+            playerName = state.player.name,
+            packTitle = state.packTitle,
+        )
+        savedStateHandle[KEY_PENDING_MOMENT] = json.encodeToString(PendingMoment.serializer(), pending)
+        return pending
+    }
+
+    private fun pendingMoment(): PendingMoment? = savedStateHandle.get<String>(KEY_PENDING_MOMENT)?.let { raw ->
+        runCatching { json.decodeFromString(PendingMoment.serializer(), raw) }.getOrNull()
+    }
+
+    // -----------------------------------------------------------------------
 
     private fun updatePlaying(transform: (InGameUiState.Playing) -> InGameUiState.Playing) {
         _uiState.update { if (it is InGameUiState.Playing) transform(it) else it }
@@ -572,6 +759,10 @@ class InGameVM @Inject constructor(
 
     override fun onCleared() {
         stopTicker()
+        if (voiceRecorder.isRecording) {
+            voiceRecorder.release()
+            pendingMoment()?.let { File(context.filesDir, it.path).delete() }
+        }
         super.onCleared()
     }
 
@@ -581,5 +772,7 @@ class InGameVM @Inject constructor(
         const val KEY_CONFIG = "game_config"
         const val KEY_PACK = "game_pack_id"
         const val KEY_CUSTOM = "game_is_custom"
+        const val KEY_SESSION = "game_session_id"
+        const val KEY_PENDING_MOMENT = "game_pending_moment"
     }
 }

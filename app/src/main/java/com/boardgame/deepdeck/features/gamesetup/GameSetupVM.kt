@@ -5,6 +5,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.boardgame.deepdeck.R
+import com.boardgame.deepdeck.data.prefs.AppSettingsRepository
 import com.boardgame.deepdeck.data.prefs.RememberedSetup
 import com.boardgame.deepdeck.data.prefs.RosterRepository
 import com.boardgame.deepdeck.data.repository.BoardGameRepository
@@ -12,6 +13,7 @@ import com.boardgame.deepdeck.di.CustomPackLocally
 import com.boardgame.deepdeck.features.ingame.model.GameConfig
 import com.boardgame.deepdeck.ui.model.GamePlayer
 import com.boardgame.deepdeck.ui.model.PlayerPalette
+import com.boardgame.deepdeck.utils.listLanguageSupport
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,6 +37,9 @@ data class GameSetupUiState(
     val penaltyEnabled: Boolean = false,
     val penaltyText: String = "",
     val passThePhone: Boolean = false,
+    /** Language code sent as `?lang=` when the deck is fetched. */
+    val cardLanguage: String = "en",
+    val captureMoments: Boolean = true,
 ) {
     val canAddPlayer: Boolean get() = players.size < GameConfig.MAX_PLAYERS
     val canStart: Boolean get() = players.size >= GameConfig.MIN_PLAYERS
@@ -53,6 +58,7 @@ sealed interface GameSetupUiEffect {
 class GameSetupVM @Inject constructor(
     @ApplicationContext private val context: Context,
     private val rosterRepository: RosterRepository,
+    private val settingsRepository: AppSettingsRepository,
     private val remoteRepository: BoardGameRepository,
     @CustomPackLocally private val localRepository: BoardGameRepository,
 ) : ViewModel() {
@@ -67,6 +73,8 @@ class GameSetupVM @Inject constructor(
     private var nextPlayerId = 1
     /** The user touched the pass-the-phone switch → stop following the 3+ players default. */
     private var passPhoneTouched = false
+    /** The user picked a card language here → remember it instead of following the app setting. */
+    private var cardLanguageTouched = false
 
     /** Idempotent: loads the remembered roster/rules and the pack title once per graph. */
     fun bind(packId: String, isCustomPack: Boolean, quickPlay: Boolean) {
@@ -77,6 +85,10 @@ class GameSetupVM @Inject constructor(
             val remembered = rosterRepository.load()
             nextPlayerId = maxOf(remembered.nextPlayerId, (remembered.players.maxOfOrNull { it.id } ?: 0) + 1)
             passPhoneTouched = remembered.passThePhone != null
+            cardLanguageTouched = remembered.cardLanguage != null
+            val cardLanguage = remembered.cardLanguage
+                ?.takeIf { code -> listLanguageSupport.any { it.code == code } }
+                ?: settingsRepository.cardLanguage()
             _uiState.update {
                 it.copy(
                     isLoading = false,
@@ -87,6 +99,8 @@ class GameSetupVM @Inject constructor(
                     penaltyText = remembered.penaltyText.ifBlank { context.getString(R.string.penalty_default) },
                     passThePhone = remembered.passThePhone
                         ?: GameConfig.defaultPassThePhone(remembered.players.size),
+                    cardLanguage = cardLanguage,
+                    captureMoments = remembered.captureMoments,
                 )
             }
         }
@@ -161,6 +175,14 @@ class GameSetupVM @Inject constructor(
         _uiState.update { it.copy(passThePhone = enabled) }
     }
 
+    fun setCaptureMoments(enabled: Boolean) = _uiState.update { it.copy(captureMoments = enabled) }
+
+    fun setCardLanguage(code: String) {
+        if (listLanguageSupport.none { it.code == code }) return
+        cardLanguageTouched = true
+        _uiState.update { it.copy(cardLanguage = code) }
+    }
+
     // --- Start ---------------------------------------------------------------
 
     fun onStartClick() {
@@ -180,6 +202,8 @@ class GameSetupVM @Inject constructor(
             penaltyEnabled = penaltyOn,
             penaltyText = state.penaltyText.trim(),
             passThePhone = state.passThePhone,
+            cardLanguage = state.cardLanguage,
+            captureMoments = state.captureMoments,
         )
         _uiState.update { it.copy(players = players) }
         viewModelScope.launch {
@@ -191,6 +215,8 @@ class GameSetupVM @Inject constructor(
                     penaltyEnabled = state.penaltyEnabled,
                     penaltyText = state.penaltyText,
                     passThePhone = if (passPhoneTouched) state.passThePhone else null,
+                    cardLanguage = if (cardLanguageTouched) state.cardLanguage else null,
+                    captureMoments = state.captureMoments,
                     nextPlayerId = nextPlayerId,
                 )
             )

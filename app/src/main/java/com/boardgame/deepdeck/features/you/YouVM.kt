@@ -8,6 +8,7 @@ import com.boardgame.deepdeck.data.prefs.AppSettings
 import com.boardgame.deepdeck.data.prefs.AppSettingsRepository
 import com.boardgame.deepdeck.data.prefs.DailyStreakRepository
 import com.boardgame.deepdeck.data.prefs.StreakState
+import com.boardgame.deepdeck.data.repository.MomentRepository
 import com.boardgame.deepdeck.work.EveningReminder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,6 +24,7 @@ data class YouUiState(
     val settings: AppSettings = AppSettings(),
     val streak: StreakState = StreakState(),
     val gamesPlayed: Int = 0,
+    val momentsCount: Int = 0,
 )
 
 @HiltViewModel
@@ -31,6 +33,7 @@ class YouVM @Inject constructor(
     private val settingsRepository: AppSettingsRepository,
     streakRepository: DailyStreakRepository,
     private val gameResultRepository: GameResultRepository,
+    momentRepository: MomentRepository,
 ) : ViewModel() {
 
     private val gamesPlayed = MutableStateFlow(0)
@@ -38,8 +41,9 @@ class YouVM @Inject constructor(
     val uiState: StateFlow<YouUiState> = combine(
         settingsRepository.settings,
         streakRepository.streak,
-        gamesPlayed
-    ) { settings, streak, games -> YouUiState(settings, streak, games) }
+        gamesPlayed,
+        momentRepository.observeCount(),
+    ) { settings, streak, games, moments -> YouUiState(settings, streak, games, moments) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), YouUiState())
 
     fun refreshStats() {

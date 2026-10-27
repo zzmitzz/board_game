@@ -17,6 +17,10 @@ data class GameConfig(
     val penaltyText: String = "",
     /** Full-screen "Pass to <name>" interstitial before each turn. */
     val passThePhone: Boolean = true,
+    /** `?lang=` for `/packs/cards`, picked on Setup. Ignored for custom (local) packs. */
+    val cardLanguage: String = "en",
+    /** In-game camera button: photos, videos & voice clips stored on this device only. */
+    val captureMoments: Boolean = true,
 ) {
     companion object {
         const val MIN_PLAYERS = 2

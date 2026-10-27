@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>DeepTalk screenshot frame 1080x1920</title>
+<!--
+  Marketing frame for one Play Store phone screenshot (1080x1920, 9:16).
+  Driven by window.SHOT from _shot.js (render.ps1 writes it from captions.json)
+  or, when opened by hand, by URL params:
+    shot   path to the raw screenshot, relative to this file
+    title  first headline line          em     highlighted second line
+    sub    small line under the headline theme  violet | sunset | rose | sky | ember | gold
+    crop   px to trim from the top of the raw screenshot (status bar), default 0
+-->
+<style>
+  @font-face { font-family: "Fraunces"; src: url("../../02-graphics/source/fonts/Fraunces.ttf"); font-weight: 100 900; }
+  @font-face { font-family: "Jakarta"; src: url("../../02-graphics/source/fonts/PlusJakartaSans-VariableFont_wght.ttf"); font-weight: 200 800; }
+  :root { --text: #F6F0FF; --text2: #CDBFE6; --a: #B57BFF; --b: #8B3DFF; --glow: rgba(139,61,255,.55); --em1: #E2C8FF; --em2: #B57BFF; }
+  body[data-theme="sunset"] { --a: #FFB84D; --b: #FF5C8A; --glow: rgba(255,122,89,.50); --em1: #FFD59A; --em2: #FF7A8F; }
+  body[data-theme="rose"]   { --a: #FF5C8A; --b: #B57BFF; --glow: rgba(255,92,138,.50); --em1: #FFB3C9; --em2: #FF5C8A; }
+  body[data-theme="sky"]    { --a: #6FC3FF; --b: #5B5BFF; --glow: rgba(91,91,255,.55); --em1: #BDE4FF; --em2: #6FC3FF; }
+  body[data-theme="ember"]  { --a: #FFC76B; --b: #FF7A59; --glow: rgba(255,122,89,.50); --em1: #FFE0A8; --em2: #FF9A6B; }
+  body[data-theme="gold"]   { --a: #FFC76B; --b: #B57BFF; --glow: rgba(255,199,107,.40); --em1: #FFE7B8; --em2: #FFC76B; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #0B0612; }
+  .canvas { position: relative; width: 1080px; height: 1920px; overflow: hidden; font-family: "Jakarta", sans-serif; color: var(--text);
+    background:
+      radial-gradient(900px 700px at 50% 62%, var(--glow), transparent 70%),
+      radial-gradient(700px 500px at 100% 0%, color-mix(in srgb, var(--a) 22%, transparent), transparent 70%),
+      linear-gradient(180deg, #170D26 0%, #0B0612 55%, #10081C 100%); }
+  .rings { position: absolute; left: 50%; top: 1150px; width: 1700px; height: 1700px; transform: translate(-50%, -50%); border-radius: 50%;
+    background: repeating-radial-gradient(circle, rgba(255,255,255,.05) 0 2px, transparent 2px 110px); }
+  .head { position: absolute; top: 120px; left: 80px; right: 80px; text-align: center; }
+  h1 { font-family: "Fraunces", serif; font-weight: 600; font-size: 92px; line-height: 1.02; letter-spacing: -.015em; font-variation-settings: "opsz" 144, "SOFT" 50; }
+  h1 em { display: block; font-style: italic; padding: 0 8px 8px;
+    background: linear-gradient(90deg, var(--em1), var(--em2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin-top: 26px; font-size: 38px; line-height: 1.35; color: var(--text2); font-weight: 500; }
+  .phone { position: absolute; left: 50%; top: 640px; width: 860px; transform: translateX(-50%);
+    border-radius: 84px; padding: 16px; background: linear-gradient(160deg, #3A2A55, #120A1E 40%, #2A1D40);
+    box-shadow: 0 0 0 2px rgba(255,255,255,.10), 0 60px 140px rgba(0,0,0,.65), 0 0 160px var(--glow); }
+  .screen { position: relative; border-radius: 70px; overflow: hidden; height: 1700px; background: #0B0612; }
+  .screen img { display: block; width: 100%; }
+  .cam { position: absolute; top: 26px; left: 50%; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: #05030A; box-shadow: 0 0 0 3px rgba(255,255,255,.06); z-index: 2; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="rings"></div>
+  <div class="head">
+    <h1><span id="title"></span><em id="em"></em></h1>
+    <div class="sub" id="sub"></div>
+  </div>
+  <div class="phone"><div class="screen"><div class="cam"></div><img id="shot" alt=""></div></div>
+</div>
+<script src="_shot.js"></script>
+<script>
+  const s = window.SHOT || {};
+  const p = new URLSearchParams(location.search);
+  const q = { get: k => (s[k] != null ? String(s[k]) : p.get(k)) };
+  document.body.dataset.theme = q.get("theme") || "violet";
+  document.getElementById("title").textContent = q.get("title") || "Skip small talk.";
+  document.getElementById("em").textContent = q.get("em") || "Get closer.";
+  document.getElementById("sub").textContent = q.get("sub") || "";
+  const img = document.getElementById("shot");
+  img.src = q.get("shot") || "../drafts/01-home-tonight-card.png";
+  const crop = parseInt(q.get("crop") || "0", 10);
+  if (crop > 0) {
+    // Cropped status bar: drop the fake camera and leave breathing room above the app content.
+    document.querySelector(".cam").style.display = "none";
+    document.querySelector(".screen").style.paddingTop = "64px";
+    document.querySelector(".screen").style.background = "#1C1230";
+  }
+  img.onload = () => { img.style.marginTop = -(crop * img.clientWidth / img.naturalWidth) + "px"; };
+</script>
+</body>
+</html>

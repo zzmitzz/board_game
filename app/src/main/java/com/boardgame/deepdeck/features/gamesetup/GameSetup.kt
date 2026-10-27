@@ -12,6 +12,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -37,16 +39,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,6 +70,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -73,6 +82,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.boardgame.deepdeck.R
+import com.boardgame.deepdeck.features.language.LanguageRow
 import com.boardgame.deepdeck.features.ingame.model.GameConfig
 import com.boardgame.deepdeck.ui.app.LocalSnackbarHostState
 import com.boardgame.deepdeck.ui.components.GlassIconButton
@@ -90,6 +100,7 @@ import com.boardgame.deepdeck.ui.model.GamePlayer
 import com.boardgame.deepdeck.ui.theme.DeepTalkShapes
 import com.boardgame.deepdeck.ui.theme.DeepTalkTheme
 import com.boardgame.deepdeck.ui.theme.Spacing
+import com.boardgame.deepdeck.utils.listLanguageSupport
 
 /**
  * Stateful Setup lobby. [onStartGame] receives the validated [GameConfig]; the nav entry
@@ -136,6 +147,8 @@ fun GameSetupScreenStateful(
         onPenaltyChange = vm::setPenaltyEnabled,
         onPenaltyTextChange = vm::setPenaltyText,
         onPassPhoneChange = vm::setPassThePhone,
+        onCardLanguageChange = vm::setCardLanguage,
+        onCaptureMomentsChange = vm::setCaptureMoments,
         onStart = {
             val now = System.currentTimeMillis()
             if (now - lastStartClick > START_DEBOUNCE_MS) {
@@ -162,11 +175,14 @@ fun GameSetupScreen(
     onPenaltyChange: (Boolean) -> Unit = {},
     onPenaltyTextChange: (String) -> Unit = {},
     onPassPhoneChange: (Boolean) -> Unit = {},
+    onCardLanguageChange: (String) -> Unit = {},
+    onCaptureMomentsChange: (Boolean) -> Unit = {},
     onStart: () -> Unit = {},
 ) {
     val colors = DeepTalkTheme.colors
     val tracker = rememberEntranceTracker()
     var rulesExpanded by rememberSaveable { mutableStateOf(false) }
+    var showLanguageSheet by rememberSaveable { mutableStateOf(false) }
 
     GlowBackground {
         Column(
@@ -260,8 +276,15 @@ fun GameSetupScreen(
                         )
                     }
                 }
+                // Custom packs are local cards with no translations, so there is nothing to pick.
+                if (!uiState.isCustomPack) {
+                    item(key = "card-language") {
+                        Spacer(Modifier.height(Spacing.sm))
+                        CardLanguageRow(code = uiState.cardLanguage, onClick = { showLanguageSheet = true })
+                    }
+                }
                 item(key = "rules") {
-                    Spacer(Modifier.height(Spacing.sm))
+                    if (uiState.isCustomPack) Spacer(Modifier.height(Spacing.sm))
                     HouseRulesCard(
                         uiState = uiState,
                         expanded = rulesExpanded,
@@ -271,6 +294,7 @@ fun GameSetupScreen(
                         onPenaltyChange = onPenaltyChange,
                         onPenaltyTextChange = onPenaltyTextChange,
                         onPassPhoneChange = onPassPhoneChange,
+                        onCaptureMomentsChange = onCaptureMomentsChange,
                     )
                 }
                 item(key = "bottom-space") { Spacer(Modifier.height(Spacing.xl)) }
@@ -297,6 +321,75 @@ fun GameSetupScreen(
                     .padding(horizontal = Spacing.gutter, vertical = Spacing.md)
                     .then(if (pulse != 1f) Modifier.graphicsLayer { scaleX = pulse; scaleY = pulse } else Modifier)
             )
+        }
+    }
+
+    if (showLanguageSheet) {
+        CardLanguageSheet(
+            selected = uiState.cardLanguage,
+            onSelect = {
+                onCardLanguageChange(it)
+                showLanguageSheet = false
+            },
+            onDismiss = { showLanguageSheet = false },
+        )
+    }
+}
+
+@Composable
+private fun CardLanguageRow(code: String, onClick: () -> Unit) {
+    val colors = DeepTalkTheme.colors
+    val language = listLanguageSupport.find { it.code == code } ?: listLanguageSupport.first()
+    GlassSurface(Modifier.fillMaxWidth(), tint = colors.sky) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .pressable(pressedScale = 0.98f, role = Role.Button, onClick = onClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Rounded.Translate, contentDescription = null, tint = colors.sky)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.setup_card_language), style = DeepTalkTheme.type.title, color = colors.textPrimary)
+                Text(stringResource(R.string.setup_card_language_desc), style = DeepTalkTheme.type.label, color = colors.textSecondary)
+            }
+            Image(
+                painter = painterResource(language.flagRes),
+                contentDescription = null,
+                modifier = Modifier.width(24.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(language.fullName, style = DeepTalkTheme.type.label, color = colors.textSecondary)
+            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = colors.textSecondary)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CardLanguageSheet(selected: String, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
+    val colors = DeepTalkTheme.colors
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = colors.bgElevated,
+        contentColor = colors.textPrimary,
+    ) {
+        Text(
+            stringResource(R.string.setup_card_language),
+            style = DeepTalkTheme.type.headline,
+            color = colors.textPrimary,
+            modifier = Modifier.padding(horizontal = Spacing.gutter)
+        )
+        LazyColumn(
+            contentPadding = PaddingValues(horizontal = Spacing.gutter, vertical = Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            modifier = Modifier.navigationBarsPadding()
+        ) {
+            items(listLanguageSupport, key = { it.code }) { item ->
+                LanguageRow(item, item.code == selected) { onSelect(item.code) }
+            }
         }
     }
 }
@@ -404,6 +497,7 @@ private fun HouseRulesCard(
     onPenaltyChange: (Boolean) -> Unit,
     onPenaltyTextChange: (String) -> Unit,
     onPassPhoneChange: (Boolean) -> Unit,
+    onCaptureMomentsChange: (Boolean) -> Unit,
 ) {
     val colors = DeepTalkTheme.colors
     val chevron by animateFloatAsState(if (expanded) 180f else 0f, label = "rulesChevron")
@@ -412,6 +506,7 @@ private fun HouseRulesCard(
         stringResource(R.string.rule_pass_phone_short).takeIf { uiState.passThePhone },
         stringResource(R.string.rule_speed_short).takeIf { uiState.speedMode },
         stringResource(R.string.rule_penalty_short).takeIf { uiState.penaltyEnabled },
+        stringResource(R.string.rule_capture_short).takeIf { uiState.captureMoments },
     ).joinToString(" · ")
 
     GlassSurface(
@@ -517,6 +612,14 @@ private fun HouseRulesCard(
                             )
                         }
                     }
+                    ToggleRow(
+                        icon = Icons.Rounded.PhotoCamera,
+                        title = stringResource(R.string.capture_moments),
+                        description = stringResource(R.string.capture_moments_desc),
+                        checked = uiState.captureMoments,
+                        onCheckedChange = onCaptureMomentsChange,
+                        accent = colors.mint
+                    )
                 }
             }
         }

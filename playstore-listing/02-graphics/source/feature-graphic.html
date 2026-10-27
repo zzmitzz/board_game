@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>DeepTalk feature graphic 1024x500</title>
+<style>
+  @font-face { font-family: "Fraunces"; src: url("fonts/Fraunces.ttf"); font-weight: 100 900; }
+  @font-face { font-family: "Jakarta"; src: url("fonts/PlusJakartaSans-VariableFont_wght.ttf"); font-weight: 200 800; }
+  :root {
+    --bg: #0B0612; --surface: #1D1430; --text: #F6F0FF; --text2: #B8A7D3;
+    --brand: #B57BFF; --brand-strong: #8B3DFF; --rose: #FF5C8A; --sky: #6FC3FF; --gold: #FFC76B; --mint: #5EE6B0; --ember: #FF7A59;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1024px; height: 500px; overflow: hidden; background: var(--bg); }
+  .canvas {
+    position: relative; width: 1024px; height: 500px; overflow: hidden;
+    background:
+      radial-gradient(520px 380px at 82% 38%, rgba(139,61,255,.55), transparent 70%),
+      radial-gradient(360px 260px at 60% 110%, rgba(255,92,138,.28), transparent 70%),
+      radial-gradient(420px 300px at -5% -10%, rgba(111,195,255,.16), transparent 70%),
+      linear-gradient(135deg, #140C1F 0%, #0B0612 60%, #120823 100%);
+    font-family: "Jakarta", sans-serif; color: var(--text);
+  }
+  /* soft concentric rings like the Tonight's card */
+  .rings { position: absolute; right: -140px; top: -170px; width: 760px; height: 760px; border-radius: 50%;
+    background: repeating-radial-gradient(circle, rgba(255,255,255,.045) 0 1px, transparent 1px 58px); }
+  .left { position: absolute; left: 64px; top: 0; bottom: 0; width: 470px; display: flex; flex-direction: column; justify-content: center; }
+  .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+  .brand img { width: 64px; height: 64px; border-radius: 16px; box-shadow: 0 8px 28px rgba(139,61,255,.55); }
+  .brand span { font-weight: 700; font-size: 20px; letter-spacing: .18em; color: var(--brand); }
+  h1 { font-family: "Fraunces", serif; font-weight: 600; font-size: 56px; line-height: 1.04; letter-spacing: -.01em; font-variation-settings: "opsz" 144, "SOFT" 50; }
+  h1 em { font-style: italic; background: linear-gradient(90deg, #D4B0FF, var(--brand) 40%, var(--rose)); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: 4px; }
+  .sub { margin-top: 18px; font-size: 20px; line-height: 1.4; color: var(--text2); font-weight: 500; }
+  .chips { display: flex; gap: 10px; margin-top: 24px; }
+  .chip { font-size: 14px; font-weight: 700; letter-spacing: .12em; padding: 8px 14px; border-radius: 999px; border: 1.5px solid; text-transform: uppercase; }
+  .c1 { color: var(--sky); border-color: rgba(111,195,255,.5); background: rgba(111,195,255,.08); }
+  .c2 { color: #C9A6FF; border-color: rgba(155,107,255,.55); background: rgba(155,107,255,.10); }
+  .c3 { color: var(--rose); border-color: rgba(255,92,138,.5); background: rgba(255,92,138,.08); }
+
+  .card { position: absolute; width: 250px; height: 340px; border-radius: 28px; padding: 26px 24px;
+    background: linear-gradient(180deg, #2A1648, #140A22); border: 1.5px solid rgba(255,255,255,.10);
+    box-shadow: 0 30px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08); display: flex; flex-direction: column; }
+  .card .lvl { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: .14em; padding: 6px 11px; border-radius: 999px; border: 1.5px solid; }
+  .card p { font-family: "Fraunces", serif; font-weight: 600; font-size: 25px; line-height: 1.22; margin-top: 26px; font-variation-settings: "opsz" 72; }
+  .card .pack { margin-top: auto; font-size: 14px; color: var(--text2); font-weight: 500; }
+  .back1 { left: 548px; top: 100px; transform: rotate(-11deg); opacity: .92; }
+  .back2 { left: 756px; top: 96px; transform: rotate(10deg); opacity: .92; }
+  .front { left: 650px; top: 70px; width: 272px; height: 364px; transform: rotate(-1deg);
+    background: linear-gradient(160deg, #B57BFF 0%, #8B3DFF 55%, #5B22C9 100%); border-color: rgba(255,255,255,.28);
+    box-shadow: 0 34px 80px rgba(139,61,255,.55), 0 10px 30px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.35); }
+  .front .lvl { color: #fff; border-color: rgba(255,255,255,.6); background: rgba(255,255,255,.14); }
+  .front p { font-size: 27px; color: #fff; }
+  .front .pack { color: rgba(255,255,255,.8); }
+  .spark { position: absolute; color: var(--gold); font-size: 22px; text-shadow: 0 0 14px rgba(255,199,107,.8); }
+  .heat { position: absolute; left: 666px; top: 446px; width: 240px; height: 8px; border-radius: 8px;
+    background: linear-gradient(90deg, var(--mint), var(--gold), var(--ember), #FF3D6E); box-shadow: 0 0 20px rgba(255,122,89,.45); }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="rings"></div>
+
+  <div class="left">
+    <div class="brand"><img src="icon.png" alt=""><span>DEEPTALK</span></div>
+    <h1>Skip small talk.<br><em>Get closer.</em></h1>
+    <div class="sub">Conversation cards for friends, couples &amp; parties.</div>
+    <div class="chips"><span class="chip c1">Icebreaker</span><span class="chip c2">Deep</span><span class="chip c3">Intimate</span></div>
+  </div>
+
+  <div class="card back1">
+    <span class="lvl c1">ICEBREAKER</span>
+    <p>What's a skill you'd love to master overnight?</p>
+    <span class="pack">New Start</span>
+  </div>
+  <div class="card back2">
+    <span class="lvl c3">INTIMATE</span>
+    <p>When did you first know you liked me?</p>
+    <span class="pack">Deep Romance</span>
+  </div>
+  <div class="card front">
+    <span class="lvl">✦ TONIGHT'S CARD</span>
+    <p>Where would you be right now if you hadn't chosen your current path?</p>
+    <span class="pack">Conversation Starters</span>
+  </div>
+
+  <div class="heat"></div>
+  <span class="spark" style="left:604px;top:52px">✦</span>
+  <span class="spark" style="left:968px;top:420px;font-size:16px">✦</span>
+  <span class="spark" style="left:548px;top:400px;font-size:14px;color:#D4B0FF">✦</span>
+</div>
+</body>
+</html>

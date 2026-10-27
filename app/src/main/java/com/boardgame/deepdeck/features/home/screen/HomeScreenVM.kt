@@ -9,6 +9,7 @@ import com.boardgame.deepdeck.data.local.entity.SavedCardEntity
 import com.boardgame.deepdeck.data.model.CardLevel
 import com.boardgame.deepdeck.data.model.DailyCardResponse
 import com.boardgame.deepdeck.data.model.HomeSectionDto
+import com.boardgame.deepdeck.data.model.assetsUIModel
 import com.boardgame.deepdeck.data.prefs.AppSettingsRepository
 import com.boardgame.deepdeck.data.prefs.DailyStreakRepository
 import com.boardgame.deepdeck.data.prefs.RosterRepository
@@ -20,6 +21,8 @@ import com.boardgame.deepdeck.data.repository.SavedCardRepository
 import com.boardgame.deepdeck.features.home.model.VibeUi
 import com.boardgame.deepdeck.features.home.model.toVibeUi
 import com.boardgame.deepdeck.ui.model.GamePlayer
+import com.boardgame.deepdeck.ui.model.CardFaceMedia
+import com.boardgame.deepdeck.ui.model.faceMedia
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -50,6 +53,7 @@ data class DailyCardUi(
     val packId: String?,
     val packTitle: String?,
     val date: String?,
+    val media: CardFaceMedia = CardFaceMedia(),
 )
 
 /** "Play again with Anna, Minh +2 · Late Night". */
@@ -303,7 +307,9 @@ class HomeScreenVM @Inject constructor(
     private fun DailyCardResponse.toUi(): DailyCardUi? {
         val c = card ?: return null
         val id = c.id ?: return null
-        val text = c.frontSide?.takeIf { it.isNotBlank() } ?: return null
+        val media = c.assetsUIModel().faceMedia(back = false)
+        // Media-only cards have no front text but still have something to reveal.
+        val text = c.frontSide?.takeIf { it.isNotBlank() } ?: if (media.isEmpty) return null else ""
         return DailyCardUi(
             cardId = id,
             text = text,
@@ -311,7 +317,8 @@ class HomeScreenVM @Inject constructor(
             level = CardLevel.from(c.level),
             packId = pack?.id ?: c.packId,
             packTitle = pack?.title,
-            date = date
+            date = date,
+            media = media
         )
     }
 }

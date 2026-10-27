@@ -5,11 +5,16 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
+        <!-- Captured moments stay on this phone only. -->
+        <exclude domain="file" path="moments/" />
         <!-- TODO: Use <include> and <exclude> to control what is backed up.
         <include .../>
         <exclude .../>
         -->
     </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="moments/" />
+    </device-transfer>
     <!--
     <device-transfer>
         <include .../>

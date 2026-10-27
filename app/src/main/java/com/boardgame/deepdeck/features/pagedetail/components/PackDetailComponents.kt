@@ -49,6 +49,7 @@ import com.boardgame.deepdeck.ui.components.color
 import com.boardgame.deepdeck.ui.components.glow
 import com.boardgame.deepdeck.ui.components.pressable
 import com.boardgame.deepdeck.ui.model.CardDetail
+import com.boardgame.deepdeck.ui.model.frontMedia
 import com.boardgame.deepdeck.ui.theme.DeepTalkShapes
 import com.boardgame.deepdeck.ui.theme.DeepTalkTheme
 import com.boardgame.deepdeck.ui.theme.Motion
@@ -175,7 +176,8 @@ fun SampleCardFan(
                                     level = level,
                                     textStyle = DeepTalkTheme.type.displaySmall.copy(
                                         fontSize = DeepTalkTheme.type.title.fontSize
-                                    )
+                                    ),
+                                    media = card.frontMedia()
                                 )
                             }
                         )

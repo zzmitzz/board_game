@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import com.boardgame.deepdeck.features.home.homeNavigationEntry
 import com.boardgame.deepdeck.features.ingame.gameFlowNavigationEntry
 import com.boardgame.deepdeck.features.language.languageNavigationEntry
+import com.boardgame.deepdeck.features.moments.momentsNavigationEntry
 import com.boardgame.deepdeck.features.library.libraryTabEntry
 import com.boardgame.deepdeck.features.mylibrary.myLibraryNavigationEntry
 import com.boardgame.deepdeck.features.you.youTabEntry
@@ -72,6 +73,7 @@ fun NavigationGraph(
                 languageNavigationEntry(navController)
                 myLibraryNavigationEntry(navController)
                 gameFlowNavigationEntry(navController)
+                momentsNavigationEntry(navController)
             }
         }
     }

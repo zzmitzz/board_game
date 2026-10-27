@@ -1,0 +1,27 @@
+﻿[
+  {
+    "out": "sample-01-tonights-card",
+    "shot": "../drafts/01-home-tonight-card.png",
+    "theme": "violet",
+    "title": "Skip small talk.",
+    "em": "Get closer.",
+    "sub": "A new question to spark every night"
+  },
+  {
+    "out": "sample-02-pick-your-vibe",
+    "shot": "../drafts/02-vibe-picker.png",
+    "theme": "sunset",
+    "title": "Who are you",
+    "em": "with tonight?",
+    "sub": "Friends, dates, parties or new groups"
+  },
+  {
+    "out": "sample-03-decks",
+    "shot": "../drafts/03-pack-collections.png",
+    "theme": "rose",
+    "title": "Decks for",
+    "em": "every mood.",
+    "sub": "Icebreakers, deep talks & date nights",
+    "crop": 165
+  }
+]

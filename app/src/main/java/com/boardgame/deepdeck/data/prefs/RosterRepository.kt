@@ -22,6 +22,9 @@ data class RememberedSetup(
     val penaltyText: String = "",
     /** null = follow the default (on for 3+ players). */
     val passThePhone: Boolean? = null,
+    /** Card language picked on Setup; null = follow the app's card-language setting. */
+    val cardLanguage: String? = null,
+    val captureMoments: Boolean = true,
     /** Next player id to hand out; ids are never reused. */
     val nextPlayerId: Int = 1,
 )

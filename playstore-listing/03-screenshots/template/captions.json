@@ -1,0 +1,10 @@
+[
+  { "out": "01-tonights-card",  "shot": "../raw/01-home-tonight-card.png", "theme": "violet", "title": "Skip small talk.",          "em": "Get closer.",           "sub": "A new question to spark every night" },
+  { "out": "02-pick-your-vibe", "shot": "../raw/02-vibe-picker.png",       "theme": "sunset", "title": "Who are you",               "em": "with tonight?",         "sub": "Friends, dates, parties or new groups" },
+  { "out": "03-swipe-to-play",  "shot": "../raw/03-in-game-card.png",      "theme": "rose",   "title": "Flip a card.",              "em": "Say it out loud.",      "sub": "Swipe right to answer, left to forfeit" },
+  { "out": "04-heat-level",     "shot": "../raw/04-pack-heat-level.png",   "theme": "ember",  "title": "Choose how",                "em": "hot it gets.",          "sub": "From Mild icebreakers to Blazing" },
+  { "out": "05-wrapped",        "shot": "../raw/05-wrapped-awards.png",    "theme": "gold",   "title": "See who",                   "em": "won the night.",        "sub": "Awards, leaderboard & card of the night" },
+  { "out": "06-pass-the-phone", "shot": "../raw/06-pass-the-phone.png",    "theme": "sky",    "title": "2 to 20 players.",          "em": "Your house rules.",     "sub": "Pass the phone, speed mode, penalties" },
+  { "out": "07-decks",          "shot": "../raw/07-pack-collections.png",  "theme": "violet", "title": "Decks for",                 "em": "every mood.",           "sub": "Icebreakers, deep talks & date nights" },
+  { "out": "08-your-own-deck",  "shot": "../raw/08-create-pack.png",       "theme": "sky",    "title": "Make your",                 "em": "own deck.",             "sub": "Write the questions only your crew would ask" }
+]

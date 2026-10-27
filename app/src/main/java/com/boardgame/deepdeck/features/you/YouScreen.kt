@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.NotificationsNone
+import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Style
@@ -56,6 +57,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.boardgame.deepdeck.BuildConfig
 import com.boardgame.deepdeck.R
+import com.boardgame.deepdeck.features.moments.MomentsRoute
 import com.boardgame.deepdeck.navigation.RootRoute
 import com.boardgame.deepdeck.ui.app.LocalBottomBarPadding
 import com.boardgame.deepdeck.ui.components.GlassSurface
@@ -77,7 +79,10 @@ private const val PRIVACY_URL = "https://uncertain-amethyst-pvpmhpc5.edgeone.dev
 
 fun NavGraphBuilder.youTabEntry(navController: NavHostController) {
     composable<RootRoute.You> {
-        YouScreen(onLanguageClick = { navController.navigate(RootRoute.Language) })
+        YouScreen(
+            onLanguageClick = { navController.navigate(RootRoute.Language) },
+            onMomentsClick = { navController.navigate(MomentsRoute.Gallery) { launchSingleTop = true } },
+        )
     }
 }
 
@@ -85,6 +90,7 @@ fun NavGraphBuilder.youTabEntry(navController: NavHostController) {
 @Composable
 fun YouScreen(
     onLanguageClick: () -> Unit,
+    onMomentsClick: () -> Unit,
     vm: YouVM = hiltViewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
@@ -112,6 +118,7 @@ fun YouScreen(
     YouContent(
         state = state,
         onLanguageClick = onLanguageClick,
+        onMomentsClick = onMomentsClick,
         onSoundChange = { vm.setSound(it) },
         onHapticsChange = { vm.setHaptics(it) },
         onNotificationsChange = { enabled ->
@@ -127,6 +134,7 @@ fun YouScreen(
 private fun YouContent(
     state: YouUiState,
     onLanguageClick: () -> Unit,
+    onMomentsClick: () -> Unit,
     onSoundChange: (Boolean) -> Unit,
     onHapticsChange: (Boolean) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
@@ -161,8 +169,20 @@ private fun YouContent(
             item(key = "stats") {
                 StatsCard(state, Modifier.staggeredEntrance(0))
             }
+            item(key = "memories") {
+                SettingsGroup(stringResource(R.string.you_memories), Modifier.staggeredEntrance(1)) {
+                    SettingRow(
+                        icon = Icons.Rounded.PhotoLibrary,
+                        title = stringResource(R.string.captured_moments),
+                        subtitle = androidx.compose.ui.res.pluralStringResource(
+                            R.plurals.moments_count, state.momentsCount, state.momentsCount
+                        ),
+                        onClick = onMomentsClick
+                    )
+                }
+            }
             item(key = "prefs") {
-                SettingsGroup(stringResource(R.string.you_preferences), Modifier.staggeredEntrance(1)) {
+                SettingsGroup(stringResource(R.string.you_preferences), Modifier.staggeredEntrance(2)) {
                     SettingRow(
                         icon = Icons.Rounded.Translate,
                         title = stringResource(R.string.language),
@@ -201,7 +221,7 @@ private fun YouContent(
                 }
             }
             item(key = "about") {
-                SettingsGroup(stringResource(R.string.about), Modifier.staggeredEntrance(2)) {
+                SettingsGroup(stringResource(R.string.about), Modifier.staggeredEntrance(3)) {
                     SettingRow(Icons.Rounded.Star, stringResource(R.string.rate_us), null, onRate)
                     Divider()
                     SettingRow(Icons.Rounded.Description, stringResource(R.string.term_condition), null, onTerms)

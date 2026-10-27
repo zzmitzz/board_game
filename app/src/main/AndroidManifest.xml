@@ -7,6 +7,21 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Evening reminder (opt-in, requested at runtime on API 33+). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Voice moments (requested at runtime). No CAMERA permission on purpose: photos/videos go
+         through the camera app (ACTION_IMAGE/VIDEO_CAPTURE), which declaring CAMERA would block. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+    <!-- Package visibility (API 30+) for the camera apps that capture moments. -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.VIDEO_CAPTURE" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -42,7 +57,7 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.BoardGame" />
 
-        <!-- Share images (cards, recaps) rendered to cache/shared/. -->
+        <!-- Share images (cards, recaps) rendered to cache/shared/; captured moments in files/moments/. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

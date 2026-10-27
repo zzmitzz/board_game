@@ -35,6 +35,7 @@ import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.Sync
@@ -86,6 +87,7 @@ import com.boardgame.deepdeck.features.ingame.components.SwipeDirection
 import com.boardgame.deepdeck.features.ingame.components.rememberSwipeCardState
 import com.boardgame.deepdeck.features.ingame.components.timerRing
 import com.boardgame.deepdeck.features.ingame.model.GameConfig
+import com.boardgame.deepdeck.features.moments.MomentCaptureFlow
 import com.boardgame.deepdeck.ui.app.LocalSnackbarHostState
 import com.boardgame.deepdeck.ui.components.ErrorState
 import com.boardgame.deepdeck.ui.components.FlipCard
@@ -96,6 +98,8 @@ import com.boardgame.deepdeck.ui.components.LocalDeepTalkHaptics
 import com.boardgame.deepdeck.ui.components.OverlinePill
 import com.boardgame.deepdeck.ui.components.PlayerAvatar
 import com.boardgame.deepdeck.ui.components.QuestionCardFace
+import com.boardgame.deepdeck.ui.model.backMedia
+import com.boardgame.deepdeck.ui.model.frontMedia
 import com.boardgame.deepdeck.ui.components.SkeletonBox
 import com.boardgame.deepdeck.ui.components.ToggleRow
 import com.boardgame.deepdeck.ui.components.color
@@ -130,6 +134,9 @@ fun ActiveGameScreenStateful(
     var showPauseSheet by rememberSaveable { mutableStateOf(false) }
     var showCardMenu by rememberSaveable { mutableStateOf(false) }
     var showHint by rememberSaveable { mutableStateOf(false) }
+    var showCaptureSheet by rememberSaveable { mutableStateOf(false) }
+    /** Camera app, mic permission dialog or voice recorder open (reported by [MomentCaptureFlow]). */
+    var captureBusy by remember { mutableStateOf(false) }
     var roundBanner by remember { mutableIntStateOf(0) }
 
     val playing = uiState as? InGameUiState.Playing
@@ -143,8 +150,8 @@ fun ActiveGameScreenStateful(
         onStopOrDispose { vm.setForeground(false) }
     }
     // Pause the timer while any overlay is open.
-    LaunchedEffect(showExitDialog, showPauseSheet, showCardMenu, showHint) {
-        vm.setPaused(showExitDialog || showPauseSheet || showCardMenu || showHint)
+    LaunchedEffect(showExitDialog, showPauseSheet, showCardMenu, showHint, showCaptureSheet, captureBusy) {
+        vm.setPaused(showExitDialog || showPauseSheet || showCardMenu || showHint || showCaptureSheet || captureBusy)
     }
     LaunchedEffect(uiState) {
         if (uiState is InGameUiState.Finished) onFinished()
@@ -239,6 +246,7 @@ fun ActiveGameScreenStateful(
                     onPause = { showPauseSheet = true },
                     onToggleSave = vm::toggleSave,
                     onMenu = { showCardMenu = true },
+                    onCapture = if (state.captureMoments) ({ showCaptureSheet = true }) else null,
                     onComplete = { flingThenCommit(SwipeDirection.Right) },
                     onForfeit = { flingThenCommit(SwipeDirection.Left) },
                     onSkip = {
@@ -265,6 +273,14 @@ fun ActiveGameScreenStateful(
     }
 
     // --- Overlays -------------------------------------------------------------
+
+    // Always composed: the camera / permission results must find their launchers on return.
+    MomentCaptureFlow(
+        vm = vm,
+        showOptions = showCaptureSheet && playing != null,
+        onDismissOptions = { showCaptureSheet = false },
+        onBusyChange = { captureBusy = it },
+    )
 
     if (showExitDialog) {
         ExitGameDialog(
@@ -353,6 +369,8 @@ private fun PlayingContent(
     onPause: () -> Unit,
     onToggleSave: () -> Unit,
     onMenu: () -> Unit,
+    /** Opens the capture sheet; null when the "Capture moments" rule is off. */
+    onCapture: (() -> Unit)?,
     onComplete: () -> Unit,
     onForfeit: () -> Unit,
     onSkip: () -> Unit,
@@ -387,6 +405,10 @@ private fun PlayingContent(
                 )
                 Spacer(Modifier.height(4.dp))
                 RoundProgress(round = state.round, total = state.totalRounds)
+            }
+            onCapture?.let {
+                GlassIconButton(Icons.Rounded.PhotoCamera, stringResource(R.string.capture_moment), it, size = 40.dp)
+                Spacer(Modifier.width(8.dp))
             }
             GlassIconButton(
                 icon = if (state.isSaved) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
@@ -553,7 +575,8 @@ private fun GameCard(state: InGameUiState.Playing, flipped: Boolean, onHintClick
                 level = level,
                 modifier = Modifier.fillMaxSize(),
                 textStyle = cardTextStyle(state.card.description),
-                footer = footer
+                footer = footer,
+                media = state.card.frontMedia()
             )
         },
         back = {
@@ -563,7 +586,8 @@ private fun GameCard(state: InGameUiState.Playing, flipped: Boolean, onHintClick
                 modifier = Modifier.fillMaxSize(),
                 textStyle = cardTextStyle(state.card.backSide.orEmpty()),
                 overline = stringResource(R.string.card_flip_side),
-                footer = footer
+                footer = footer,
+                media = state.card.backMedia()
             )
         }
     )

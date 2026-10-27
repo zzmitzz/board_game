@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepTalk Store Preview</title>
+<style>
+  @font-face { font-family: "Jakarta"; src: url("02-graphics/source/fonts/PlusJakartaSans-VariableFont_wght.ttf"); font-weight: 200 800; }
+  @font-face { font-family: "Fraunces"; src: url("02-graphics/source/fonts/Fraunces.ttf"); font-weight: 100 900; }
+  :root { --bg: #0B0612; --panel: #140C1F; --line: rgba(255,255,255,.08); --text: #F6F0FF; --text2: #B8A7D3; --muted: #7C6B96; --brand: #B57BFF; --green: #5EE6B0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: "Jakarta", system-ui, sans-serif; line-height: 1.5; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 80px; }
+  .note { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .feature { width: 100%; border-radius: 20px; display: block; border: 1px solid var(--line); }
+  .head { display: flex; gap: 20px; align-items: center; margin: 28px 0 8px; flex-wrap: wrap; }
+  .head img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 10px 30px rgba(139,61,255,.45); }
+  h1 { font-family: "Fraunces", serif; font-weight: 600; font-size: clamp(26px, 4vw, 38px); line-height: 1.1; }
+  .dev { color: var(--brand); font-weight: 600; margin-top: 4px; }
+  .stats { display: flex; gap: 28px; margin: 22px 0; flex-wrap: wrap; }
+  .stats div { text-align: center; } .stats b { display: block; font-size: 16px; } .stats span { font-size: 12px; color: var(--muted); }
+  .install { display: inline-block; background: linear-gradient(90deg, #B57BFF, #8B3DFF); color: #1A0633; font-weight: 700; padding: 12px 56px; border-radius: 12px; }
+  .shots { display: flex; gap: 14px; overflow-x: auto; padding: 24px 0 12px; scroll-snap-type: x mandatory; }
+  .shots img { height: 420px; border-radius: 16px; scroll-snap-align: start; border: 1px solid var(--line); }
+  .shots .ph { height: 420px; aspect-ratio: 9/16; border-radius: 16px; border: 1.5px dashed rgba(181,123,255,.35); display: grid; place-items: center; text-align: center; padding: 16px; color: var(--muted); font-size: 13px; flex: none; }
+  h2 { font-size: 20px; margin: 32px 0 10px; display: flex; align-items: center; gap: 10px; }
+  .short { font-size: 17px; color: var(--text); margin-bottom: 14px; }
+  .full { white-space: pre-wrap; color: var(--text2); font-size: 15px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; max-height: 520px; overflow: auto; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: var(--text2); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; font-size: 14px; color: var(--text2); }
+  .card b { color: var(--text); display: block; margin-bottom: 4px; }
+  .warn { border-color: rgba(255,92,138,.45); } .warn b { color: #FF8FB0; }
+  code { font-size: 12px; color: var(--brand); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="note">Local preview of the Google Play listing. Open this file in a browser. The dashed placeholders fill in automatically once you render your screenshots into <code>03-screenshots/output-phone/</code>.</p>
+
+  <img class="feature" src="02-graphics/feature-graphic-1024x500.png" alt="Feature graphic">
+
+  <div class="head">
+    <img src="02-graphics/app-icon-512.png" alt="App icon">
+    <div>
+      <h1>DeepTalk: Icebreaker Card Game</h1>
+      <div class="dev">Mitz</div>
+    </div>
+  </div>
+  <div class="stats">
+    <div><b>Free</b><span>No ads</span></div>
+    <div><b>18+</b><span>Target age</span></div>
+    <div><b>Card</b><span>Game category</span></div>
+    <div><b>2–20</b><span>Players</span></div>
+  </div>
+  <span class="install">Install</span>
+
+  <div class="shots" id="shots"></div>
+
+  <h2>About this game</h2>
+  <p class="short">Question cards for friends, couples &amp; parties. Skip small talk, get closer. ✨</p>
+  <div class="full" id="full">Turn any night in into a night to remember. ✨
+
+DeepTalk is the conversation card game that gets friends, couples and new groups talking about the things that actually matter — and laughing a lot along the way. No awkward silences. No small talk. Just pass the phone, flip a card, and see where the conversation takes you.
+
+🃏 PICK YOUR VIBE
+Who are you with tonight? Choose a vibe and DeepTalk puts the right decks first:
+• Friends &amp; Close Friends — nostalgia, inside jokes and the stories you never told
+• New Start — icebreakers for new groups, classmates, coworkers and first meetings
+• Lover &amp; Deep Romance — questions that bring couples closer on date night
+• After Dark — bolder, spicier questions for grown-up nights (18+)
+
+🔥 CHOOSE THE HEAT
+Every deck has a Heat Level from Mild to Blazing, and every card is tagged Icebreaker, Deep or Intimate — so you always know how far the conversation will go. Start light, go deeper when the room is ready.
+
+🎉 PARTY-READY GAMEPLAY
+• Play with 2 to 20 players, each with their own avatar
+• Swipe right when you answer, swipe left to forfeit
+• Pass-the-phone mode keeps every card secret until the right player holds it
+• Optional 30-second speed mode for fast, chaotic rounds
+• Custom forfeit penalties — &quot;take a sip&quot;, &quot;do 10 push-ups&quot;, you decide
+• One free skip per round for the question you really can&#x27;t answer
+
+🏆 DEEPTALK WRAPPED
+When the game ends, see who won the night. Awards like Open Book, Mystery, Speedster and Brave Heart, a full leaderboard and the &quot;card of the night&quot; — ready to share with your group chat.
+
+🌙 TONIGHT&#x27;S CARD
+A fresh question every day. Reveal it, keep your streak alive, and get a gentle evening reminder (turn it off anytime).
+
+✍️ MAKE YOUR OWN DECK
+Write the questions only your crew would ask. Create custom packs with your own cards, cover images and hints — and play them anytime, even offline.
+
+❤️ SAVE THE BEST QUESTIONS
+Found a card you love? Save it to your Library or share it as a beautiful image.
+
+🌍 CARDS IN YOUR LANGUAGE
+Play in English or Tiếng Việt, and translate every card automatically into 13 languages — including Español, Français, Deutsch, Italiano, Português, Русский, Türkçe, हिन्दी, Bahasa Indonesia, 日本語 and 한국어.
+
+PERFECT FOR
+✔ Game nights and house parties
+✔ Date nights and couples&#x27; evenings
+✔ Road trips, camping and dinner parties
+✔ Team building and classroom icebreakers
+✔ Getting to know someone new — or your oldest friends even better
+
+No account. No sign-up. Open the app and start talking.
+
+Some decks include mature themes and drinking-game penalties and are meant for adults 18+. Please play responsibly.
+
+Download DeepTalk and start the conversation you&#x27;ve been waiting to have. 💬</div>
+  <div class="chips"><span class="chip">Party</span><span class="chip">Multiplayer</span><span class="chip">Casual</span><span class="chip">Offline</span><span class="chip">Stylized</span></div>
+
+  <h2>Data safety (summary)</h2>
+  <div class="grid">
+    <div class="card"><b>No data shared with third parties</b>Firebase acts as a service provider</div>
+    <div class="card"><b>Data collected</b>Device IDs · App interactions (analytics)</div>
+    <div class="card warn"><b>Encrypted in transit: not yet</b>Move the API to HTTPS first (checklist #4)</div>
+    <div class="card"><b>No account needed</b>Deletion requests by email</div>
+  </div>
+
+  <h2>Before you publish</h2>
+  <div class="grid">
+    <div class="card warn"><b>18 of 20 packs are empty</b>Only 85 cards exist on production</div>
+    <div class="card warn"><b>Release signed with debug key</b>Create an upload keystore</div>
+    <div class="card warn"><b>Privacy/Terms URLs return 404</b>Host 04-privacy-policy.html</div>
+    <div class="card warn"><b>API is plain HTTP</b>Data safety will show "not encrypted"</div>
+  </div>
+  <p class="note" style="margin-top:14px">Full details: <code>06-release/pre-launch-checklist.md</code></p>
+</div>
+<script>
+  const names = ["01-tonights-card","02-pick-your-vibe","03-swipe-to-play","04-heat-level","05-wrapped","06-pass-the-phone","07-decks","08-your-own-deck"];
+  const samples = {"01-tonights-card":"sample-01-tonights-card","02-pick-your-vibe":"sample-02-pick-your-vibe","07-decks":"sample-03-decks"};
+  const box = document.getElementById("shots");
+  names.forEach(n => {
+    const img = new Image();
+    img.alt = n;
+    img.src = "03-screenshots/output-phone/" + n + ".png";
+    img.onerror = () => {
+      if (samples[n] && !img.dataset.fallback) { img.dataset.fallback = 1; img.src = "03-screenshots/output-phone/" + samples[n] + ".png"; return; }
+      const ph = document.createElement("div"); ph.className = "ph"; ph.textContent = n.replace(/^\d+-/, "").replace(/-/g, " ") + "\n(capture pending)";
+      img.replaceWith(ph);
+    };
+    box.appendChild(img);
+  });
+</script>
+</body>
+</html>
