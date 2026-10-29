@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.boardgame.deepdeck.R
 import com.boardgame.deepdeck.data.model.PacksPreview
 import com.boardgame.deepdeck.features.home.components.HomeHeader
+import com.boardgame.deepdeck.features.home.components.LiveCallCard
 import com.boardgame.deepdeck.features.home.components.MakeDeckCard
 import com.boardgame.deepdeck.features.home.components.QuickPlayStrip
 import com.boardgame.deepdeck.features.home.components.SectionBlock
@@ -63,6 +64,7 @@ fun HomeScreen(
     onPlayPack: (packId: String) -> Unit,
     onQuickPlay: (packId: String, isCustomPack: Boolean) -> Unit,
     onMakeDeckClick: () -> Unit,
+    onLiveCallClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -111,7 +113,8 @@ fun HomeScreen(
         onQuickPlay = {
             viewModel.prepareQuickPlay { onQuickPlay(it.packId, it.isCustomPack) }
         },
-        onMakeDeckClick = onMakeDeckClick
+        onMakeDeckClick = onMakeDeckClick,
+        onLiveCallClick = onLiveCallClick
     )
 }
 
@@ -131,6 +134,7 @@ internal fun HomeScreenContent(
     onPlayPack: (String) -> Unit = {},
     onQuickPlay: () -> Unit = {},
     onMakeDeckClick: () -> Unit = {},
+    onLiveCallClick: () -> Unit = {},
 ) {
     val colors = DeepTalkTheme.colors
     val bottomPadding = LocalBottomBarPadding.current
@@ -227,6 +231,12 @@ internal fun HomeScreenContent(
                                     modifier = Modifier.staggeredEntrance(3, tracker, "quickplay")
                                 )
                             }
+                        }
+                        item(key = "live-call") {
+                            LiveCallCard(
+                                onClick = onLiveCallClick,
+                                modifier = Modifier.staggeredEntrance(3, tracker, "live-call")
+                            )
                         }
                         items(uiState.sections, key = { "section-${it.id}" }) { section ->
                             SectionBlock(

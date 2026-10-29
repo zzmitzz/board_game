@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.boardgame.deepdeck.features.call.callNavigationEntry
 import com.boardgame.deepdeck.features.home.homeNavigationEntry
 import com.boardgame.deepdeck.features.ingame.gameFlowNavigationEntry
 import com.boardgame.deepdeck.features.language.languageNavigationEntry
@@ -74,6 +75,7 @@ fun NavigationGraph(
                 myLibraryNavigationEntry(navController)
                 gameFlowNavigationEntry(navController)
                 momentsNavigationEntry(navController)
+                callNavigationEntry(navController)
             }
         }
     }

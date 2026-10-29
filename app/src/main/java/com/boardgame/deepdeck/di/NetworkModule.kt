@@ -2,6 +2,7 @@ package com.boardgame.deepdeck.di
 
 import com.boardgame.deepdeck.BuildConfig
 import com.boardgame.deepdeck.data.remote.BoardGameEndpoint
+import com.boardgame.deepdeck.data.remote.CallEndpoint
 import com.boardgame.deepdeck.data.remote.HomeDataEndpoint
 import dagger.Module
 import dagger.Provides
@@ -80,4 +81,9 @@ object NetworkModule {
     @Singleton
     fun provideHomeDataAPI(retrofit: Retrofit): HomeDataEndpoint =
         retrofit.create(HomeDataEndpoint::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCallAPI(retrofit: Retrofit): CallEndpoint =
+        retrofit.create(CallEndpoint::class.java)
 }

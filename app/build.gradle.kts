@@ -117,6 +117,9 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.2")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 
+    // Live video call: WebRTC (org.webrtc, maintained build of Google's libwebrtc)
+    implementation("io.getstream:stream-webrtc-android:1.3.10")
+
     // Firebase SDK
     implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
     implementation("com.google.firebase:firebase-analytics")

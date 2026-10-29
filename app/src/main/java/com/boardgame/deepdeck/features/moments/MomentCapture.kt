@@ -144,6 +144,41 @@ fun MomentCaptureFlow(
         }
     }
 
+    // The manifest declares CAMERA (live calls), so the camera-app intents need it granted too.
+    var pendingCameraType by rememberSaveable { mutableStateOf<MomentType?>(null) }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        systemUiOpen = false
+        val type = pendingCameraType
+        pendingCameraType = null
+        if (granted && type != null) {
+            launchCamera(type)
+            return@rememberLauncherForActivityResult
+        }
+        val blocked = activity != null &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+        scope.launch {
+            if (blocked) {
+                val result = snackbar.showSnackbar(
+                    message = context.getString(R.string.camera_permission_blocked),
+                    actionLabel = context.getString(R.string.open_settings),
+                    duration = SnackbarDuration.Long
+                )
+                if (result == SnackbarResult.ActionPerformed) context.openAppDetailsSettings()
+            } else {
+                snackbar.showSnackbar(context.getString(R.string.camera_permission_needed))
+            }
+        }
+    }
+    val openCamera: (MomentType) -> Unit = { type ->
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launchCamera(type)
+        } else {
+            pendingCameraType = type
+            systemUiOpen = true
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         systemUiOpen = false
         if (granted) {
@@ -211,7 +246,7 @@ fun MomentCaptureFlow(
             CaptureOptionsContent(
                 onPick = { type ->
                     onDismissOptions()
-                    if (type == MomentType.AUDIO) openRecorder() else launchCamera(type)
+                    if (type == MomentType.AUDIO) openRecorder() else openCamera(type)
                 }
             )
         }

@@ -31,12 +31,15 @@ class SplashScreenActivity : AppCompatActivity() {
             // Onboarding is shown once; returning users go straight to the app.
             val target = if (hasSeenOnboarding()) MainActivity::class.java else OnBoardingActivity::class.java
             val intent = Intent(this@SplashScreenActivity, target)
+            // A deepdeck://call/<CODE> invite: MainActivity's NavHost opens it as a deep link.
+            if (target == MainActivity::class.java) intent.data = this@SplashScreenActivity.intent?.data
             startActivity(intent)
             finish()
         }
     }
 
-    private fun hasSeenOnboarding(): Boolean {
+
+        private fun hasSeenOnboarding(): Boolean {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getBoolean(KEY_ONBOARDING_DONE, false)
     }

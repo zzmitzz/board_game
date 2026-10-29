@@ -7,10 +7,19 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Evening reminder (opt-in, requested at runtime on API 33+). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Voice moments (requested at runtime). No CAMERA permission on purpose: photos/videos go
-         through the camera app (ACTION_IMAGE/VIDEO_CAPTURE), which declaring CAMERA would block. -->
+    <!-- Voice moments + live calls (requested at runtime). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Live video calls. Declaring CAMERA means the camera-app intents (photo/video moments) need it
+         granted too, so MomentCaptureFlow asks for it before launching them. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Call audio routing (speaker / earpiece, communication mode). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Keeps camera + mic running while the call is in the background (CallService). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <!-- Package visibility (API 30+) for the camera apps that capture moments. -->
@@ -44,6 +53,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Live call invite: deepdeck://call/<CODE> (forwarded to MainActivity's NavHost). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="deepdeck" android:host="call" />
+            </intent-filter>
         </activity>
 
         <activity
@@ -56,6 +72,12 @@
             android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.BoardGame" />
+
+        <!-- Ongoing-call notification; lets camera + mic keep working when the app is in the background. -->
+        <service
+            android:name=".features.call.CallService"
+            android:exported="false"
+            android:foregroundServiceType="camera|microphone" />
 
         <!-- Share images (cards, recaps) rendered to cache/shared/; captured moments in files/moments/. -->
         <provider

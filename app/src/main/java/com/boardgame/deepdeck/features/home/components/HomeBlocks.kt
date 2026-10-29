@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -233,6 +234,49 @@ fun QuickPlayStrip(
 }
 
 /** Footer: "Make your own deck" → Library › Custom packs. */
+/** "Talk live": a video call + chat room for playing with someone who is not in the room. */
+@Composable
+fun LiveCallCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = DeepTalkTheme.colors
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.gutter)
+            .glow(colors.rose, radius = 24.dp, alpha = 0.16f)
+            .clip(DeepTalkShapes.lg)
+            .background(
+                Brush.linearGradient(listOf(colors.rose.copy(alpha = 0.22f), colors.surface))
+            )
+            .border(1.dp, colors.rose.copy(alpha = 0.3f), DeepTalkShapes.lg)
+            .pressable(pressedScale = 0.98f, onClick = onClick)
+            .padding(18.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier
+                .size(48.dp)
+                .background(Brush.linearGradient(listOf(colors.rose, colors.brandStrong)), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Rounded.Videocam, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.call_entry_title),
+                style = DeepTalkTheme.type.displaySmall,
+                color = colors.textPrimary
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.call_entry_desc),
+                style = DeepTalkTheme.type.body,
+                color = colors.textSecondary
+            )
+        }
+    }
+}
+
 @Composable
 fun MakeDeckCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = DeepTalkTheme.colors

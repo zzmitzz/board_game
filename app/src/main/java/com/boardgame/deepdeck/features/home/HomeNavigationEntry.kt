@@ -10,6 +10,7 @@ import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.boardgame.deepdeck.data.model.PacksPreview
 import com.boardgame.deepdeck.data.model.tileImage
+import com.boardgame.deepdeck.features.call.CallRoute
 import com.boardgame.deepdeck.features.home.screen.HomeScreen
 import com.boardgame.deepdeck.features.home.screen.HomeScreenVM
 import com.boardgame.deepdeck.features.home.section_detail.SectionDetailScreens
@@ -92,6 +93,7 @@ fun NavGraphBuilder.homeNavigationEntry(
                         navController.startGame(packId, isCustom = isCustom, quickPlay = true)
                     },
                     onMakeDeckClick = { navController.navigate(MyLibraryRoute.AddPack) },
+                    onLiveCallClick = { navController.navigate(CallRoute.Start) { launchSingleTop = true } },
                 )
             }
         }
